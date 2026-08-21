@@ -1,0 +1,51 @@
+name: Build GDC Plugin Manager (Windows .exe + installer)
+
+# Se ruleaza automat cand faci "git push" pe branch-ul main, sau manual
+# din tab-ul "Actions" al repo-ului (butonul "Run workflow"). Rezultatul
+# (GDCPluginManagerSetup.exe) e apoi urcat MANUAL pe release-ul de la
+# gordasgdc/gdc-plugin-manager (acolo unde traiesc si asset-urile Mac),
+# nu exista un release propriu-zis pe acest repo.
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Descarca codul din repo
+        uses: actions/checkout@v4
+
+      - name: Instaleaza .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      # PrivateCatalogAuth.cs e gitignored (contine tokenul GitHub real
+      # pt. repo-ul privat gdc-plugin-manager-files) - CI il recreeaza
+      # din sablon + secretul PRIVATE_CATALOG_TOKEN (Settings -> Secrets
+      # and variables -> Actions, pe acest repo). Fara el, build-ul pica
+      # cu "cannot find PrivateCatalogAuth in scope" (vezi
+      # PrivateCatalogAuth.cs.example pentru cum se seteaza manual local).
+      - name: Recreeaza PrivateCatalogAuth.cs din secret
+        shell: pwsh
+        run: |
+          $template = Get-Content "src\GDCPluginManager.Core\Services\PrivateCatalogAuth.cs.example" -Raw
+          $real = $template -replace 'PASTE_TOKEN_HERE', '${{ secrets.PRIVATE_CATALOG_TOKEN }}'
+          Set-Content -Path "src\GDCPluginManager.Core\Services\PrivateCatalogAuth.cs" -Value $real -NoNewline
+
+      - name: Publica exe-ul self-contained (single-file, win-x64)
+        run: |
+          dotnet publish src\GDCPluginManager.Client -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish
+
+      - name: Compileaza instalatorul (Inno Setup - preinstalat pe runner-ul windows-latest)
+        run: |
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
+
+      - name: Incarca instalatorul ca artefact descarcabil
+        uses: actions/upload-artifact@v4
+        with:
+          name: GDCPluginManager-Windows-Installer
+          path: Output\GDCPluginManagerSetup.exe

@@ -7,7 +7,9 @@ obj/
 # `dotnet publish`, nu apartine sursei. Arhivele .zip sunt exact ce
 # incarcam manual/prin CI pe GitHub Release, nu au ce cauta in git.
 publish/
+Output/
 *.zip
+*.exe
 
 # Contine tokenul GitHub read-only real — nu urca niciodata in git,
 # exact ca PrivateCatalogAuth.swift pe Mac (vezi .gitignore-ul de acolo).
