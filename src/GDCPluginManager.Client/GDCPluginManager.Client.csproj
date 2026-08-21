@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <!-- Permite dotnet restore/build sa rezolve TFM-ul windows si de pe macOS,
+         doar cat sa verificam sintaxa C#/XAML aici — nu inlocuieste un build
+         real pe Windows (compilarea XAML->BAML necere PresentationBuildTasks,
+         disponibil doar pe Windows). -->
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>GDCPluginManager.Client</RootNamespace>
+    <AssemblyName>GDCPluginManager</AssemblyName>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <!-- Acelasi numar ca versiunea Mac (docs/update.json foloseste un singur
+         camp "version" comun ambelor platforme) — UpdateChecker.CurrentVersion
+         citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
+    <Version>1.2.4</Version>
+    <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
+         AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
+    <ApplicationIcon>Assets\app.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ObservableObject / RelayCommand / [ObservableProperty] source generators -->
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <!-- Iconite vectoriale Fluent (Segoe Fluent Icons look, nativ pe Windows 11) + FluentWindow. -->
+    <PackageReference Include="WPF-UI" Version="3.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\GDCPluginManager.Core\GDCPluginManager.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Acelasi fisier, expus si ca Resource WPF (pack URI), pentru
+         Window.Icon (title bar/taskbar la runtime) — ApplicationIcon de mai
+         sus seteaza doar iconita exe-ului in Explorer. -->
+    <Resource Include="Assets\app.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Python 3.12 embeddable oficial (python.org), ~22MB — bundle-uit langa
+         exe, ca PowerGradeImporter sa NU mai depinda de un Python instalat
+         separat de client. CopyToPublishDirectory e obligatoriu si pentru
+         dotnet publish (nu doar build); PreserveNewest evita recopierea
+         inutila la fiecare build. -->
+    <None Include="PythonRuntime\**" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

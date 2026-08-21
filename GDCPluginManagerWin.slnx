@@ -1,0 +1,6 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/GDCPluginManager.Client/GDCPluginManager.Client.csproj" />
+    <Project Path="src/GDCPluginManager.Core/GDCPluginManager.Core.csproj" />
+  </Folder>
+</Solution>

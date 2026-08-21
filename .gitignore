@@ -1,0 +1,14 @@
+bin/
+obj/
+.vs/
+*.user
+
+# Build output (.exe, .pdb, PythonRuntime bundle) - regenerat de
+# `dotnet publish`, nu apartine sursei. Arhivele .zip sunt exact ce
+# incarcam manual/prin CI pe GitHub Release, nu au ce cauta in git.
+publish/
+*.zip
+
+# Contine tokenul GitHub read-only real — nu urca niciodata in git,
+# exact ca PrivateCatalogAuth.swift pe Mac (vezi .gitignore-ul de acolo).
+src/GDCPluginManager.Core/Services/PrivateCatalogAuth.cs

@@ -1,0 +1,14 @@
+namespace GDCPluginManager.Core.Services;
+
+/// Template — copiaza in PrivateCatalogAuth.cs (gitignored) si completeaza
+/// Token cu acelasi token read-only folosit pe Mac
+/// (Sources/GDCPluginManagerCore/PrivateCatalogAuth.swift), inainte de a
+/// compila un client Windows real. Vezi Furnizor -> "Cum reinnoiesc
+/// token-ul GitHub?" daca ai nevoie sa generezi unul nou.
+public static class PrivateCatalogAuth
+{
+    public const string Owner = "gordasgdc";
+    public const string Repo = "gdc-plugin-manager-files";
+
+    public const string Token = "";
+}

@@ -1,0 +1,19 @@
+<Application x:Class="GDCPluginManager.Client.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Obligatoriu pentru WPF-UI: fara ui:ControlsDictionary, SymbolIcon
+                     nu gaseste fontul de iconite embedded si arata patratele goale
+                     ("tofu") pe orice Windows fara "Segoe Fluent Icons" instalat
+                     (confirmat pe masina de test — Windows fara acest font). -->
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+                <ResourceDictionary Source="Styles/Theme.xaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>

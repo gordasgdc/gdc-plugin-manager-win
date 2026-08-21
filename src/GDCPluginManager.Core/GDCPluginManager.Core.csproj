@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>GDCPluginManager.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Ed25519 pentru LicenseCore (.NET nu are suport nativ pentru Ed25519 pe net8.0). -->
+    <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+    <!-- WMI pentru MachineID (Win32_ComputerSystemProduct.UUID) — Windows-only. -->
+    <PackageReference Include="System.Management" Version="8.0.0" />
+  </ItemGroup>
+
+</Project>
