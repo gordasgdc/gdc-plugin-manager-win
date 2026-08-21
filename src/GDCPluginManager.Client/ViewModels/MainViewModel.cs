@@ -18,6 +18,9 @@ public enum SidebarPage
 {
     Catalog,
     Courses,
+    EducationalResources,
+    Events,
+    PartnerStores,
     Apps,
     License,
 }
@@ -33,6 +36,9 @@ public sealed partial class MainViewModel : ObservableObject
     public ICollectionView ProductsView { get; }
 
     public ObservableCollection<CourseViewModel> Courses { get; } = [];
+    public ObservableCollection<EducationalResourceViewModel> EducationalResources { get; } = [];
+    public ObservableCollection<EventViewModel> Events { get; } = [];
+    public ObservableCollection<PartnerStoreViewModel> PartnerStores { get; } = [];
     public ObservableCollection<AppLinkViewModel> Apps { get; } = [];
 
     public LicensePaneViewModel LicensePane { get; }
@@ -151,6 +157,15 @@ public sealed partial class MainViewModel : ObservableObject
     private void ShowCourses() => CurrentPage = SidebarPage.Courses;
 
     [RelayCommand]
+    private void ShowEducationalResources() => CurrentPage = SidebarPage.EducationalResources;
+
+    [RelayCommand]
+    private void ShowEvents() => CurrentPage = SidebarPage.Events;
+
+    [RelayCommand]
+    private void ShowPartnerStores() => CurrentPage = SidebarPage.PartnerStores;
+
+    [RelayCommand]
     private void ShowApps() => CurrentPage = SidebarPage.Apps;
 
     [RelayCommand]
@@ -175,6 +190,24 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var course in CatalogService.Shared.Courses)
         {
             Courses.Add(new CourseViewModel(course));
+        }
+
+        EducationalResources.Clear();
+        foreach (var resource in CatalogService.Shared.EducationalResources)
+        {
+            EducationalResources.Add(new EducationalResourceViewModel(resource));
+        }
+
+        Events.Clear();
+        foreach (var ev in CatalogService.Shared.Events)
+        {
+            Events.Add(new EventViewModel(ev));
+        }
+
+        PartnerStores.Clear();
+        foreach (var store in CatalogService.Shared.PartnerStores)
+        {
+            PartnerStores.Add(new PartnerStoreViewModel(store));
         }
 
         Apps.Clear();

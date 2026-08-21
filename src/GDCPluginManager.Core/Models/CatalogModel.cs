@@ -243,12 +243,77 @@ public sealed record AppLink
     public string? YoutubeURL { get; init; }
 }
 
-/// Port 1:1 al Catalog.swift. `Courses`/`Apps` default la lista goala daca
-/// lipsesc din JSON (catalog mai vechi, fara aceste chei inca).
+/// Port 1:1 al EducationalResource.Kind din CatalogModel.swift. CamelCase
+/// naming policy pe un enum cu un singur cuvant produce exact "course" /
+/// "book" / "guide" (litera intai coborata), identic cu rawValue-ul din
+/// Swift — vezi converterul aplicat pe proprietatea Kind mai jos.
+public enum EducationalResourceKind
+{
+    Course,
+    Book,
+    Guide,
+}
+
+public static class EducationalResourceKindExtensions
+{
+    public static string Label(this EducationalResourceKind kind) => kind switch
+    {
+        EducationalResourceKind.Course => "Curs",
+        EducationalResourceKind.Book => "Carte",
+        EducationalResourceKind.Guide => "Ghid",
+        _ => kind.ToString(),
+    };
+}
+
+/// Port 1:1 al EducationalResource.swift — carte/curs online/ghid vandut de
+/// o terta parte (Amazon, Gumroad, Udemy...). Spre deosebire de Course, NU
+/// e rezervabil prin WhatsApp: clientul leaga direct spre ExternalURL.
+public sealed record EducationalResource
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Description { get; init; }
+    [JsonConverter(typeof(JsonStringEnumConverter<EducationalResourceKind>))]
+    public required EducationalResourceKind Kind { get; init; }
+    public required string ExternalURL { get; init; }
+    public string? YoutubeURL { get; init; }
+}
+
+/// Port 1:1 al Event.swift — anunt de comunitate (workshop, curs, festival).
+/// DateDisplay e text liber intentionat (ex. "15-17 martie 2026") — nu se
+/// face nicio logica de calendar pe el, nici in Furnizor, nici aici.
+public sealed record Event
+{
+    public required string Id { get; init; }
+    public required string Title { get; init; }
+    public required string Description { get; init; }
+    public required string DateDisplay { get; init; }
+    public required string Location { get; init; }
+    public required string ExternalURL { get; init; }
+    public string? YoutubeURL { get; init; }
+}
+
+/// Port 1:1 al PartnerStore.swift — magazin partener de echipament
+/// foto-video, doar nume/descriere/link, nimic de instalat.
+public sealed record PartnerStore
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Description { get; init; }
+    public required string Url { get; init; }
+}
+
+/// Port 1:1 al Catalog.swift. Fiecare colectie default la lista goala daca
+/// lipseste din JSON (catalog mai vechi, fara acea cheie inca) — System.Text.Json
+/// lasa proprietatea la valoarea implicita din initializator cand cheia
+/// lipseste complet din payload, exact ca decodeIfPresent(...) ?? [] pe Mac.
 public sealed class Catalog
 {
     public string? UpdatedAt { get; init; }
     public IReadOnlyList<PluginItem> Items { get; init; } = [];
     public IReadOnlyList<Course> Courses { get; init; } = [];
     public IReadOnlyList<AppLink> Apps { get; init; } = [];
+    public IReadOnlyList<EducationalResource> EducationalResources { get; init; } = [];
+    public IReadOnlyList<Event> Events { get; init; } = [];
+    public IReadOnlyList<PartnerStore> PartnerStores { get; init; } = [];
 }
