@@ -32,8 +32,8 @@ OutputBaseFilename=GDCPluginManagerSetup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
-ArchitecturesAllowed=x64
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesAllowed=x64compatible
+ArchitecturesInstallIn64BitMode=x64compatible
 ; Nu semnat cu certificat platit (acelasi caz ca .pkg-ul de pe Mac,
 ; nesemnat) — Windows SmartScreen va arata un avertisment "Unrecognized
 ; app" la prima rulare a instalatorului. Normal pentru distributie indie,
