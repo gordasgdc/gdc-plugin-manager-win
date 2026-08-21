@@ -41,7 +41,10 @@ ArchitecturesInstallIn64BitMode=x64
 UninstallDisplayIcon={app}\{#MyAppExeName}
 
 [Languages]
-Name: "romanian"; MessagesFile: "compiler:Languages\Romanian.isl"
+; "Romanian.isl" e un add-on separat, neinclus in instalarea de baza a
+; Inno Setup (compiler:Languages\Romanian.isl nu exista implicit) - textele
+; instalatorului raman doar in engleza. Aplicatia in sine ramane RO/EN/ES,
+; asta afecteaza doar butoanele/mesajele din fereastra instalatorului.
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
