@@ -71,9 +71,13 @@ public static class PluginTypeExtensions
         var programData = Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData);
         switch (type)
         {
-            case PluginType.Dctl:
             case PluginType.Lut:
                 return Path.Combine(programData, "Blackmagic Design", "DaVinci Resolve", "Support", "LUT");
+            case PluginType.Dctl:
+                // Bug real (acelasi ca pe Mac): DCTL-urile foloseau exact
+                // folderul de LUT-uri, fara subfolderul "DCTL" dedicat pe
+                // care Resolve il cauta specific pentru fisierele .dctl.
+                return Path.Combine(programData, "Blackmagic Design", "DaVinci Resolve", "Support", "LUT", "DCTL");
             case PluginType.Fuse:
                 return Path.Combine(programData, "Blackmagic Design", "DaVinci Resolve", "Support", "Fusion", "Fuses");
             case PluginType.PowerGrade:

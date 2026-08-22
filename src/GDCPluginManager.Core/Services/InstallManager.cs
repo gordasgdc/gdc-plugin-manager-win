@@ -265,6 +265,20 @@ public sealed class InstallManager : INotifyPropertyChanged
     private void ElevatedCopy(string sourcePath, string destinationPath, string directory)
     {
         var script = $"mkdir \"{directory}\" 2>nul & copy /Y \"{sourcePath}\" \"{destinationPath}\"";
+
+        // Cererea userului: "o singura parola, nu la fiecare instalare
+        // OFX" - implementata cu icacls in loc de a slabi permisiunile pe
+        // toata masina. Daca scrierea are loc sub radacina OFX (singurul
+        // tip care chiar cere elevare - Program Files\Common Files), in
+        // ACELASI script deja elevat (un singur prompt UAC) acordam si
+        // userului curent drepturi Modify recursive pe radacina OFX
+        // Plugins. Instalarile OFX urmatoare scriu direct, fara UAC.
+        var ofxRoot = PluginType.Ofx.InstallDirectory();
+        if (directory.StartsWith(ofxRoot, StringComparison.OrdinalIgnoreCase))
+        {
+            script += $" & icacls \"{ofxRoot}\" /grant \"{Environment.UserName}\":(OI)(CI)M /T";
+        }
+
         RunElevated(script);
     }
 
