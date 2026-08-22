@@ -10,5 +10,10 @@ public static class PrivateCatalogAuth
     public const string Owner = "gordasgdc";
     public const string Repo = "gdc-plugin-manager-files";
 
+    // WARNING: this literal string "PASTE_TOKEN_HERE" is a required placeholder —
+    // build-windows.yml's `-replace 'PASTE_TOKEN_HERE', secret` step depends on it
+    // matching EXACTLY. If this ever gets "cleaned up" to Token = "", the CI
+    // substitution silently does nothing and every build ships with an empty
+    // token (401/403 on every download). Bug found 2026-08-21 the hard way.
     public const string Token = "PASTE_TOKEN_HERE";
 }

@@ -28,6 +28,10 @@ file static class Log
 /// doar mesajul de import manual, niciodata o eroare dura. Cere confirmare
 /// pe o masina cu Resolve Studio instalat inainte sa consideri asta gata.
 [SupportedOSPlatform("windows")]
+// WARNING: PowerGrade import happens EXCLUSIVELY through Resolve's official
+// Scripting API below - never write directly into %APPDATA%\...\Gallery\ (no
+// "index.xml"/.drx path is documented by Blackmagic for Windows). A direct
+// write risks corrupting the user's project database. See CLAUDE.md.
 public static class PowerGradeImporter
 {
     public enum ImportResultKind { ImportedToGallery, StagedOnly }
