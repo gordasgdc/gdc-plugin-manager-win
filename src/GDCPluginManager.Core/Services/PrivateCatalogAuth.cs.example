@@ -10,5 +10,5 @@ public static class PrivateCatalogAuth
     public const string Owner = "gordasgdc";
     public const string Repo = "gdc-plugin-manager-files";
 
-    public const string Token = "";
+    public const string Token = "PASTE_TOKEN_HERE";
 }
