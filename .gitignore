@@ -11,6 +11,16 @@ Output/
 *.zip
 *.exe
 
+# Exceptie de la *.zip/*.exe de mai sus: astea NU sunt build output, sunt
+# interpretorul Python embeddable (python.org) bundle-uit ca sursa, folosit
+# de PowerGradeImporter.cs pentru scripting-ul DaVinci Resolve. Fara
+# python312.zip (contine "encodings" si tot stdlib-ul), Python porneste dar
+# crapa imediat cu "ModuleNotFoundError: No module named 'encodings'" - bug
+# real gasit 2026-08-22 cand *.zip l-a exclus din git fara sa observam,
+# CI compila mereu un Python fara biblioteca standard.
+!src/GDCPluginManager.Client/PythonRuntime/*.zip
+!src/GDCPluginManager.Client/PythonRuntime/*.exe
+
 # Contine tokenul GitHub read-only real — nu urca niciodata in git,
 # exact ca PrivateCatalogAuth.swift pe Mac (vezi .gitignore-ul de acolo).
 src/GDCPluginManager.Core/Services/PrivateCatalogAuth.cs
