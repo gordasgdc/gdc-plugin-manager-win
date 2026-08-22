@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.Versioning;
 
 namespace GDCPluginManager.Core.Services;
@@ -31,6 +32,13 @@ public static class PowerGradeImporter
     /// Fiecare produs primeste propriul album, cu prefix "GDC — " ca sa nu
     /// se poata coincide vreodata cu un album personal al lui Cristi.
     public static string AlbumName(string productName) => "GDC — " + productName.Trim();
+
+    /// "OK" e mereu ULTIMA linie printata la succes, dar scriptul de import
+    /// printeaza acum linii DEBUG:... INAINTE de rezultat - deci nu mai
+    /// putem verifica doar output.StartsWith("OK"). Verificam daca vreo
+    /// linie e exact "OK", indiferent de ce vine inainte.
+    private static bool IsSuccessOutput(string? output) =>
+        output is not null && output.Split('\n').Any(line => line.Trim() == "OK");
 
     public static ImportResult ImportIntoGallery(string productName, IReadOnlyList<string> filePaths, string stagingFolder)
     {
@@ -88,6 +96,9 @@ public static class PowerGradeImporter
         # ieftin si sigur de incercat (no-op daca folderul nu exista).
         if hasattr(os, "add_dll_directory") and os.path.exists(r"{{Path.GetDirectoryName(ScriptLibPath)}}"):
             os.add_dll_directory(r"{{Path.GetDirectoryName(ScriptLibPath)}}")
+        print("DEBUG:RESOLVE_SCRIPT_API=" + str(os.environ.get("RESOLVE_SCRIPT_API")))
+        print("DEBUG:RESOLVE_SCRIPT_LIB=" + str(os.environ.get("RESOLVE_SCRIPT_LIB")))
+        print("DEBUG:sys.path=" + str(sys.path))
         try:
             import DaVinciResolveScript as dvr
             resolve = dvr.scriptapp("Resolve")
@@ -117,12 +128,14 @@ public static class PowerGradeImporter
             ok = target.ImportStills([{{drxPathsLiteral}}])
             print("OK" if ok else "FAIL:import_returned_false")
         except Exception as e:
-            print("FAIL:" + str(e))
+            import traceback
+            print("FAIL:" + type(e).__name__ + ": " + str(e))
+            print("TRACEBACK:" + traceback.format_exc().replace("\n", " | "))
         """;
 
         var output = RunPython(python.Value, script);
         DiagnosticLog.Write("PowerGradeImporter", $"RunPython output: {output ?? "(null)"}");
-        if (output is null || !output.StartsWith("OK", StringComparison.Ordinal))
+        if (!IsSuccessOutput(output))
         {
             return new ImportResult(ImportResultKind.StagedOnly, null, stagingFolder);
         }
@@ -172,7 +185,9 @@ public static class PowerGradeImporter
             ok = target.DeleteStills(list(range(len(stills))))
             print("OK" if ok else "FAIL:delete_returned_false")
         except Exception as e:
-            print("FAIL:" + str(e))
+            import traceback
+            print("FAIL:" + type(e).__name__ + ": " + str(e))
+            print("TRACEBACK:" + traceback.format_exc().replace("\n", " | "))
         """;
 
         var output = RunPython(python.Value, script);
