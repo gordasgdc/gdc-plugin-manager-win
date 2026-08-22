@@ -59,27 +59,38 @@ public static class PowerGradeImporter
         }
 
         var drxPathsLiteral = string.Join(", ", drxPaths.Select(p => "r\"" + p + "\""));
-        // WARNING: nu importa DaVinciResolveScript.py normal (import
-        // DaVinciResolveScript). Pe Python >= 3.5, acel fisier foloseste
-        // importlib.machinery.ExtensionFileLoader (protocolul multi-phase
-        // init, PEP 489) ca sa incarce fusionscript.dll — dar fusionscript.dll
-        // al Resolve pe Windows foloseste initializare single-phase (stilul
-        // vechi de C extension), incompatibila cu acel loader: da eroarea
-        // CPython specifica "initialization of fusionscript failed without
-        // raising an exception" (confirmat live 2026-08-23, identic pe Python
-        // 3.9 SI 3.10 — deci nu era o problema de versiune ABI, ci de METODA
-        // de incarcare). DaVinciResolveScript.py insusi are un fallback la
-        // `imp.load_dynamic` pentru Python < 3.5 — acel mecanism vechi
-        // (single-phase-compatible) e exact ce merge cu acest fusionscript.dll.
-        // `imp` e deprecated dar tot disponibil pe 3.9/3.10 (eliminat abia in
-        // 3.12) — il folosim direct, ocolind complet DaVinciResolveScript.py.
+        // WARNING: pe aceasta masina de test, ImportIntoGallery esueaza
+        // constant cu "FAIL:initialization of fusionscript failed without
+        // raising an exception" (SystemError specific CPython), indiferent
+        // de Python 3.9, 3.10, SAU incercarea de a folosi imp.load_dynamic
+        // direct in loc de "import DaVinciResolveScript" (testat live
+        // 2026-08-23, toate trei dau eroare IDENTICA byte-cu-byte) — vezi
+        // Technical Decisions & Known Pitfalls din CLAUDE.md pentru istoricul
+        // complet. Concluzie: imp.load_dynamic NU e o cale de incarcare
+        // diferita pe Python 3.9/3.10 fata de importlib.machinery -
+        // ambele ruleaza acelasi cod C intern (_imp.create_dynamic), deci
+        // "ocolirea" nu schimba nimic. Cauza reala ramane necunoscuta -
+        // posibil o problema specifica instalarii Resolve de pe acea masina,
+        // nu ceva reparabil din partea noastra fara debugging nativ (WinDbg)
+        // direct pe masina cu problema. Codul ramane pe forma simpla
+        // (import DaVinciResolveScript), identica cu varianta Mac - orice
+        // discrepanta viitoare cade automat pe stagedOnly, niciodata eroare
+        // dura, deci nu bloca alt lucru pe asta.
         var script = $$"""
-        import sys
+        import sys, os
         sys.path.append(r"{{ScriptModulesPath}}")
+        # Python 3.8+ nu mai cauta implicit in PATH dupa DLL-urile dependente
+        # ale unei extensii native (schimbare de securitate CPython) - daca
+        # fusionscript.dll are nevoie de alte DLL-uri din propriul folder
+        # Resolve (Qt/ffmpeg etc.) care nu s-ar gasi altfel, asta le adauga
+        # explicit la calea de cautare. Netestat inca daca rezolva pitfall-ul
+        # din CLAUDE.md ("initialization of fusionscript failed..."), dar e
+        # ieftin si sigur de incercat (no-op daca folderul nu exista).
+        if hasattr(os, "add_dll_directory") and os.path.exists(r"{{Path.GetDirectoryName(ScriptLibPath)}}"):
+            os.add_dll_directory(r"{{Path.GetDirectoryName(ScriptLibPath)}}")
         try:
-            import imp
-            fusionscript = imp.load_dynamic("fusionscript", r"{{ScriptLibPath}}")
-            resolve = fusionscript.scriptapp("Resolve")
+            import DaVinciResolveScript as dvr
+            resolve = dvr.scriptapp("Resolve")
             if resolve is None:
                 print("FAIL:no_scripting_access")
                 sys.exit(0)
@@ -127,15 +138,18 @@ public static class PowerGradeImporter
             return RemoveResultKind.RemovedFilesOnly;
         }
 
-        // WARNING: vezi comentariul din ImportIntoGallery de mai sus — acelasi
-        // motiv, acelasi fix (imp.load_dynamic direct, ocolind DaVinciResolveScript.py).
+        // WARNING: vezi comentariul din ImportIntoGallery de mai sus despre
+        // "FAIL:initialization of fusionscript failed without raising an
+        // exception" — cade la fel pe stagedOnly/RemovedFilesOnly, niciodata
+        // eroare dura.
         var script = $$"""
-        import sys
+        import sys, os
         sys.path.append(r"{{ScriptModulesPath}}")
+        if hasattr(os, "add_dll_directory") and os.path.exists(r"{{Path.GetDirectoryName(ScriptLibPath)}}"):
+            os.add_dll_directory(r"{{Path.GetDirectoryName(ScriptLibPath)}}")
         try:
-            import imp
-            fusionscript = imp.load_dynamic("fusionscript", r"{{ScriptLibPath}}")
-            resolve = fusionscript.scriptapp("Resolve")
+            import DaVinciResolveScript as dvr
+            resolve = dvr.scriptapp("Resolve")
             if resolve is None:
                 print("FAIL:no_scripting_access")
                 sys.exit(0)
