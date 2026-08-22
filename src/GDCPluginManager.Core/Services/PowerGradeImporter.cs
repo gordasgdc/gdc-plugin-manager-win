@@ -59,12 +59,27 @@ public static class PowerGradeImporter
         }
 
         var drxPathsLiteral = string.Join(", ", drxPaths.Select(p => "r\"" + p + "\""));
+        // WARNING: nu importa DaVinciResolveScript.py normal (import
+        // DaVinciResolveScript). Pe Python >= 3.5, acel fisier foloseste
+        // importlib.machinery.ExtensionFileLoader (protocolul multi-phase
+        // init, PEP 489) ca sa incarce fusionscript.dll — dar fusionscript.dll
+        // al Resolve pe Windows foloseste initializare single-phase (stilul
+        // vechi de C extension), incompatibila cu acel loader: da eroarea
+        // CPython specifica "initialization of fusionscript failed without
+        // raising an exception" (confirmat live 2026-08-23, identic pe Python
+        // 3.9 SI 3.10 — deci nu era o problema de versiune ABI, ci de METODA
+        // de incarcare). DaVinciResolveScript.py insusi are un fallback la
+        // `imp.load_dynamic` pentru Python < 3.5 — acel mecanism vechi
+        // (single-phase-compatible) e exact ce merge cu acest fusionscript.dll.
+        // `imp` e deprecated dar tot disponibil pe 3.9/3.10 (eliminat abia in
+        // 3.12) — il folosim direct, ocolind complet DaVinciResolveScript.py.
         var script = $$"""
         import sys
         sys.path.append(r"{{ScriptModulesPath}}")
         try:
-            import DaVinciResolveScript as dvr
-            resolve = dvr.scriptapp("Resolve")
+            import imp
+            fusionscript = imp.load_dynamic("fusionscript", r"{{ScriptLibPath}}")
+            resolve = fusionscript.scriptapp("Resolve")
             if resolve is None:
                 print("FAIL:no_scripting_access")
                 sys.exit(0)
@@ -112,12 +127,15 @@ public static class PowerGradeImporter
             return RemoveResultKind.RemovedFilesOnly;
         }
 
+        // WARNING: vezi comentariul din ImportIntoGallery de mai sus — acelasi
+        // motiv, acelasi fix (imp.load_dynamic direct, ocolind DaVinciResolveScript.py).
         var script = $$"""
         import sys
         sys.path.append(r"{{ScriptModulesPath}}")
         try:
-            import DaVinciResolveScript as dvr
-            resolve = dvr.scriptapp("Resolve")
+            import imp
+            fusionscript = imp.load_dynamic("fusionscript", r"{{ScriptLibPath}}")
+            resolve = fusionscript.scriptapp("Resolve")
             if resolve is None:
                 print("FAIL:no_scripting_access")
                 sys.exit(0)
