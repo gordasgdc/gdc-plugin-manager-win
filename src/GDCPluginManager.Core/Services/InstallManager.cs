@@ -81,6 +81,24 @@ public sealed class InstallManager : INotifyPropertyChanged
         return Path.Combine(baseDir, item.BundleFolderName ?? item.Id);
     }
 
+    /// Calea unui fisier relativa la RADACINA PRODUSULUI (nu doar numele de
+    /// fisier) - reconstruita din file.Path, mereu in formatul
+    /// "id/versiune/rest..." la publicare. Pentru un produs cu un singur
+    /// fisier fara subfoldere da acelasi rezultat ca file.Filename dinainte;
+    /// conteaza doar pentru pack-uri cu structura de foldere (OFX in
+    /// special). Foloseste '/' explicit (nu Path.DirectorySeparatorChar) la
+    /// gasirea prefixului, pentru ca file.Path e mereu scris cu '/' (git/
+    /// GitHub), indiferent de platforma pe care ruleaza clientul.
+    private static string RelativeInstallPath(PluginFile file, PluginItem item)
+    {
+        var prefix = $"{item.Id}/{item.Version}/";
+        if (!file.Path.StartsWith(prefix, StringComparison.Ordinal)) return file.Filename;
+        var relative = file.Path[prefix.Length..];
+        // Convertim separatorii '/' din repo in cei nativi Windows ('\'),
+        // ca Path.Combine sa creeze subfolderele corecte.
+        return relative.Replace('/', Path.DirectorySeparatorChar);
+    }
+
     public async Task<InstallOutcome> InstallAsync(PluginItem item)
     {
         var destinationDir = DestinationDirectory(item);
@@ -106,8 +124,18 @@ public sealed class InstallManager : INotifyPropertyChanged
             var writtenPaths = new List<string>();
             for (var i = 0; i < item.Files.Count; i++)
             {
-                var destinationPath = Path.Combine(destinationDir, item.Files[i].Filename);
-                WriteFile(tempFiles[i], destinationPath, destinationDir);
+                // Bug real, gasit la implementarea OFX (acelasi ca pe Mac,
+                // vezi InstallManager.swift): Filename e doar ultima
+                // componenta din Path, deci un pack cu subfoldere (un
+                // .ofx.bundle intreg pe Windows se distribuie ca un folder
+                // de fisiere, nu neaparat plat) se scria FARA structura de
+                // foldere, riscand coliziuni de nume intre subfoldere.
+                // Fix: reconstruim calea relativa la produs din Files[i].Path
+                // (format "id/versiune/rest..." - vezi PublishView.swift pe
+                // Mac / echivalentul Furnizor) si o pastram la instalare.
+                var relativePath = RelativeInstallPath(item.Files[i], item);
+                var destinationPath = Path.Combine(destinationDir, relativePath);
+                WriteFile(tempFiles[i], destinationPath, Path.GetDirectoryName(destinationPath) ?? destinationDir);
                 writtenPaths.Add(destinationPath);
             }
 
