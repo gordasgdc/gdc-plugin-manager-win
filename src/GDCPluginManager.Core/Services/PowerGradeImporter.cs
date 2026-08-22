@@ -3,17 +3,6 @@ using System.Runtime.Versioning;
 
 namespace GDCPluginManager.Core.Services;
 
-file static class Log
-{
-    private static readonly string Path_ = Path.Combine(Path.GetTempPath(), "gdcpm-crash.log");
-
-    public static void Write(string message)
-    {
-        try { File.AppendAllText(Path_, $"[{DateTime.Now:HH:mm:ss.fff}] [PowerGradeImporter] {message}\n"); }
-        catch { /* best-effort */ }
-    }
-}
-
 /// Port al PowerGradeImporter.swift — bridge catre API-ul de scripting
 /// extern al DaVinci Resolve, ca sa importe/elimine PowerGrade-uri direct
 /// in Gallery, fara pas manual.
@@ -46,26 +35,26 @@ public static class PowerGradeImporter
     public static ImportResult ImportIntoGallery(string productName, IReadOnlyList<string> filePaths, string stagingFolder)
     {
         var albumName = AlbumName(productName);
-        Log.Write($"ImportIntoGallery start: product={productName}, files={filePaths.Count}");
+        DiagnosticLog.Write("PowerGradeImporter", $"ImportIntoGallery start: product={productName}, files={filePaths.Count}");
 
         if (!ResolveProcessCheck.IsRunning)
         {
-            Log.Write("Resolve nu ruleaza (ResolveProcessCheck.IsRunning=false) -> stagedOnly");
+            DiagnosticLog.Write("PowerGradeImporter", "Resolve nu ruleaza (ResolveProcessCheck.IsRunning=false) -> stagedOnly");
             return new ImportResult(ImportResultKind.StagedOnly, null, stagingFolder);
         }
 
         var drxPaths = filePaths.Where(p => Path.GetExtension(p).Equals(".drx", StringComparison.OrdinalIgnoreCase)).ToList();
         if (drxPaths.Count == 0)
         {
-            Log.Write($"Niciun fisier .drx in lista primita ({string.Join(", ", filePaths)}) -> stagedOnly");
+            DiagnosticLog.Write("PowerGradeImporter", $"Niciun fisier .drx in lista primita ({string.Join(", ", filePaths)}) -> stagedOnly");
             return new ImportResult(ImportResultKind.StagedOnly, null, stagingFolder);
         }
 
         var python = FindPython();
-        Log.Write(python is null ? "FindPython: niciun candidat gasit" : $"FindPython: folosesc '{python.Value.Exe} {python.Value.FixedArgs}'");
+        DiagnosticLog.Write("PowerGradeImporter", python is null ? "FindPython: niciun candidat gasit" : $"FindPython: folosesc '{python.Value.Exe} {python.Value.FixedArgs}'");
         if (python is null || !Directory.Exists(ScriptModulesPath))
         {
-            Log.Write($"python null? {python is null}, ScriptModulesPath exista? {Directory.Exists(ScriptModulesPath)} ({ScriptModulesPath}) -> stagedOnly");
+            DiagnosticLog.Write("PowerGradeImporter", $"python null? {python is null}, ScriptModulesPath exista? {Directory.Exists(ScriptModulesPath)} ({ScriptModulesPath}) -> stagedOnly");
             return new ImportResult(ImportResultKind.StagedOnly, null, stagingFolder);
         }
 
@@ -106,7 +95,7 @@ public static class PowerGradeImporter
         """;
 
         var output = RunPython(python.Value, script);
-        Log.Write($"RunPython output: {output ?? "(null)"}");
+        DiagnosticLog.Write("PowerGradeImporter", $"RunPython output: {output ?? "(null)"}");
         if (output is null || !output.StartsWith("OK", StringComparison.Ordinal))
         {
             return new ImportResult(ImportResultKind.StagedOnly, null, stagingFolder);
@@ -205,10 +194,10 @@ public static class PowerGradeImporter
             {
                 if (File.Exists(candidate.Exe))
                 {
-                    Log.Write($"FindPython: folosesc Python bundle-uit ({candidate.Exe})");
+                    DiagnosticLog.Write("PowerGradeImporter", $"FindPython: folosesc Python bundle-uit ({candidate.Exe})");
                     return candidate;
                 }
-                Log.Write($"FindPython: Python bundle-uit lipseste ({candidate.Exe}) — incerc PATH.");
+                DiagnosticLog.Write("PowerGradeImporter", $"FindPython: Python bundle-uit lipseste ({candidate.Exe}) — incerc PATH.");
                 continue;
             }
 
@@ -227,11 +216,11 @@ public static class PowerGradeImporter
                 using var probe = Process.Start(psi);
                 probe?.WaitForExit(3000);
                 if (probe is { ExitCode: 0 }) return candidate;
-                Log.Write($"FindPython: '{candidate.Exe}' a raspuns cu exit code {probe?.ExitCode}");
+                DiagnosticLog.Write("PowerGradeImporter", $"FindPython: '{candidate.Exe}' a raspuns cu exit code {probe?.ExitCode}");
             }
             catch (Exception ex)
             {
-                Log.Write($"FindPython: '{candidate.Exe}' indisponibil ({ex.GetType().Name}: {ex.Message})");
+                DiagnosticLog.Write("PowerGradeImporter", $"FindPython: '{candidate.Exe}' indisponibil ({ex.GetType().Name}: {ex.Message})");
             }
         }
         return null;
@@ -292,7 +281,7 @@ public static class PowerGradeImporter
             using var process = Process.Start(psi);
             if (process is null)
             {
-                Log.Write($"RunPython: Process.Start('{python.Exe} {args}') a intors null");
+                DiagnosticLog.Write("PowerGradeImporter", $"RunPython: Process.Start('{python.Exe} {args}') a intors null");
                 return null;
             }
 
@@ -310,7 +299,7 @@ public static class PowerGradeImporter
             if (!process.WaitForExit(timeoutMs))
             {
                 process.Kill();
-                Log.Write($"RunPython: timeout dupa {timeoutMs}ms, proces omorat.");
+                DiagnosticLog.Write("PowerGradeImporter", $"RunPython: timeout dupa {timeoutMs}ms, proces omorat.");
                 return null;
             }
 
@@ -319,18 +308,18 @@ public static class PowerGradeImporter
 
             if (process.ExitCode != 0)
             {
-                Log.Write($"RunPython: exit code {process.ExitCode}. stdout=[{stdout}] stderr=[{stderr}]");
+                DiagnosticLog.Write("PowerGradeImporter", $"RunPython: exit code {process.ExitCode}. stdout=[{stdout}] stderr=[{stderr}]");
                 return null;
             }
             if (!string.IsNullOrEmpty(stderr))
             {
-                Log.Write($"RunPython: exit 0 dar stderr non-gol: [{stderr}]");
+                DiagnosticLog.Write("PowerGradeImporter", $"RunPython: exit 0 dar stderr non-gol: [{stderr}]");
             }
             return stdout;
         }
         catch (Exception ex)
         {
-            Log.Write($"RunPython: exceptie: {ex}");
+            DiagnosticLog.Write("PowerGradeImporter", $"RunPython: exceptie: {ex}");
             return null;
         }
     }

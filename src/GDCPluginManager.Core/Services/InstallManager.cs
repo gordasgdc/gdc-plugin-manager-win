@@ -103,6 +103,7 @@ public sealed class InstallManager : INotifyPropertyChanged
     {
         var destinationDir = DestinationDirectory(item);
         var tempFiles = new List<string>();
+        DiagnosticLog.Write("InstallManager", $"InstallAsync start: item={item.Id} ({item.Name}), type={item.Type}, files={item.Files.Count}, destinationDir={destinationDir}");
         try
         {
             // Verifica checksum-ul FIECARUI fisier inainte sa scrie ceva, ca
@@ -114,6 +115,7 @@ public sealed class InstallManager : INotifyPropertyChanged
                 var actualSha = Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
                 if (actualSha != file.Sha256.ToLowerInvariant())
                 {
+                    DiagnosticLog.Write("InstallManager", $"Checksum mismatch pe {file.Path}: asteptat {file.Sha256}, primit {actualSha}");
                     throw InstallException.ChecksumMismatch();
                 }
                 var tempPath = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -136,12 +138,30 @@ public sealed class InstallManager : INotifyPropertyChanged
                 var relativePath = RelativeInstallPath(item.Files[i], item);
                 var destinationPath = Path.Combine(destinationDir, relativePath);
                 WriteFile(tempFiles[i], destinationPath, Path.GetDirectoryName(destinationPath) ?? destinationDir);
+
+                // WARNING: nu marca niciodata "Installed" doar pt. ca
+                // File.Copy nu a aruncat exceptie - verifica REAL ca
+                // fisierul exista pe disc dupa scriere. Gasit 2026-08-22
+                // dupa un raport de client: UI arata "Installed" dar
+                // fisierele lipseau din DaVinci Resolve. Cauza exacta inca
+                // neconfirmata (VirtualStore exclus - vezi app.manifest
+                // asInvoker - dar poate exista alt scenariu neasteptat pe
+                // masina clientului), insa indiferent de cauza, statusul nu
+                // are voie sa minta: daca fisierul chiar nu e acolo, e
+                // WriteFailed, nu Installed.
+                if (!File.Exists(destinationPath))
+                {
+                    DiagnosticLog.Write("InstallManager", $"WriteFile pentru {destinationPath} nu a aruncat exceptie, dar File.Exists intoarce false imediat dupa scriere!");
+                    throw InstallException.WriteFailed($"Fisierul nu exista dupa scriere: {destinationPath}");
+                }
+                DiagnosticLog.Write("InstallManager", $"Scris si verificat: {destinationPath}");
                 writtenPaths.Add(destinationPath);
             }
 
             _installedVersions[item.Id] = item.Version;
             SaveState();
             Raise(nameof(InstalledVersions));
+            DiagnosticLog.Write("InstallManager", $"InstallAsync succes: {item.Id}, {writtenPaths.Count} fisiere in {destinationDir}");
 
             if (item.Type != PluginType.PowerGrade) return InstallOutcome.Installed;
 
@@ -151,6 +171,11 @@ public sealed class InstallManager : INotifyPropertyChanged
                 PowerGradeImporter.ImportResultKind.ImportedToGallery => InstallOutcome.ToGallery(result.AlbumName!),
                 _ => InstallOutcome.NeedsManualStep(result.StagingFolder ?? destinationDir),
             };
+        }
+        catch (Exception ex)
+        {
+            DiagnosticLog.Write("InstallManager", $"InstallAsync EROARE pentru {item.Id}: {ex.GetType().Name}: {ex.Message}");
+            throw;
         }
         finally
         {
