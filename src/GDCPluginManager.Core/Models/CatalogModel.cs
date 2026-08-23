@@ -108,6 +108,56 @@ public sealed record PluginFile
     public string Filename => System.IO.Path.GetFileName(Path);
 }
 
+/// Port 1:1 al CatalogAssets din CatalogModel.swift — de unde se incarca
+/// imaginile de prezentare (coperti) ale catalogului.
+///
+/// SISTEM HIBRID — un singur camp `CoverImage`, doua surse posibile:
+///
+///   1. UPLOAD LOCAL: cale relativa ("covers/&lt;id&gt;.jpg"). Furnizor (Mac) a
+///      comprimat imaginea si a publicat-o in repo-ul public, langa
+///      catalog.json. Se rezolva fata de BaseUrl.
+///
+///   2. URL EXTERN: link absolut ("https://cdn.exemplu.com/x.jpg"), gazduit
+///      de furnizor pe CDN-ul lui. Se foloseste ca atare.
+///
+/// ARCHITECTURE NOTE: NU exista Furnizor pe Windows (repo-ul asta are doar
+/// Client + Core) — publicarea si compresia se fac exclusiv de pe Mac, cu
+/// ImageProcessor.swift. Aici doar CONSUMAM imaginile, deci nu avem nevoie
+/// de nicio librarie de procesare imagini (fara ImageSharp, fara
+/// System.Drawing). Daca vreodata apare un Furnizor pe Windows, ATUNCI
+/// trebuie portat si ImageProcessor.swift, cu aceleasi praguri.
+///
+/// WARNING (varianta 2): un URL extern e in afara controlului nostru — daca
+/// furnizorul sterge fisierul de pe CDN, coperta dispare fara sa aflam.
+/// UI-ul TREBUIE sa trateze esecul de incarcare ca pe un caz normal si sa
+/// cada inapoi pe IconSymbol, nu sa arate un chenar spart.
+public static class CatalogAssets
+{
+    /// Acelasi domeniu ca CatalogService / UpdateChecker.
+    public static readonly Uri BaseUrl = new("https://gordas.dev/");
+
+    /// True daca valoarea e un link extern, nu o cale relativa gazduita de noi.
+    public static bool IsExternal(string? coverImage)
+    {
+        if (string.IsNullOrEmpty(coverImage)) return false;
+        return coverImage.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            || coverImage.StartsWith("https://", StringComparison.OrdinalIgnoreCase);
+    }
+
+    /// Transforma valoarea din catalog intr-un URL descarcabil, indiferent de
+    /// varianta. null daca produsul nu are inca o coperta.
+    public static Uri? ImageUrl(string? coverImage)
+    {
+        if (string.IsNullOrEmpty(coverImage)) return null;
+        // Uri(BaseUrl, x) ignora oricum base-ul cand x e absolut, dar
+        // verificam explicit ca sa fie evident ca sistemul hibrid e
+        // intentionat, nu un efect secundar.
+        return IsExternal(coverImage)
+            ? new Uri(coverImage)
+            : new Uri(BaseUrl, coverImage);
+    }
+}
+
 /// Port 1:1 al PluginItem.swift — o intrare din catalog. `Id` e intrarea in
 /// hash-ul SHA-512 al licentei (vezi LicenseCore.productHash pe Mac) — NU se
 /// schimba niciodata dupa prima vanzare.
@@ -139,6 +189,15 @@ public sealed class PluginItem
     /// Doar pentru OFX: numele exact al folderului .ofx.bundle original.
     /// Resolve identifica un plugin OFX dupa acest nume literal de folder.
     public string? BundleFolderName { get; init; }
+
+    /// Coperta produsului: cale relativa ("covers/&lt;id&gt;.jpg") sau URL extern
+    /// absolut — vezi CatalogAssets. null daca nu are inca una, caz in care
+    /// cardul cade pe IconSymbol.
+    public string? CoverImage { get; init; }
+
+    /// URL-ul absolut al copertii, gata de incarcat (null daca nu are).
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 
     /// True pentru un pack cu mai multe fisiere — se instaleaza intr-un
     /// subfolder propriu, nu liber la radacina folderului Resolve.
@@ -193,6 +252,9 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             IsTrial = root.TryGetProperty("isTrial", out var trial) && trial.GetBoolean(),
             YoutubeURL = root.TryGetProperty("youtubeURL", out var yt) ? yt.GetString() : null,
             BundleFolderName = root.TryGetProperty("bundleFolderName", out var bfn) ? bfn.GetString() : null,
+            // Cheie noua (2026-08): intrarile publicate inainte de sistemul
+            // de coperti nu o au deloc -> null, fara eroare.
+            CoverImage = root.TryGetProperty("coverImage", out var cover) ? cover.GetString() : null,
         };
     }
 
@@ -213,6 +275,7 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
         writer.WriteBoolean("isTrial", value.IsTrial);
         if (value.YoutubeURL is not null) writer.WriteString("youtubeURL", value.YoutubeURL);
         if (value.BundleFolderName is not null) writer.WriteString("bundleFolderName", value.BundleFolderName);
+        if (value.CoverImage is not null) writer.WriteString("coverImage", value.CoverImage);
         writer.WriteEndObject();
     }
 }
@@ -235,6 +298,13 @@ public sealed record Course
     public required string Name { get; init; }
     public required string Description { get; init; }
     public required IReadOnlyList<CourseOption> Options { get; init; }
+
+    /// Coperta cursului — vezi CatalogAssets. Publicata de pe Mac cu presetul
+    /// `.cover` (max 1600px), ca sa se vada detaliul intr-un preview marit.
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
 /// Port 1:1 al AppLink.swift — link catre o alta aplicatie GDC, afisat in
@@ -281,6 +351,12 @@ public sealed record EducationalResource
     public required EducationalResourceKind Kind { get; init; }
     public required string ExternalURL { get; init; }
     public string? YoutubeURL { get; init; }
+
+    /// Coperta materialului (coperta cartii/cursului) — preset `.cover`.
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
 /// Port 1:1 al Event.swift — anunt de comunitate (workshop, curs, festival).
@@ -295,6 +371,14 @@ public sealed record Event
     public required string Location { get; init; }
     public required string ExternalURL { get; init; }
     public string? YoutubeURL { get; init; }
+
+    /// Afisul evenimentului — preset `.cover`. Aici imaginea chiar poarta
+    /// informatie (data, program, invitati), deci e cazul in care preview-ul
+    /// marit conteaza cel mai mult.
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
 /// Port 1:1 al PartnerStore.swift — magazin partener de echipament
@@ -305,6 +389,14 @@ public sealed record PartnerStore
     public required string Name { get; init; }
     public required string Description { get; init; }
     public required string Url { get; init; }
+
+    /// Logo-ul magazinului — preset `.icon` (patrat 512x512). Daca logo-ul e
+    /// PNG cu fundal transparent, ImageProcessor (Mac) il pastreaza PNG in
+    /// loc sa-l aplatizeze pe alb.
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
 /// Port 1:1 al Catalog.swift. Fiecare colectie default la lista goala daca
