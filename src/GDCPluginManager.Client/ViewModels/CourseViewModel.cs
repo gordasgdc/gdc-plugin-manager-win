@@ -41,9 +41,18 @@ public sealed class CourseViewModel
     public CourseViewModel(Course course)
     {
         Course = course;
+        // Dupa atribuirea de mai sus: `Course` e inca null la intrarea in
+        // constructor, deci coperta se citeste din parametru, nu din camp.
+        Cover = new CoverViewModel(course.CoverImageUrl, course.Name);
         Options = course.Options.Select(o => new CourseOptionViewModel(o, course.Name)).ToList();
     }
 
     public string Name => Course.Name;
+
+    /// Coperta cardului + actiunea de marire. Vezi CoverViewModel:
+    /// o singura implementare, folosita de toate cele cinci tipuri de card.
+    /// Se creeaza o data, in constructor, nu la fiecare acces — altfel WPF
+    /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
+    public CoverViewModel Cover { get; }
     public string Description => Course.Description;
 }

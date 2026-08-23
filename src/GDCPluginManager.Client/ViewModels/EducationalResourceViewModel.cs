@@ -15,9 +15,18 @@ public sealed partial class EducationalResourceViewModel : ObservableObject
     public EducationalResourceViewModel(EducationalResource resource)
     {
         Resource = resource;
+        // Dupa atribuirea de mai sus: `Resource` e inca null la intrarea in
+        // constructor, deci coperta se citeste din parametru, nu din camp.
+        Cover = new CoverViewModel(resource.CoverImageUrl, resource.Name);
     }
 
     public string Name => Resource.Name;
+
+    /// Coperta cardului + actiunea de marire. Vezi CoverViewModel:
+    /// o singura implementare, folosita de toate cele cinci tipuri de card.
+    /// Se creeaza o data, in constructor, nu la fiecare acces — altfel WPF
+    /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
+    public CoverViewModel Cover { get; }
     public string Description => Resource.Description;
     public string KindLabel => Resource.Kind.Label();
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Resource.YoutubeURL);

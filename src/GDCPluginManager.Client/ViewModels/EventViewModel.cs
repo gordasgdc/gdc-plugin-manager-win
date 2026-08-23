@@ -15,9 +15,18 @@ public sealed partial class EventViewModel : ObservableObject
     public EventViewModel(Event ev)
     {
         Event = ev;
+        // Dupa atribuirea de mai sus: `Event` e inca null la intrarea in
+        // constructor, deci coperta se citeste din parametru, nu din camp.
+        Cover = new CoverViewModel(ev.CoverImageUrl, ev.Title);
     }
 
     public string Title => Event.Title;
+
+    /// Coperta cardului + actiunea de marire. Vezi CoverViewModel:
+    /// o singura implementare, folosita de toate cele cinci tipuri de card.
+    /// Se creeaza o data, in constructor, nu la fiecare acces — altfel WPF
+    /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
+    public CoverViewModel Cover { get; }
     public string Description => Event.Description;
     public string DateAndLocation => $"{Event.DateDisplay} · {Event.Location}";
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Event.YoutubeURL);

@@ -29,9 +29,18 @@ public sealed partial class ProductViewModel : ObservableObject
     public ProductViewModel(PluginItem item)
     {
         Item = item;
+        // Dupa atribuirea de mai sus: `Item` e inca null la intrarea in
+        // constructor, deci coperta se citeste din parametru, nu din camp.
+        Cover = new CoverViewModel(item.CoverImageUrl, item.Name);
     }
 
     public string Name => Item.Name;
+
+    /// Coperta cardului + actiunea de marire. Vezi CoverViewModel:
+    /// o singura implementare, folosita de toate cele cinci tipuri de card.
+    /// Se creeaza o data, in constructor, nu la fiecare acces — altfel WPF
+    /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
+    public CoverViewModel Cover { get; }
     public string Description => Item.Description;
     public string TypeLabel => Item.Type.Label();
     public string VersionLabel => $"v{Item.Version}";
