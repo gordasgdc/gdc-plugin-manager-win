@@ -1,5 +1,6 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
@@ -71,6 +72,13 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string? _updateBannerText;
 
+    /// URL-ul de descarcare al versiunii noi de APLICATIE (nu de produs),
+    /// citit din update.json.
+    ///
+    /// WARNING: proprietatea asta a existat o vreme fara sa fie legata de
+    /// nimic in MainWindow.xaml — banner-ul anunta versiunea noua si nu
+    /// oferea nicio cale de a o lua. Daca modifici banner-ul, verifica si
+    /// legatura cu DownloadUpdateCommand.
     [ObservableProperty]
     private string? _updateDownloadUrl;
 
@@ -170,6 +178,34 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowLicense() => CurrentPage = SidebarPage.License;
+
+    /// Deschide in browser pagina de descarcare a versiunii noi de aplicatie.
+    ///
+    /// NOTE — de ce browser si nu instalare automata: actualizarea APLICATIEI
+    /// nu e (inca) un self-update in-app. Pe Windows instalarea se face cu
+    /// GDCPluginManagerSetup.exe, iar un instalator nu poate suprascrie un
+    /// .exe care ruleaza — ar fi nevoie de un proces separat care asteapta
+    /// iesirea aplicatiei, ruleaza setup-ul si o reporneste.
+    ///
+    /// WARNING: a NU se confunda cu actualizarea PRODUSELOR (LUT/DCTL/OFX/
+    /// PowerGrade), care e complet in-app, cu un click, prin
+    /// InstallManager.InstallAsync — vezi butonul "Actualizeaza" de pe card,
+    /// afisat cand versiunea din catalog e mai noua decat cea instalata.
+    /// Sunt doua fluxuri diferite, cu doua surse diferite:
+    ///   produse   -> catalog.json  -> InstallManager (1 click, in-app)
+    ///   aplicatia -> update.json   -> acest buton     (deschide browserul)
+    [RelayCommand]
+    private void DownloadUpdate()
+    {
+        var url = UpdateDownloadUrl;
+        // Doar http/https: update.json e al nostru, dar un URL invalid aici
+        // ar ajunge direct in ShellExecute.
+        if (string.IsNullOrWhiteSpace(url)) return;
+        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
+            && !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
+
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
 
     [RelayCommand]
     private void DismissUpdateBanner()

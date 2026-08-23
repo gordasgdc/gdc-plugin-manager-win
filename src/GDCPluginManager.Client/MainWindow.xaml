@@ -398,7 +398,17 @@
                             <TextBlock Text="{Binding UpdateBannerText}" Foreground="{StaticResource BrandBrush}"
                                        TextWrapping="Wrap" VerticalAlignment="Center" />
                         </StackPanel>
-                        <Button Grid.Column="1" Content="Ascunde" Margin="10,0,0,0" Command="{Binding DismissUpdateBannerCommand}" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <!-- WARNING: acest buton lipsea complet. UpdateDownloadUrl era
+                                 setat in MainViewModel dar nu era legat de nimic in XAML,
+                                 deci banner-ul anunta o versiune noua si nu oferea NICIO
+                                 cale de a o lua - nici macar un link. Daca refaci
+                                 banner-ul, pastreaza legatura asta. -->
+                            <Button Content="Descarcă" Margin="10,0,0,0"
+                                    Command="{Binding DownloadUpdateCommand}"
+                                    Visibility="{Binding UpdateDownloadUrl, Converter={StaticResource NullToVisibility}}" />
+                            <Button Content="Ascunde" Margin="8,0,0,0" Command="{Binding DismissUpdateBannerCommand}" />
+                        </StackPanel>
                     </Grid>
                 </Border>
                 <TextBlock Text="{Binding LoadError}" Foreground="#FFE8544D" TextWrapping="Wrap" Margin="0,6,0,0"
