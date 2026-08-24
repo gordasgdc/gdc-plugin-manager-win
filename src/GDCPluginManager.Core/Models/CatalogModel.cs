@@ -315,6 +315,13 @@ public sealed record AppLink
     public required string Name { get; init; }
     public required string Url { get; init; }
     public string? YoutubeURL { get; init; }
+
+    /// Coperta aplicatiei — preset `.icon`, adaugat 2026-08-24. Catalogul
+    /// vechi (fara aceasta cheie) decodeaza cu null automat.
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
 /// Port 1:1 al EducationalResource.Kind din CatalogModel.swift. CamelCase

@@ -232,7 +232,19 @@
                         <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Center">
                             <TextBlock Text="APLICATIE" FontSize="9" FontWeight="Bold" Foreground="#4EA1F5" />
                         </Border>
-                        <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="20" Margin="0,10,0,0" Foreground="#4EA1F5" />
+                        <!-- Coperta, daca aplicatia are una (vezi CoverButtonStyle mai sus);
+                             altfel cade pe simbolul de mai jos (acelasi pattern ca la Magazine). -->
+                        <Button Style="{StaticResource CoverButtonStyle}"
+                                Command="{Binding Cover.ShowCommand}"
+                                Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                            <Border CornerRadius="6" ClipToBounds="True" Height="56"
+                                    Background="{StaticResource InkSurfaceRaisedBrush}">
+                                <Image Source="{Binding Cover.Url}" Stretch="UniformToFill"
+                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                            </Border>
+                        </Button>
+                        <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="20" Margin="0,10,0,0" Foreground="#4EA1F5"
+                                       Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <Button Content="Deschide" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
                     </StackPanel>

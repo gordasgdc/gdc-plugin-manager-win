@@ -16,10 +16,18 @@ public sealed partial class AppLinkViewModel : ObservableObject
     public AppLinkViewModel(AppLink app)
     {
         App = app;
+        // Dupa atribuirea de mai sus: `App` e inca null la intrarea in
+        // constructor, deci coperta se citeste din parametru, nu din camp
+        // (acelasi pattern ca PartnerStoreViewModel).
+        Cover = new CoverViewModel(app.CoverImageUrl, app.Name);
     }
 
     public string Name => App.Name;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(App.YoutubeURL);
+
+    /// Coperta cardului + acțiunea de mărire. Vezi CoverViewModel: o
+    /// singură implementare, folosită de toate tipurile de card.
+    public CoverViewModel Cover { get; }
 
     [RelayCommand]
     private void Open() => Process.Start(new ProcessStartInfo(App.Url) { UseShellExecute = true });

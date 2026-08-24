@@ -1,6 +1,10 @@
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using GDCPluginManager.Client.ViewModels;
+using GDCPluginManager.Core.Services;
 
 namespace GDCPluginManager.Client;
 
@@ -40,6 +44,54 @@ public partial class MainWindow : Window
         {
             Log($"InitializeCommand a aruncat: {ex}");
         }
+
+        await MaybeShowUpdatePopupAsync();
+    }
+
+    /// Pop-up modal, pe lânga bannerul din antet (nu în locul lui): bannerul
+    /// e discret și poate fi ratat; pop-up-ul întrerupe o singură dată, la
+    /// apariția unei versiuni noi, și explică răspicat că nu e self-update
+    /// automat. Perechea de pe Mac e alertele din ContentView.swift — dacă
+    /// schimbi textul/comportamentul într-o parte, schimbă-l și în cealaltă.
+    ///
+    /// De ce Wpf.Ui.Controls.MessageBox și nu System.Windows.MessageBox:
+    /// cel nativ are doar butoane fixe (Yes/No/OK/Cancel), nu poate arăta
+    /// "Descarcă"/"Mai târziu" — cel din Wpf.Ui suportă text custom pe
+    /// butoane și se potrivește cu tema aplicației.
+    ///
+    /// Citește direct din UpdateChecker.Shared.AvailableUpdate (nu din
+    /// MainViewModel) — e aceeași sursă pe care InitializeCommand a folosit-o
+    /// deja ca să populeze bannerul, deci nu mai trebuie dus un al doilea
+    /// obiect prin ViewModel doar pentru popup.
+    private async Task MaybeShowUpdatePopupAsync()
+    {
+        var info = UpdateChecker.Shared.AvailableUpdate;
+        if (info is null) return;
+
+        var url = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
+
+        var box = new Wpf.Ui.Controls.MessageBox
+        {
+            Title = "Actualizare disponibilă",
+            Content = "Este disponibilă o nouă versiune! Te rugăm să descarci ultimul installer " +
+                      $"și să îl instalezi peste versiunea actuală. (v{info.Version})",
+            PrimaryButtonText = url is not null ? "Descarcă" : string.Empty,
+            CloseButtonText = "Mai târziu",
+        };
+
+        var result = await box.ShowDialogAsync();
+        if (result == Wpf.Ui.Controls.MessageBoxResult.Primary && url is not null)
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
+
+        // Inchiderea popup-ului (din orice buton) ascunde si bannerul si
+        // marcheaza versiunea ca "vazuta" — exact ca pe Mac, unde popup-ul
+        // si bannerul citesc aceeasi stare (`availableUpdate`), deci
+        // inchiderea unuia le inchide pe amandoua. Fara asta, popup-ul ar
+        // reaparea la fiecare pornire cat timp userul nu apasa si "Ascunde"
+        // separat pe banner.
+        _viewModel.DismissUpdateBannerCommand.Execute(null);
     }
 
     private static void Log(string message)
