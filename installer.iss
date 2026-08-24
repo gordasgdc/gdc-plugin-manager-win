@@ -4,9 +4,14 @@
 ; Files, creeaza scurtatura in Start Menu, apare corect in "Apps & Features"
 ; cu dezinstalare curata.
 ;
-; Cum se compileaza (pe Windows, o data ai nevoie de Inno Setup Compiler
+; Cum se compileaza MANUAL (CI-ul din .github/workflows/build-windows.yml
+; face toti pasii astia automat, inclusiv obfuscarea — asta e doar pentru
+; un build local, pe Windows; o data ai nevoie de Inno Setup Compiler
 ; instalat — gratuit, https://jrsoftware.org/isdl.php):
-;   1. dotnet publish src\GDCPluginManager.Client -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish
+;   1. dotnet publish src\GDCPluginManager.Client -c Release -r win-x64 --self-contained -o publish
+;      (FARA -p:PublishSingleFile=true — vezi obfuscarea din CI, care are
+;      nevoie de GDCPluginManager.Core.dll ca fisier separat, nu impachetat
+;      in exe. Fara pasul de obfuscare, single-file merge la fel de bine.)
 ;   2. Deschide acest fisier (installer.iss) cu Inno Setup Compiler
 ;   3. Apasa "Compile" (sau F9)
 ;   4. Rezultatul apare in Output\GDCPluginManagerSetup.exe

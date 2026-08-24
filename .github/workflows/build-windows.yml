@@ -18,10 +18,12 @@ jobs:
       - name: Descarca codul din repo
         uses: actions/checkout@v4
 
-      - name: Instaleaza .NET 8 SDK
+      - name: Instaleaza .NET SDK (8.0 pt. aplicatie, 9.0 pt. unealta de obfuscare)
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: "8.0.x"
+          dotnet-version: |
+            8.0.x
+            9.0.x
 
       # PrivateCatalogAuth.cs e gitignored (contine tokenul GitHub real
       # pt. repo-ul privat gdc-plugin-manager-files) - CI il recreeaza
@@ -36,9 +38,72 @@ jobs:
           $real = $template -replace 'PASTE_TOKEN_HERE', '${{ secrets.PRIVATE_CATALOG_TOKEN }}'
           Set-Content -Path "src\GDCPluginManager.Core\Services\PrivateCatalogAuth.cs" -Value $real -NoNewline
 
-      - name: Publica exe-ul self-contained (single-file, win-x64)
+      - name: Publica exe-ul self-contained (win-x64)
+        # ATENTIE: fara -p:PublishSingleFile=true, intentionat. Obfuscarea de mai
+        # jos rescrie GDCPluginManager.Core.dll ca fisier separat DUPA publish —
+        # cu single-file, DLL-urile ar fi impachetate in interiorul exe-ului si
+        # n-ar mai exista un fisier loose de inlocuit. installer.iss oricum
+        # copiaza tot ce e in publish\ (Files: "publish\*"), deci trecerea la
+        # multi-fisier nu cere nicio modificare acolo.
         run: |
-          dotnet publish src\GDCPluginManager.Client -c Release -r win-x64 --self-contained -p:PublishSingleFile=true -o publish
+          dotnet publish src\GDCPluginManager.Client -c Release -r win-x64 --self-contained -o publish
+
+      # ─────────────────────────────────────────────────────────────────────
+      # Obfuscare (Obfuscar, https://github.com/obfuscar/obfuscar) — DOAR pe
+      # GDCPluginManager.Core.dll, unde traieste LicenseCore. NU si pe
+      # GDCPluginManager.exe (clientul WPF): un obfuscator care redenumeste
+      # tipuri legate de XAML poate rupe randarea la runtime (XamlParseException
+      # - BAML-ul refera tipuri dupa nume din x:Class), risc pe care nu-l pot
+      # verifica interactiv de pe un Mac. Core.dll nu are nicio dependinta de
+      # WPF/XAML, deci e sigur de obfuscat integral.
+      #
+      # KeepPublicApi=true (implicit din Obfuscar 2.2.0+, setat explicit mai
+      # jos oricum) pastreaza neatinse tipurile/membrii publici — GDCPluginManager.exe
+      # a fost compilat impotriva semnaturii ORIGINALE a lui Core.dll; daca
+      # obfuscarea ar redenumi ceva public, exe-ul ar crapa la incarcare
+      # (MissingMethodException), fiindca el nu e recompilat dupa obfuscare.
+      #
+      # Versiune FIXATA (3.0.0-beta.19) in loc de "latest": un tool de
+      # obfuscare care isi schimba comportamentul intre build-uri, neobservat,
+      # e exact genul de risc care merita evitat pe un build de productie.
+      - name: Instaleaza Obfuscar (obfuscare cod, doar Core.dll)
+        run: dotnet tool install --global Obfuscar.GlobalTool --version 3.0.0-beta.19
+
+      - name: Genereaza configuratia Obfuscar (cai absolute, cerute de v3)
+        shell: pwsh
+        run: |
+          $publishDir = (Resolve-Path "publish").Path
+          $outDir = Join-Path $publishDir "..\obfuscated"
+          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
+          $config = @"
+          <?xml version='1.0'?>
+          <Obfuscator>
+            <Var name="InPath" value="$publishDir" />
+            <Var name="OutPath" value="$outDir" />
+            <Var name="KeepPublicApi" value="true" />
+            <Var name="HidePrivateApi" value="true" />
+            <Var name="HideStrings" value="true" />
+            <Var name="AnalyzeXaml" value="true" />
+            <AssemblySearchPath path="$publishDir" />
+            <Module file="$publishDir\GDCPluginManager.Core.dll" />
+          </Obfuscator>
+          "@
+          Set-Content -Path obfuscar.xml -Value $config
+          Write-Host $config
+
+      - name: Obfusca GDCPluginManager.Core.dll
+        run: obfuscar.console obfuscar.xml
+
+      - name: Inlocuieste Core.dll cu versiunea obfuscata
+        shell: pwsh
+        run: |
+          $obfuscated = "obfuscated\GDCPluginManager.Core.dll"
+          if (-not (Test-Path $obfuscated)) {
+            Write-Error "Obfuscarea nu a produs $obfuscated - opresc build-ul, mai bine un build esuat vizibil decat unul care publica silentios DLL-ul neobfuscat."
+            exit 1
+          }
+          Copy-Item $obfuscated "publish\GDCPluginManager.Core.dll" -Force
+          Write-Host "Core.dll obfuscat, copiat peste versiunea din publish\"
 
       - name: Compileaza instalatorul (Inno Setup - preinstalat pe runner-ul windows-latest)
         run: |
