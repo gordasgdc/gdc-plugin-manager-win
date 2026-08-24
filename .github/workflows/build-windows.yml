@@ -105,6 +105,60 @@ jobs:
           Copy-Item $obfuscated "publish\GDCPluginManager.Core.dll" -Force
           Write-Host "Core.dll obfuscat, copiat peste versiunea din publish\"
 
+      # Smoke test: dovedeste ca API-ul PUBLIC al Core.dll obfuscat inca
+      # functioneaza EXACT ca inainte, apelat dintr-un binar separat — exact
+      # cum face GDCPluginManager.exe. "Build-ul a reusit" nu e suficient:
+      # KeepPublicApi=true e o SETARE, nu o garantie — asta chiar RULEAZA
+      # DLL-ul obfuscat si verifica un rezultat cunoscut dinainte (calculat
+      # independent, in Python, pe Mac — vezi valoarea asteptata mai jos).
+      # Daca obfuscarea a rupt ceva, build-ul pica AICI, nu la un utilizator.
+      - name: Smoke test — Core.dll obfuscat raspunde corect
+        shell: pwsh
+        run: |
+          $coreDll = (Resolve-Path "publish\GDCPluginManager.Core.dll").Path
+          New-Item -ItemType Directory -Force -Path smoketest | Out-Null
+
+          @"
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net8.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+            </PropertyGroup>
+            <ItemGroup>
+              <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />
+              <Reference Include="GDCPluginManager.Core">
+                <HintPath>$coreDll</HintPath>
+              </Reference>
+            </ItemGroup>
+          </Project>
+          "@ | Set-Content smoketest\SmokeTest.csproj
+
+          @"
+          using GDCPluginManager.Core.Services;
+          using System;
+          using System.Linq;
+
+          // SHA-512("test-product-smoketest")[:4], calculat independent
+          // (Python, hashlib) — NU regenerat aici, ca sa nu testam
+          // "functia isi confirma singura rezultatul".
+          var expected = new byte[] { 0x98, 0xfe, 0xe8, 0xc8 };
+          var actual = LicenseCore.ProductHash("test-product-smoketest");
+          if (!actual.SequenceEqual(expected))
+              throw new Exception(`$"ProductHash gresit: asteptat {Convert.ToHexString(expected)}, primit {Convert.ToHexString(actual)}");
+
+          // Round-trip Base32 (RFC 4648) — functie separata, alt fragment de cod.
+          var original = new byte[] { 1, 2, 3, 4, 5, 250 };
+          var encoded = LicenseCore.Base32Encode(original);
+          var decoded = LicenseCore.Base32Decode(encoded);
+          if (decoded is null || !decoded.SequenceEqual(original))
+              throw new Exception("Base32 round-trip esuat dupa obfuscare");
+
+          Console.WriteLine("Smoke test OK: Core.dll obfuscat raspunde corect la API-ul public.");
+          "@ | Set-Content smoketest\Program.cs
+
+          dotnet run --project smoketest -c Release
+
       - name: Compileaza instalatorul (Inno Setup - preinstalat pe runner-ul windows-latest)
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer.iss
