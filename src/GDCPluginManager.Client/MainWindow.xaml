@@ -27,6 +27,7 @@
              fara acest converter, NICIO coperta nu se vede pe Windows,
              oricare ar fi categoria. Vezi UriToImageSourceConverter.cs. -->
         <conv:UriToImageSourceConverter x:Key="UriToImageSource" />
+        <conv:PriceFilterWeightConverter x:Key="PriceFilterWeight" />
 
         <!-- =====================================================================
              Coperta de card (imagine de prezentare).
@@ -102,8 +103,15 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="{Binding PriceLabel}" FontWeight="SemiBold"
-                                    VerticalAlignment="Center" />
+                        <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Border Background="{Binding BadgeBrush}" CornerRadius="9" Padding="7,2"
+                                    ToolTip="{Binding BadgeTooltip}">
+                                <TextBlock Text="{Binding BadgeText}" FontSize="9" FontWeight="Bold" Foreground="White" />
+                            </Border>
+                            <TextBlock Text="{Binding PriceLabel}" FontWeight="SemiBold" Margin="8,0,0,0"
+                                       VerticalAlignment="Center"
+                                       Visibility="{Binding ShowPrice, Converter={StaticResource BoolToVisibility}}" />
+                        </StackPanel>
                         <TextBlock Grid.Column="1" Text="{Binding VersionLabel}" Style="{StaticResource MutedTextStyle}"
                                     VerticalAlignment="Center" />
                     </Grid>
@@ -477,6 +485,10 @@
             <!-- Bara de sus: cautare + refresh — doar pe pagina de catalog. -->
             <Grid Grid.Row="0" Margin="20,20,20,0"
                   Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
@@ -500,6 +512,20 @@
                         <TextBlock Text="Reincarca" />
                     </StackPanel>
                 </Button>
+
+                <!-- Filtru rapid Toate/Gratuite/Premium — cerut explicit
+                     2026-08-24, ca cine vrea doar uneltele gratuite sa le
+                     gaseasca instant. Randat SUB bara de cautare (nu ca rand
+                     nou in grid-ul parinte, ca sa nu deranjez numerotarea
+                     Grid.Row existenta mai jos, folosita si de RowSpan). -->
+                <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
+                    <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.All}"
+                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
+                    <Button Content="Gratuite" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Free}"
+                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Free}" />
+                    <Button Content="Premium" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Paid}"
+                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Paid}" />
+                </StackPanel>
             </Grid>
 
             <!-- Banner update / eroare -->

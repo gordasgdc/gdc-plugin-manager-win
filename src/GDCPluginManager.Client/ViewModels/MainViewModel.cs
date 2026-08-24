@@ -15,6 +15,11 @@ namespace GDCPluginManager.Client.ViewModels;
 /// Un filtru din bara laterala — "Toate" (Type == null) plus una pe fiecare PluginType.
 public sealed record CategoryFilter(string Label, PluginType? Type, SymbolRegular Symbol);
 
+/// Filtru rapid Toate/Gratuite/Premium — cerut explicit 2026-08-24, ca
+/// cine vrea doar uneltele gratuite sa le gaseasca instant. Port 1:1 al
+/// PriceFilter din CatalogGrid (ContentView.swift, Mac).
+public enum PriceFilter { All, Free, Paid }
+
 /// Ce se afiseaza in panoul principal — port 1:1 al SidebarSection din
 /// ContentView.swift (fara .help, neportat inca).
 public enum SidebarPage
@@ -65,6 +70,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private string _searchText = string.Empty;
+
+    [ObservableProperty]
+    private PriceFilter _priceFilter = PriceFilter.All;
 
     [ObservableProperty]
     private bool _isLoading;
@@ -130,11 +138,17 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     partial void OnSearchTextChanged(string value) => ProductsView.Refresh();
+    partial void OnPriceFilterChanged(PriceFilter value) => ProductsView.Refresh();
+
+    [RelayCommand]
+    private void SetPriceFilter(PriceFilter filter) => PriceFilter = filter;
 
     private bool FilterProduct(object obj)
     {
         if (obj is not ProductViewModel p) return false;
         if (SelectedCategory.Type is { } type && p.Item.Type != type) return false;
+        if (PriceFilter == PriceFilter.Free && !p.Item.IsFree) return false;
+        if (PriceFilter == PriceFilter.Paid && p.Item.IsFree) return false;
         if (string.IsNullOrWhiteSpace(SearchText)) return true;
         return p.Name.Contains(SearchText, StringComparison.OrdinalIgnoreCase)
                || p.Description.Contains(SearchText, StringComparison.OrdinalIgnoreCase);

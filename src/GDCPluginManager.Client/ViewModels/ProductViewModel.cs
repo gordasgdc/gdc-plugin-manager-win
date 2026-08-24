@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
@@ -45,6 +46,23 @@ public sealed partial class ProductViewModel : ObservableObject
     public string TypeLabel => Item.Type.Label();
     public string VersionLabel => $"v{Item.Version}";
     public string PriceLabel => Item.IsFree ? (Item.IsTrial ? "Proba" : "Gratuit") : Item.PriceDisplay;
+
+    /// Badge GRATUIT (verde) / PROBĂ (albastru) / LICENȚĂ (portocaliu) —
+    /// cerut explicit 2026-08-24, ca sa nu creeze impresia de "reclama
+    /// agresiva": eticheta e clara si scurta, mesajul complet de
+    /// incredere apare doar la hover (vezi BadgeTooltip). Port 1:1 al
+    /// BadgePill din ContentView.swift (Mac).
+    public string BadgeText => Item.IsFree ? (Item.IsTrial ? "PROBĂ" : "GRATUIT") : "LICENȚĂ";
+    public Brush BadgeBrush => Item.IsFree
+        ? (Item.IsTrial ? Brushes.DodgerBlue : Brushes.MediumSeaGreen)
+        : Brushes.DarkOrange;
+    public string? BadgeTooltip => Item.IsFree
+        ? null
+        : "Dezvoltat și susținut de comunitate. Licență Lifetime la preț promoțional de lansare.";
+    /// Pretul numeric se arata separat de badge DOAR pentru produsele
+    /// platite — la cele gratuite badge-ul "GRATUIT"/"PROBĂ" e suficient,
+    /// un pret de "0,00 €" alaturi ar fi confuz.
+    public bool ShowPrice => !Item.IsFree;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Item.YoutubeURL);
 
     public bool IsInstalled => InstallManager.Shared.IsInstalled(Item);
