@@ -451,14 +451,14 @@
                         <TextBlock Text="Aplicatii" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
-                <!-- Aplicatia companion de Android (APK). Datele vin din
-                     android.json prin AndroidReleaseService. -->
+                <!-- Aplicatia mobila companion (PWA, gordas.dev/app.html —
+                     fost APK/TWA, retras 2026-08-24). -->
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
                              Command="{Binding ShowAndroidCommand}"
                              IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Android, Mode=OneWay}">
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="PhoneDesktop24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Android" VerticalAlignment="Center" />
+                        <TextBlock Text="Aplicatie mobila" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
 
@@ -664,55 +664,47 @@
                 </StackPanel>
             </ScrollViewer>
 
-            <!-- Pagina Android — anunta aplicatia companion (APK) si da linkul.
-                 Sursa datelor: android.json, prin AndroidReleaseService (Core).
-                 Cod QR (2026-08-24): AndroidQrImage, generat de MainViewModel
-                 cu QRCoder (vezi QrCodeImageGenerator.cs) — port 1:1 al
-                 varintei Mac (CIFilter.qrCodeGenerator). Fundal alb obligatoriu:
-                 QR-ul are nevoie de contrast ca sa fie citit, la fel ca pe Mac. -->
+            <!-- Pagina Aplicatie mobila — fost "Android"/APK, RETRAS 2026-08-24
+                 (cerut explicit: fara certificate, fara erori de instalare,
+                 fara APK). Acum e direct PWA-ul gordas.dev/app.html, deschis
+                 in browser — merge pe Android SI iPhone. Link fix
+                 (MainViewModel.MobileAppUrl), fara nicio cerere de retea.
+                 Cod QR: MobileAppQrImage, generat o singura data cu QRCoder
+                 (vezi QrCodeImageGenerator.cs). Fundal alb obligatoriu: QR-ul
+                 are nevoie de contrast ca sa fie citit, la fel ca pe Mac. -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
                 <StackPanel MaxWidth="620" HorizontalAlignment="Left">
-                    <TextBlock Text="Aplicatia de Android" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
+                    <TextBlock Text="Aplicatia mobila" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"
-                               Text="Ai catalogul GDC si pe telefon: produse, cursuri, evenimente si magazine partenere, cu functionare offline. Aplicatia se instaleaza direct din fisier APK, nu din Play Store." />
+                               Text="Ai catalogul GDC si pe telefon: produse, cursuri, evenimente si magazine partenere, cu functionare offline. Scaneaza codul de mai jos, direct din browser, fara instalare — merge pe Android si pe iPhone." />
 
-                    <!-- Detaliile versiunii; ascunse cat timp android.json nu e citit. -->
-                    <StackPanel Visibility="{Binding AndroidRelease, Converter={StaticResource NullToVisibility}}">
-                        <Border Background="White" CornerRadius="10" Padding="10" Width="188" Height="188"
-                                HorizontalAlignment="Left" Margin="0,0,0,14"
-                                Visibility="{Binding AndroidQrImage, Converter={StaticResource NullToVisibility}}">
-                            <Image Source="{Binding AndroidQrImage}" Width="168" Height="168"
-                                   RenderOptions.BitmapScalingMode="NearestNeighbor" />
-                        </Border>
-                        <TextBlock Style="{StaticResource MutedTextStyle}" Margin="0,0,0,3">
-                            <Run Text="Versiune" /><Run Text=" " /><Run Text="{Binding AndroidRelease.Version, Mode=OneWay}" FontFamily="Consolas" />
-                        </TextBlock>
-                        <TextBlock Style="{StaticResource MutedTextStyle}" Margin="0,0,0,3"
-                                   Text="{Binding AndroidRelease.MinAndroid, Mode=OneWay, StringFormat='Necesita Android {0}+'}" />
-                        <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,14"
-                                   Text="{Binding AndroidRelease.Changes, Mode=OneWay}" />
+                    <Border Background="White" CornerRadius="10" Padding="10" Width="188" Height="188"
+                            HorizontalAlignment="Left" Margin="0,0,0,14"
+                            Visibility="{Binding MobileAppQrImage, Converter={StaticResource NullToVisibility}}">
+                        <Image Source="{Binding MobileAppQrImage}" Width="168" Height="168"
+                               RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                    </Border>
+                    <TextBlock Style="{StaticResource MutedTextStyle}" Margin="0,0,0,14" FontFamily="Consolas"
+                               Text="gordas.dev/app.html" />
 
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
-                            <ui:Button Content="Deschide pagina de descarcare" Appearance="Primary"
-                                       Command="{Binding OpenAndroidPageCommand}" Margin="0,0,8,0" />
-                            <ui:Button Content="Copiaza linkul APK" Command="{Binding CopyAndroidLinkCommand}" />
-                        </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                        <ui:Button Content="Deschide" Appearance="Primary"
+                                   Command="{Binding OpenAndroidPageCommand}" Margin="0,0,8,0" />
+                        <ui:Button Content="Copiaza linkul" Command="{Binding CopyAndroidLinkCommand}" />
                     </StackPanel>
 
-                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,14"
-                               Text="Nu am putut afla ultima versiune de Android. Verifica conexiunea si reincearca."
-                               Visibility="{Binding AndroidFailed, Converter={StaticResource BoolToVisibility}}" />
-
-                    <TextBlock Text="Cum se instaleaza" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,0,0,8" />
+                    <TextBlock Text="Adauga pe ecranul principal (optional)" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,0,0,8" />
+                    <TextBlock Text="Android (Chrome)" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
-                               Text="1. Copiaza linkul de mai sus si deschide-l in Chrome pe telefon." />
+                               Text="1. Deschide linkul in Chrome, apoi apasa meniul (⋮) din dreapta sus." />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,10"
+                               Text="2. Alege &quot;Adauga pe ecranul principal&quot; — primesti un icon, ca o aplicatie instalata." />
+                    <TextBlock Text="iPhone (Safari)" FontWeight="SemiBold" Margin="0,0,0,4" />
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
-                               Text="2. Descarca fisierul .apk — daca apare un avertisment, alege &quot;Descarca oricum&quot;." />
+                               Text="1. Deschide linkul in Safari, apoi apasa butonul de partajare (patratul cu sageata in sus)." />
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
-                               Text="3. Deschide fisierul descarcat. Android cere o permisiune: activeaza &quot;Permite din aceasta sursa&quot;." />
-                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
-                               Text="4. Apasa &quot;Instaleaza&quot;. Aplicatia nu vine din Play Store, deci pasii de mai sus sunt normali." />
+                               Text="2. Alege &quot;Adauga pe ecranul principal&quot; din lista." />
                 </StackPanel>
             </ScrollViewer>
 

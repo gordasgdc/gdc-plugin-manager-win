@@ -93,27 +93,17 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string? _updateDownloadUrl;
 
-    // Aplicatia companion de Android (APK). Datele vin din android.json prin
-    // AndroidReleaseService — vezi nota de arhitectura de acolo despre de ce nu
-    // folosim "releases/latest/download/...".
-    [ObservableProperty]
-    private AndroidRelease? _androidRelease;
+    // Aplicatia mobila companion (fost APK/TWA, RETRAS 2026-08-24 — cerut
+    // explicit de Cristi: "scapam complet de problemele cu certificatele,
+    // erorile de instalare pe Android si fisierele APK"). Acum e direct
+    // PWA-ul gordas.dev/app.html, deschis in browser — merge pe Android SI
+    // iPhone, fara instalare, fara avertisment de certificat. Link fix, nu
+    // mai exista android.json/AndroidReleaseService/versiune de verificat.
+    public const string MobileAppUrl = "https://gordas.dev/app.html";
 
-    [ObservableProperty]
-    private bool _androidFailed;
-
-    /// Cod QR spre link-ul direct de .apk — regenerat automat de fiecare
-    /// data cand AndroidRelease se schimba (vezi OnAndroidReleaseChanged
-    /// mai jos, generat de [ObservableProperty] pentru AndroidRelease).
-    /// Nu e el insusi [ObservableProperty] pentru ca nu are un camp propriu
-    /// de setat din afara — e strict derivat din AndroidRelease.
-    [ObservableProperty]
-    private System.Windows.Media.Imaging.BitmapImage? _androidQrImage;
-
-    partial void OnAndroidReleaseChanged(AndroidRelease? value)
-    {
-        AndroidQrImage = value is null ? null : QrCodeImageGenerator.Generate(value.ApkUrl);
-    }
+    /// Cod QR spre PWA — generat o singura data (link fix, nu se schimba),
+    /// nu mai depinde de nicio cerere de retea.
+    public System.Windows.Media.Imaging.BitmapImage? MobileAppQrImage { get; } = QrCodeImageGenerator.Generate(MobileAppUrl);
 
     public string MachineIdDisplay => MachineID.Display;
 
@@ -179,12 +169,6 @@ public sealed partial class MainViewModel : ObservableObject
                                 (string.IsNullOrWhiteSpace(info.Changes) ? "" : $" — {info.Changes}");
             UpdateDownloadUrl = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
         }
-
-        // Nu blocam pornirea daca android.json nu e disponibil: panoul isi arata
-        // singur mesajul de eroare, restul aplicatiei merge normal.
-        await AndroidReleaseService.Shared.LoadAsync();
-        AndroidRelease = AndroidReleaseService.Shared.Release;
-        AndroidFailed = AndroidReleaseService.Shared.Failed;
     }
 
     [RelayCommand]
@@ -224,23 +208,19 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ShowAndroid() => CurrentPage = SidebarPage.Android;
 
-    /// Deschide pagina de release a APK-ului in browserul implicit.
+    /// Deschide PWA-ul (gordas.dev/app.html) in browserul implicit.
     [RelayCommand]
     private void OpenAndroidPage()
     {
-        var url = AndroidRelease?.ReleasePage ?? AndroidRelease?.ApkUrl;
-        if (string.IsNullOrWhiteSpace(url)) return;
         // UseShellExecute e obligatoriu pe .NET pentru a deschide un URL.
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        Process.Start(new ProcessStartInfo(MobileAppUrl) { UseShellExecute = true });
     }
 
-    /// Copiaza linkul .apk, ca sa poata fi trimis pe telefon prin orice canal.
+    /// Copiaza linkul PWA-ului, ca sa poata fi trimis pe telefon prin orice canal.
     [RelayCommand]
     private void CopyAndroidLink()
     {
-        var url = AndroidRelease?.ApkUrl;
-        if (string.IsNullOrWhiteSpace(url)) return;
-        try { Clipboard.SetText(url); }
+        try { Clipboard.SetText(MobileAppUrl); }
         catch { /* clipboard-ul poate fi blocat de alt proces — nu e fatal */ }
     }
 
