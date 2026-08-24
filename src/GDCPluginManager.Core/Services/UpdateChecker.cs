@@ -87,16 +87,25 @@ public sealed class UpdateChecker : INotifyPropertyChanged
             return;
         }
 
+        // PITFALL FIXED 2026-08-24: `Mandatory` exista in JSON de la
+        // inceput dar nu era citit nicaieri — port 1:1 al fix-ului din
+        // UpdateChecker.swift: un update mandatory ignora inchiderea
+        // anterioara si reapare la fiecare CheckAsync() (lansare/refresh)
+        // cat timp versiunea instalata ramane veche.
         var dismissed = ReadDismissedVersion();
         Log.Write($"dismissed={dismissed ?? "(none)"}");
-        AvailableUpdate = dismissed == info.Version ? null : info;
+        var alreadyDismissed = dismissed == info.Version && info.Mandatory != true;
+        AvailableUpdate = alreadyDismissed ? null : info;
         Raise(nameof(AvailableUpdate));
     }
 
     public void Dismiss()
     {
         if (AvailableUpdate is null) return;
-        WriteDismissedVersion(AvailableUpdate.Version);
+        if (AvailableUpdate.Mandatory != true)
+        {
+            WriteDismissedVersion(AvailableUpdate.Version);
+        }
         AvailableUpdate = null;
         Raise(nameof(AvailableUpdate));
     }

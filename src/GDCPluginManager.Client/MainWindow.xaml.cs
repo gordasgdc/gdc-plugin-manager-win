@@ -70,13 +70,16 @@ public partial class MainWindow : Window
 
         var url = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
 
+        // Update marcat mandatory (docs/update.json): fara "Mai tarziu" —
+        // vezi UpdateChecker.Dismiss(), nu se mai persista inchiderea
+        // pentru mandatory, deci butonul ar fi oricum inutil aici.
         var box = new Wpf.Ui.Controls.MessageBox
         {
             Title = "Actualizare disponibilă",
             Content = "Este disponibilă o nouă versiune! Te rugăm să descarci ultimul installer " +
                       $"și să îl instalezi peste versiunea actuală. (v{info.Version})",
             PrimaryButtonText = url is not null ? "Descarcă" : string.Empty,
-            CloseButtonText = "Mai târziu",
+            CloseButtonText = info.Mandatory == true ? string.Empty : "Mai târziu",
         };
 
         var result = await box.ShowDialogAsync();
