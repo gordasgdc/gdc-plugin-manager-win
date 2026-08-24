@@ -27,6 +27,12 @@ public sealed partial class ProductViewModel : ObservableObject
     [ObservableProperty]
     private string? _statusMessage;
 
+    /// Esec de instalare pentru o resursa PLATITA (vezi
+    /// PaidResourceInstallException / InstallManager.cs) — arata butonul de
+    /// contact WhatsApp in loc de fisiere/instructiuni de instalare manuala.
+    [ObservableProperty]
+    private bool _showPaidResourceSupportError;
+
     public ProductViewModel(PluginItem item)
     {
         Item = item;
@@ -90,6 +96,14 @@ public sealed partial class ProductViewModel : ObservableObject
     }
 
     [RelayCommand]
+    private void ContactSupport()
+    {
+        var text = $"Salut! A aparut o eroare la instalarea {Item.Name} — ma poti ajuta sa o instalez manual? ID calculator: {MachineID.Display}";
+        var url = $"https://wa.me/34643109970?text={Uri.EscapeDataString(text)}";
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+
+    [RelayCommand]
     private void OpenTutorial()
     {
         if (!string.IsNullOrWhiteSpace(Item.YoutubeURL))
@@ -105,6 +119,7 @@ public sealed partial class ProductViewModel : ObservableObject
 
         IsBusy = true;
         StatusMessage = null;
+        ShowPaidResourceSupportError = false;
         try
         {
             var outcome = await InstallManager.Shared.InstallAsync(Item);
@@ -116,6 +131,14 @@ public sealed partial class ProductViewModel : ObservableObject
                     $"Fisierele sunt verificate in {outcome.StagingFolder} — deschide Gallery-ul din Resolve si importa-le manual (album nou, PowerGrade -> Import).",
                 _ => null,
             };
+        }
+        catch (PaidResourceInstallException ex)
+        {
+            // Mesaj generic, fara cale de fisier/instructiuni — vezi
+            // InstallManager.cs. Butonul de contact apare separat (XAML,
+            // legat de ShowPaidResourceSupportError).
+            StatusMessage = ex.Message;
+            ShowPaidResourceSupportError = true;
         }
         catch (Exception ex)
         {
@@ -133,6 +156,7 @@ public sealed partial class ProductViewModel : ObservableObject
     {
         IsBusy = true;
         StatusMessage = null;
+        ShowPaidResourceSupportError = false;
         try
         {
             var outcome = InstallManager.Shared.Remove(Item);

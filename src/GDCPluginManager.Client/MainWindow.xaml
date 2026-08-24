@@ -122,6 +122,13 @@
                     <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
                                Margin="0,6,0,0" Visibility="{Binding StatusMessage, Converter={StaticResource NullToVisibility}}" />
 
+                    <!-- Buton de contact WhatsApp, doar cand instalarea unei resurse PLATITE
+                         a esuat (vezi PaidResourceInstallException / ProductViewModel.cs) —
+                         port 1:1 al showPaidResourceSupportError din PluginCard (ContentView.swift). -->
+                    <Button Content="Contacteaza suportul" Margin="0,6,0,0" HorizontalAlignment="Left"
+                            Command="{Binding ContactSupportCommand}"
+                            Visibility="{Binding ShowPaidResourceSupportError, Converter={StaticResource BoolToVisibility}}" />
+
                     <!-- Zona de actiune — port 1:1 al actionButton din PluginCard (ContentView.swift):
                          Cumpara (neblocat) / Actualizeaza+Elimina / Instalat+Elimina / Instaleaza. -->
                     <Grid Margin="0,12,0,0">

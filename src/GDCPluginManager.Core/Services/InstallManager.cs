@@ -35,6 +35,16 @@ public sealed class InstallException(string message) : Exception(message)
     public static InstallException WriteFailed(string detail) => new($"Couldn't write the file: {detail}");
 }
 
+/// SECURITATE (raportat de Cristi 2026-08-24, port 1:1 al InstallError.
+/// paidResourceInstallFailed din InstallManager.swift): eroare dedicata,
+/// aruncata DOAR cand importul automat in Gallery esueaza pentru un
+/// PowerGrade PLATIT — vezi comentariul din InstallAsync mai jos. Tip
+/// separat (nu doar InstallException cu alt mesaj) ca ProductViewModel sa
+/// poata face catch specific si sa arate butonul de contact WhatsApp, nu
+/// doar textul de eroare.
+public sealed class PaidResourceInstallException() : Exception(
+    "A aparut o eroare la incarcarea resursei platite. Te rugam sa contactezi suportul pentru asistenta.");
+
 /// Port 1:1 al InstallManager.swift — descarca un plugin, il verifica, si il
 /// copiaza in folderul DaVinci Resolve corespunzator tipului sau (vezi
 /// PluginTypeExtensions.InstallDirectory). Incearca intai o scriere directa —
@@ -166,11 +176,36 @@ public sealed class InstallManager : INotifyPropertyChanged
             if (item.Type != PluginType.PowerGrade) return InstallOutcome.Installed;
 
             var result = PowerGradeImporter.ImportIntoGallery(item.Name, writtenPaths, destinationDir);
-            return result.Kind switch
+            if (result.Kind == PowerGradeImporter.ImportResultKind.ImportedToGallery)
             {
-                PowerGradeImporter.ImportResultKind.ImportedToGallery => InstallOutcome.ToGallery(result.AlbumName!),
-                _ => InstallOutcome.NeedsManualStep(result.StagingFolder ?? destinationDir),
-            };
+                return InstallOutcome.ToGallery(result.AlbumName!);
+            }
+
+            if (!item.IsFree)
+            {
+                // SECURITATE: pentru un produs GRATUIT, "staged only" e
+                // inofensiv. Pentru unul PLATIT, fisierul .drx verificat
+                // ajungea pe disc chiar si cand importul automat esua —
+                // exact ce comentariul din PowerGradeImporter.cs ("EXCLUSIV
+                // prin Scripting API") voia sa evite: un client putea
+                // provoca intentionat esecul (nu deschide Resolve, sau
+                // Resolve Free) ca sa obtina fisierul brut si sa-l
+                // distribuie neautorizat. Fix: stergem tot ce am scris (nu
+                // ramane NIMIC recuperabil pe disc), dezinstalam din
+                // starea locala, si aruncam o exceptie dedicata — fara
+                // cale de fisier sau instructiuni de instalare manuala
+                // (ProductViewModel.cs arata in schimb butonul de contact
+                // WhatsApp).
+                var stagingFolder = result.StagingFolder ?? destinationDir;
+                try { Directory.Delete(stagingFolder, recursive: true); } catch { /* best-effort cleanup */ }
+                _installedVersions.Remove(item.Id);
+                SaveState();
+                Raise(nameof(InstalledVersions));
+                DiagnosticLog.Write("InstallManager", $"PowerGrade platit '{item.Id}': import Gallery esuat -> stergere completa (securitate), nu stagedOnly.");
+                throw new PaidResourceInstallException();
+            }
+
+            return InstallOutcome.NeedsManualStep(result.StagingFolder ?? destinationDir);
         }
         catch (Exception ex)
         {
