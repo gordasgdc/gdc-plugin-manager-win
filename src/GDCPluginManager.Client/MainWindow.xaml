@@ -659,9 +659,10 @@
 
             <!-- Pagina Android — anunta aplicatia companion (APK) si da linkul.
                  Sursa datelor: android.json, prin AndroidReleaseService (Core).
-                 Spre deosebire de varianta de pe Mac, aici NU desenam cod QR:
-                 WPF nu are un generator inclus si nu merita o dependinta noua
-                 doar pentru asta — linkul si butonul de copiere acopera nevoia. -->
+                 Cod QR (2026-08-24): AndroidQrImage, generat de MainViewModel
+                 cu QRCoder (vezi QrCodeImageGenerator.cs) — port 1:1 al
+                 varintei Mac (CIFilter.qrCodeGenerator). Fundal alb obligatoriu:
+                 QR-ul are nevoie de contrast ca sa fie citit, la fel ca pe Mac. -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
                           Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
                 <StackPanel MaxWidth="620" HorizontalAlignment="Left">
@@ -671,6 +672,12 @@
 
                     <!-- Detaliile versiunii; ascunse cat timp android.json nu e citit. -->
                     <StackPanel Visibility="{Binding AndroidRelease, Converter={StaticResource NullToVisibility}}">
+                        <Border Background="White" CornerRadius="10" Padding="10" Width="188" Height="188"
+                                HorizontalAlignment="Left" Margin="0,0,0,14"
+                                Visibility="{Binding AndroidQrImage, Converter={StaticResource NullToVisibility}}">
+                            <Image Source="{Binding AndroidQrImage}" Width="168" Height="168"
+                                   RenderOptions.BitmapScalingMode="NearestNeighbor" />
+                        </Border>
                         <TextBlock Style="{StaticResource MutedTextStyle}" Margin="0,0,0,3">
                             <Run Text="Versiune" /><Run Text=" " /><Run Text="{Binding AndroidRelease.Version, Mode=OneWay}" FontFamily="Consolas" />
                         </TextBlock>

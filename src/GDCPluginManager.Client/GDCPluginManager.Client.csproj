@@ -17,7 +17,7 @@
     <!-- Acelasi numar ca versiunea Mac (docs/update.json foloseste un singur
          camp "version" comun ambelor platforme) — UpdateChecker.CurrentVersion
          citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
-    <Version>1.2.11</Version>
+    <Version>1.2.12</Version>
     <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
          AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
@@ -28,6 +28,12 @@
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
     <!-- Iconite vectoriale Fluent (Segoe Fluent Icons look, nativ pe Windows 11) + FluentWindow. -->
     <PackageReference Include="WPF-UI" Version="3.0.5" />
+    <!-- Cod QR pentru pagina Android (link direct catre .apk) — pana acum
+         lipsea intentionat pe Windows (WPF n-are generator inclus), dar
+         QRCoder e mic, MIT, fara System.Drawing.Common (PngByteQRCode
+         produce direct bytes PNG, pur managed) — nicio dependinta grea
+         pentru un cod QR local, la fel ca CIFilter.qrCodeGenerator() pe Mac. -->
+    <PackageReference Include="QRCoder" Version="1.6.0" />
   </ItemGroup>
 
   <ItemGroup>

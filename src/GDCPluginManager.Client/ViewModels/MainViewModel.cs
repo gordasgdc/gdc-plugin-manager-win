@@ -2,10 +2,10 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;   // Process.Start — deschide linkul APK in browser
 using System.Windows;       // Clipboard — copiaza linkul APK
-using System.Diagnostics;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using GDCPluginManager.Client.Services;
 using GDCPluginManager.Core.Models;
 using GDCPluginManager.Core.Services;
 using Wpf.Ui.Controls;
@@ -101,6 +101,19 @@ public sealed partial class MainViewModel : ObservableObject
 
     [ObservableProperty]
     private bool _androidFailed;
+
+    /// Cod QR spre link-ul direct de .apk — regenerat automat de fiecare
+    /// data cand AndroidRelease se schimba (vezi OnAndroidReleaseChanged
+    /// mai jos, generat de [ObservableProperty] pentru AndroidRelease).
+    /// Nu e el insusi [ObservableProperty] pentru ca nu are un camp propriu
+    /// de setat din afara — e strict derivat din AndroidRelease.
+    [ObservableProperty]
+    private System.Windows.Media.Imaging.BitmapImage? _androidQrImage;
+
+    partial void OnAndroidReleaseChanged(AndroidRelease? value)
+    {
+        AndroidQrImage = value is null ? null : QrCodeImageGenerator.Generate(value.ApkUrl);
+    }
 
     public string MachineIdDisplay => MachineID.Display;
 
