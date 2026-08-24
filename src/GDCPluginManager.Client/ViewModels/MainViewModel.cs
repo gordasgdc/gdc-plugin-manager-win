@@ -1,5 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;   // Process.Start — deschide linkul APK in browser
+using System.Windows;       // Clipboard — copiaza linkul APK
 using System.Diagnostics;
 using System.Windows.Data;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -23,6 +25,7 @@ public enum SidebarPage
     Events,
     PartnerStores,
     Apps,
+    Android,
     License,
 }
 
@@ -82,6 +85,15 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string? _updateDownloadUrl;
 
+    // Aplicatia companion de Android (APK). Datele vin din android.json prin
+    // AndroidReleaseService — vezi nota de arhitectura de acolo despre de ce nu
+    // folosim "releases/latest/download/...".
+    [ObservableProperty]
+    private AndroidRelease? _androidRelease;
+
+    [ObservableProperty]
+    private bool _androidFailed;
+
     public string MachineIdDisplay => MachineID.Display;
 
     public MainViewModel()
@@ -140,6 +152,12 @@ public sealed partial class MainViewModel : ObservableObject
                                 (string.IsNullOrWhiteSpace(info.Changes) ? "" : $" — {info.Changes}");
             UpdateDownloadUrl = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
         }
+
+        // Nu blocam pornirea daca android.json nu e disponibil: panoul isi arata
+        // singur mesajul de eroare, restul aplicatiei merge normal.
+        await AndroidReleaseService.Shared.LoadAsync();
+        AndroidRelease = AndroidReleaseService.Shared.Release;
+        AndroidFailed = AndroidReleaseService.Shared.Failed;
     }
 
     [RelayCommand]
@@ -175,6 +193,29 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowApps() => CurrentPage = SidebarPage.Apps;
+
+    [RelayCommand]
+    private void ShowAndroid() => CurrentPage = SidebarPage.Android;
+
+    /// Deschide pagina de release a APK-ului in browserul implicit.
+    [RelayCommand]
+    private void OpenAndroidPage()
+    {
+        var url = AndroidRelease?.ReleasePage ?? AndroidRelease?.ApkUrl;
+        if (string.IsNullOrWhiteSpace(url)) return;
+        // UseShellExecute e obligatoriu pe .NET pentru a deschide un URL.
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+    }
+
+    /// Copiaza linkul .apk, ca sa poata fi trimis pe telefon prin orice canal.
+    [RelayCommand]
+    private void CopyAndroidLink()
+    {
+        var url = AndroidRelease?.ApkUrl;
+        if (string.IsNullOrWhiteSpace(url)) return;
+        try { Clipboard.SetText(url); }
+        catch { /* clipboard-ul poate fi blocat de alt proces — nu e fatal */ }
+    }
 
     [RelayCommand]
     private void ShowLicense() => CurrentPage = SidebarPage.License;

@@ -419,6 +419,16 @@
                         <TextBlock Text="Aplicatii" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
+                <!-- Aplicatia companion de Android (APK). Datele vin din
+                     android.json prin AndroidReleaseService. -->
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowAndroidCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Android, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="PhoneDesktop24" FontSize="16" Margin="0,0,10,0" />
+                        <TextBlock Text="Android" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
 
                 <Separator Margin="16,16" />
 
@@ -601,6 +611,51 @@
                             </ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>
                     </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Pagina Android — anunta aplicatia companion (APK) si da linkul.
+                 Sursa datelor: android.json, prin AndroidReleaseService (Core).
+                 Spre deosebire de varianta de pe Mac, aici NU desenam cod QR:
+                 WPF nu are un generator inclus si nu merita o dependinta noua
+                 doar pentru asta — linkul si butonul de copiere acopera nevoia. -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
+                <StackPanel MaxWidth="620" HorizontalAlignment="Left">
+                    <TextBlock Text="Aplicatia de Android" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"
+                               Text="Ai catalogul GDC si pe telefon: produse, cursuri, evenimente si magazine partenere, cu functionare offline. Aplicatia se instaleaza direct din fisier APK, nu din Play Store." />
+
+                    <!-- Detaliile versiunii; ascunse cat timp android.json nu e citit. -->
+                    <StackPanel Visibility="{Binding AndroidRelease, Converter={StaticResource NullToVisibility}}">
+                        <TextBlock Style="{StaticResource MutedTextStyle}" Margin="0,0,0,3">
+                            <Run Text="Versiune" /><Run Text=" " /><Run Text="{Binding AndroidRelease.Version, Mode=OneWay}" FontFamily="Consolas" />
+                        </TextBlock>
+                        <TextBlock Style="{StaticResource MutedTextStyle}" Margin="0,0,0,3"
+                                   Text="{Binding AndroidRelease.MinAndroid, Mode=OneWay, StringFormat='Necesita Android {0}+'}" />
+                        <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,14"
+                                   Text="{Binding AndroidRelease.Changes, Mode=OneWay}" />
+
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,18">
+                            <ui:Button Content="Deschide pagina de descarcare" Appearance="Primary"
+                                       Command="{Binding OpenAndroidPageCommand}" Margin="0,0,8,0" />
+                            <ui:Button Content="Copiaza linkul APK" Command="{Binding CopyAndroidLinkCommand}" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,14"
+                               Text="Nu am putut afla ultima versiune de Android. Verifica conexiunea si reincearca."
+                               Visibility="{Binding AndroidFailed, Converter={StaticResource BoolToVisibility}}" />
+
+                    <TextBlock Text="Cum se instaleaza" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,0,0,8" />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
+                               Text="1. Copiaza linkul de mai sus si deschide-l in Chrome pe telefon." />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
+                               Text="2. Descarca fisierul .apk — daca apare un avertisment, alege &quot;Descarca oricum&quot;." />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
+                               Text="3. Deschide fisierul descarcat. Android cere o permisiune: activeaza &quot;Permite din aceasta sursa&quot;." />
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,4"
+                               Text="4. Apasa &quot;Instaleaza&quot;. Aplicatia nu vine din Play Store, deci pasii de mai sus sunt normali." />
                 </StackPanel>
             </ScrollViewer>
 
