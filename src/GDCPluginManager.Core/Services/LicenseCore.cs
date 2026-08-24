@@ -31,13 +31,23 @@ public static class LicenseCore
         BadSignature,
         WrongProduct,
         WrongMachine,
+        /// GDC-SEC (kill-switch diferentiat, decizie 2026-08-24): board UUID
+        /// n-a putut fi citit acum (WMI restrictionat, VM etc.) — distinct de
+        /// WrongMachine, ca sa nu blocam un client cinstit pentru o eroare
+        /// temporara. Vezi LicenseManager.cs pentru logica de grace period.
+        HwidUnavailable,
         Expired,
     }
 
-    public sealed class ValidationError(ValidationErrorKind kind, long expiredAt = 0) : Exception
+    public sealed class ValidationError(ValidationErrorKind kind, long expiredAt = 0, Payload? payload = null) : Exception
     {
         public ValidationErrorKind Kind { get; } = kind;
         public long ExpiredAt { get; } = expiredAt;
+
+        /// Populat pentru WrongMachine/HwidUnavailable/Expired — cazuri unde
+        /// codul e altfel valid criptografic si LicenseManager are nevoie de
+        /// payload ca sa decida politica (ex. grace period) fara sa re-parseze.
+        public Payload? Payload { get; } = payload;
     }
 
     /// Base64 al cheii PUBLICE Ed25519 din keygen.py (public_key.txt) al
@@ -47,7 +57,13 @@ public static class LicenseCore
     public const int PayloadSize = 22;
 
     /// Valideaza un serial introdus/lipit de user fata de expectedProductID.
-    public static Payload Validate(string serial, string expectedProductId)
+    /// hwidAvailable=false (grace-period / re-verificare periodica, vezi
+    /// LicenseManager.cs) inseamna ca board UUID n-a putut fi citit acum —
+    /// o nepotrivire de masina in acest caz arunca HwidUnavailable, nu
+    /// WrongMachine (evita un fals-pozitiv pentru un client cinstit). La
+    /// activarea interactiva (default hwidAvailable=true) comportamentul
+    /// ramane neschimbat.
+    public static Payload Validate(string serial, string expectedProductId, bool hwidAvailable = true)
     {
         var packed = Base32Decode(serial);
         if (packed is null || packed.Length != PayloadSize + 64)
@@ -80,17 +96,25 @@ public static class LicenseCore
 
         var storedMachineHash = payloadBytes[16..22];
         var isMachineLocked = storedMachineHash.Any(b => b != 0);
-        if (isMachineLocked && !storedMachineHash.AsSpan().SequenceEqual(MachineID.HashBytes))
+        var payload = new Payload(expiresAt, isMachineLocked);
+        if (isMachineLocked)
         {
-            throw new ValidationError(ValidationErrorKind.WrongMachine);
+            if (!hwidAvailable)
+            {
+                throw new ValidationError(ValidationErrorKind.HwidUnavailable, payload: payload);
+            }
+            if (!storedMachineHash.AsSpan().SequenceEqual(MachineID.HashBytes))
+            {
+                throw new ValidationError(ValidationErrorKind.WrongMachine, payload: payload);
+            }
         }
 
         if (expiresAt != 0 && expiresAt < DateTimeOffset.UtcNow.ToUnixTimeSeconds())
         {
-            throw new ValidationError(ValidationErrorKind.Expired, expiresAt);
+            throw new ValidationError(ValidationErrorKind.Expired, expiresAt, payload);
         }
 
-        return new Payload(expiresAt, isMachineLocked);
+        return payload;
     }
 
     public static byte[] ProductHash(string productId) =>

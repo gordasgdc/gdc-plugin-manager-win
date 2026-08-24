@@ -34,6 +34,36 @@ public sealed class LicenseManager : INotifyPropertyChanged
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "GDCPluginManager", "licenses.json");
 
+    /// Kill-switch diferentiat (decizie 2026-08-24): cate secunde tinem
+    /// licentele anterior-valide "active" cand board UUID nu poate fi citit
+    /// acum (WMI restrictionat, VM etc.) — global, nu per produs, fiindca
+    /// board UUID e acelasi indiferent de produs.
+    private const long GracePeriodSeconds = 5 * 24 * 60 * 60; // 5 zile
+
+    private static string GraceFilePath =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "GDCPluginManager", "last_good_hwid.txt");
+
+    private static long ReadLastGoodTimestamp()
+    {
+        try { return long.Parse(File.ReadAllText(GraceFilePath).Trim()); }
+        catch { return 0; }
+    }
+
+    private static void WriteLastGoodTimestamp(long ts)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(GraceFilePath)!);
+            File.WriteAllText(GraceFilePath, ts.ToString());
+        }
+        catch
+        {
+            // Nescriere pe disc nu trebuie sa blocheze sesiunea curenta.
+        }
+    }
+
     private LicenseManager()
     {
         LoadSavedLicenses();
@@ -109,21 +139,63 @@ public sealed class LicenseManager : INotifyPropertyChanged
         WriteStore(store);
     }
 
+    /// Reincarca si reverifica fiecare cod stocat — niciodata un flag
+    /// cache-uit (vezi GDC-SEC-05). Kill-switch diferentiat (decizie
+    /// 2026-08-24) dupa tipul erorii:
+    ///   - BadSignature/MalformedCode -> tamper evident: elimina din store
+    ///     de pe disc (hard lock), nu doar din memorie.
+    ///   - HwidUnavailable -> grace period: daca ultima verificare buna e
+    ///     mai recenta de GracePeriodSeconds, ramane licentiat (foloseste
+    ///     payload-ul atasat erorii); altfel demo (nu-l eliminam din store).
+    ///   - WrongMachine/WrongProduct/Expired -> demo, codul ramane pe disc
+    ///     (nu e tamper, poate fi hardware schimbat legitim).
     private void LoadSavedLicenses()
     {
         var store = LoadStore();
         if (store is null) return;
+
+        var hwidAvailable = MachineID.IsAvailable;
+        var lastGood = ReadLastGoodTimestamp();
+        var now = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var graceActive = lastGood != 0 && (now - lastGood) < GracePeriodSeconds;
+        var anyValidated = false;
+        var toRemove = new List<string>();
+
         foreach (var (productId, code) in store)
         {
             try
             {
-                var payload = LicenseCore.Validate(code, productId);
+                var payload = LicenseCore.Validate(code, productId, hwidAvailable);
                 _licensedProducts[productId] = payload;
+                anyValidated = true;
+            }
+            catch (LicenseCore.ValidationError ex) when (
+                ex.Kind is LicenseCore.ValidationErrorKind.BadSignature
+                        or LicenseCore.ValidationErrorKind.MalformedCode)
+            {
+                // Tamper evident — elimina codul falsificat/corupt de pe disc.
+                toRemove.Add(productId);
+            }
+            catch (LicenseCore.ValidationError ex) when (
+                ex.Kind == LicenseCore.ValidationErrorKind.HwidUnavailable && graceActive && ex.Payload is { } gracePayload)
+            {
+                _licensedProducts[productId] = gracePayload; // grace activ — pastreaza starea buna anterioara
             }
             catch (LicenseCore.ValidationError)
             {
-                // Cod stocat nu mai valideaza (expirat/masina schimbata) — il ignoram, ramane in fisier ca istoric.
+                // HwidUnavailable (grace expirat) / WrongMachine / WrongProduct / Expired
+                // -> mod demo, codul ramane pe disc ca istoric.
             }
+        }
+
+        if (anyValidated)
+        {
+            WriteLastGoodTimestamp(now);
+        }
+        if (toRemove.Count > 0)
+        {
+            foreach (var id in toRemove) store.Remove(id);
+            WriteStore(store);
         }
     }
 
@@ -167,6 +239,7 @@ public sealed class LicenseManager : INotifyPropertyChanged
         LicenseCore.ValidationErrorKind.BadSignature => "Cod invalid — semnatura nu corespunde.",
         LicenseCore.ValidationErrorKind.WrongProduct => "Acest cod nu e valabil pentru niciun produs din catalog.",
         LicenseCore.ValidationErrorKind.WrongMachine => "Acest cod e legat de o alta masina.",
+        LicenseCore.ValidationErrorKind.HwidUnavailable => "Nu am putut citi identificatorul hardware acum — incearca din nou.",
         LicenseCore.ValidationErrorKind.Expired => "Acest cod a expirat.",
         _ => "Activare esuata.",
     };
