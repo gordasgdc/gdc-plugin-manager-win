@@ -92,6 +92,66 @@ public static class PluginTypeExtensions
     }
 }
 
+/// Port 1:1 al SupportedOS din CatalogModel.swift — compatibilitatea de
+/// sistem de operare a unui produs. Implicit CrossPlatform: toate
+/// produsele existente inainte de acest camp chiar ruleaza pe ambele
+/// platforme, deci o intrare veche (fara aceasta cheie) trebuie sa
+/// decodeze ca "merge oriunde", nu "ascunde-l pe toata lumea".
+public enum SupportedOS
+{
+    MacOS,
+    Windows,
+    CrossPlatform,
+}
+
+public static class SupportedOSExtensions
+{
+    /// Platforma curenta — mereu Windows in acest client (Mac are
+    /// propria implementare .macOS in LicenseCore/CatalogModel.swift).
+    public static readonly SupportedOS Current = SupportedOS.Windows;
+
+    public static bool Allows(this SupportedOS self, SupportedOS current) =>
+        self == SupportedOS.CrossPlatform || self == current;
+
+    /// Emoji-badge afisat pe cardul din catalog — vezi cerinta "Selector
+    /// Compatibilitate OS": 🍎 doar Mac, 🪟 doar Windows, 🔄 ambele.
+    public static string BadgeEmoji(this SupportedOS self) => self switch
+    {
+        SupportedOS.MacOS => "🍎",
+        SupportedOS.Windows => "🪟",
+        SupportedOS.CrossPlatform => "🔄",
+        _ => "",
+    };
+}
+
+/// Mapeaza SupportedOS <-> stringul exact din JSON ("macOS", "windows",
+/// "crossPlatform" — identic cu rawValue-ul enum-ului Swift).
+public sealed class SupportedOSJsonConverter : JsonConverter<SupportedOS>
+{
+    public override SupportedOS Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var raw = reader.GetString();
+        return raw switch
+        {
+            "macOS" => SupportedOS.MacOS,
+            "windows" => SupportedOS.Windows,
+            "crossPlatform" => SupportedOS.CrossPlatform,
+            _ => throw new JsonException($"Unknown SupportedOS: {raw}"),
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, SupportedOS value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value switch
+        {
+            SupportedOS.MacOS => "macOS",
+            SupportedOS.Windows => "windows",
+            SupportedOS.CrossPlatform => "crossPlatform",
+            _ => throw new JsonException($"Unknown SupportedOS: {value}"),
+        });
+    }
+}
+
 /// Port 1:1 al PluginFile.swift — un fisier apartinand unui PluginItem, asa
 /// cum sta in repo-ul privat gdc-plugin-manager-files (path complet in repo,
 /// fetch prin GitHub Contents API autentificat — vezi InstallManager, de portat).
@@ -195,6 +255,10 @@ public sealed class PluginItem
     /// cardul cade pe IconSymbol.
     public string? CoverImage { get; init; }
 
+    /// Compatibilitate OS — vezi SupportedOS. Implicit CrossPlatform
+    /// (toate produsele existente pana acum ruleaza pe ambele platforme).
+    public SupportedOS SupportedOS { get; init; } = SupportedOS.CrossPlatform;
+
     /// URL-ul absolut al copertii, gata de incarcat (null daca nu are).
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -255,6 +319,11 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             // Cheie noua (2026-08): intrarile publicate inainte de sistemul
             // de coperti nu o au deloc -> null, fara eroare.
             CoverImage = root.TryGetProperty("coverImage", out var cover) ? cover.GetString() : null,
+            // Cheie noua (2026-08-25): intrarile vechi nu o au -> CrossPlatform,
+            // pastrand comportamentul actual (instalabil pe ambele platforme).
+            SupportedOS = root.TryGetProperty("supportedOS", out var os)
+                ? JsonSerializer.Deserialize<SupportedOS>(os.GetRawText(), options)
+                : SupportedOS.CrossPlatform,
         };
     }
 
@@ -276,6 +345,8 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
         if (value.YoutubeURL is not null) writer.WriteString("youtubeURL", value.YoutubeURL);
         if (value.BundleFolderName is not null) writer.WriteString("bundleFolderName", value.BundleFolderName);
         if (value.CoverImage is not null) writer.WriteString("coverImage", value.CoverImage);
+        writer.WritePropertyName("supportedOS");
+        JsonSerializer.Serialize(writer, value.SupportedOS, options);
         writer.WriteEndObject();
     }
 }

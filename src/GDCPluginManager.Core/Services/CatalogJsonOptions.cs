@@ -13,6 +13,7 @@ public static class CatalogJsonOptions
         Converters =
         {
             new PluginTypeJsonConverter(),
+            new SupportedOSJsonConverter(),
             new PluginItemJsonConverter(),
         },
     };

@@ -85,6 +85,8 @@
                                     Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
                                 <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
                             </Button>
+                            <TextBlock Text="{Binding OSBadgeEmoji}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"
+                                       Visibility="{Binding ShowOSBadge, Converter={StaticResource BoolToVisibility}}" />
                             <Border Style="{StaticResource BadgeBorderStyle}">
                                 <TextBlock Text="{Binding TypeLabel}" FontSize="10" FontWeight="SemiBold"
                                            Foreground="{StaticResource BrandBrush}" />
@@ -129,9 +131,17 @@
                             Command="{Binding ContactSupportCommand}"
                             Visibility="{Binding ShowPaidResourceSupportError, Converter={StaticResource BoolToVisibility}}" />
 
+                    <!-- Vezi cerinta "Selector Compatibilitate OS": produs mono-platforma
+                         incompatibil cu Windows -> niciun buton de cumparare/instalare,
+                         doar acest mesaj. Port 1:1 al `!item.supportedOS.allows` din
+                         PluginCard (ContentView.swift, Mac). -->
+                    <TextBlock Text="Incompatibil cu sistemul tau" FontSize="12" Foreground="#FFD9534F"
+                               Margin="0,12,0,0"
+                               Visibility="{Binding IsCompatible, Converter={StaticResource InverseBoolToVisibility}}" />
+
                     <!-- Zona de actiune — port 1:1 al actionButton din PluginCard (ContentView.swift):
                          Cumpara (neblocat) / Actualizeaza+Elimina / Instalat+Elimina / Instaleaza. -->
-                    <Grid Margin="0,12,0,0">
+                    <Grid Margin="0,12,0,0" Visibility="{Binding IsCompatible, Converter={StaticResource BoolToVisibility}}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />

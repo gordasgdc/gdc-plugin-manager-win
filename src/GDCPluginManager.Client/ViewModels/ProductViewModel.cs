@@ -71,6 +71,13 @@ public sealed partial class ProductViewModel : ObservableObject
     public bool ShowPrice => !Item.IsFree;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Item.YoutubeURL);
 
+    /// Vezi cerinta "Selector Compatibilitate OS": badge emoji pe card,
+    /// ascuns pentru CrossPlatform (starea normala, nu merita zgomot
+    /// vizual pe fiecare card din grila).
+    public bool ShowOSBadge => Item.SupportedOS != SupportedOS.CrossPlatform;
+    public string OSBadgeEmoji => Item.SupportedOS.BadgeEmoji();
+    public bool IsCompatible => Item.SupportedOS.Allows(SupportedOSExtensions.Current);
+
     public bool IsInstalled => InstallManager.Shared.IsInstalled(Item);
     public bool HasUpdate => InstallManager.Shared.HasUpdate(Item);
     public bool IsUnlocked => LicenseManager.Shared.IsUnlocked(Item);
@@ -115,6 +122,7 @@ public sealed partial class ProductViewModel : ObservableObject
     [RelayCommand]
     private async Task InstallAsync()
     {
+        if (!IsCompatible) return; // butonul e dezactivat/ascuns in starea asta (vezi IsCompatible in XAML).
         if (!IsUnlocked) return; // butonul e "Cumpara" in starea asta, InstallCommand nu ar trebui apelat.
 
         IsBusy = true;
