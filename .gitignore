@@ -24,3 +24,15 @@ Output/
 # Contine tokenul GitHub read-only real — nu urca niciodata in git,
 # exact ca PrivateCatalogAuth.swift pe Mac (vezi .gitignore-ul de acolo).
 src/GDCPluginManager.Core/Services/PrivateCatalogAuth.cs
+
+# SECURITATE (2026-08-25): certificate Apple / chei private - nu trebuie
+# NICIODATA sa ajunga intr-un commit. Stau exclusiv local, in
+# ~/Developer/Certificates/ (in afara oricarui repo git). Acest repo nu
+# foloseste certificate Apple direct, dar regula e globala pe tot
+# ecosistemul GDC - vezi PROJECT_STRUCTURE.md.
+*.p12
+*.cer
+*.p8
+*.key
+*.pem
+*.mobileprovision
