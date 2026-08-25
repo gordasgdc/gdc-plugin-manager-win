@@ -78,3 +78,26 @@ Jurnal append-only. Un rând nou de fiecare dată când găsim/rezolvăm un bug 
 - **2026-08-24 — `Mandatory` din `UpdateInfo` acum e citit efectiv** (vezi `UpdateChecker.CheckAsync()`/`.Dismiss()`) — reaparea la fiecare lansare daca `true`, fara buton de inchidere permanenta. Regula de release (bump versiune + `update.json` + Release GitHub manual la orice fix) documentata complet in `gdc-plugin-manager-catalog-vendor/CLAUDE.md`.
 - **2026-08-24 — Badge GRATUIT/LICENȚĂ/PROBĂ + filtru Toate/Gratuite/Premium pe Produse.** `ProductViewModel` capătă `BadgeText`/`BadgeBrush`/`BadgeTooltip`/`ShowPrice`; `MainViewModel` capătă `PriceFilter` (enum) + `SetPriceFilterCommand`, integrat în `FilterProduct`. Filtrul e randat ca al doilea rând în grid-ul deja existent al barei de căutare (Grid.Row="0", cu RowDefinitions noi LOCALE acelui Grid) — NU ca rând nou în grid-ul părinte de nivel superior, ca să nu deranjeze numerotarea `Grid.Row`/`RowSpan` deja folosită mai jos de ScrollViewer-e. Detalii complete (inclusiv investigația imaginilor Facebook) în `gdc-plugin-manager-catalog-vendor/CLAUDE.md`.
 - **2026-08-24 — REZOLVAT: codul QR lipsea pe Windows din pagina Android, DELIBERAT (nu bug) — comentariul vechi din `MainWindow.xaml` spunea explicit "WPF nu are un generator inclus si nu merita o dependinta noua doar pentru asta".** Cristi a cerut parity cu Mac-ul. Fix: pachet nou `QRCoder` (MIT, 1.6.0) — `PngByteQRCode` produce PNG pur managed, fără `System.Drawing.Common`. `QrCodeImageGenerator.cs` (Client/Services) generează un `BitmapImage` din `AndroidRelease.ApkUrl` — port 1:1 al `AndroidPane.qrImage(from:)` (Mac, `CIFilter.qrCodeGenerator`, correction level M, scalare ×10). `MainViewModel.OnAndroidReleaseChanged` regenerează `AndroidQrImage` automat de fiecare dată când `android.json` se reîncarcă. Fundal alb obligatoriu (contrast necesar pt. citire), `RenderOptions.BitmapScalingMode="NearestNeighbor"` — echivalentul `.interpolation(.none)` de pe Mac, altfel QR-ul iese neclar la scalare.
+
+## DIRECTIVĂ PERMANENTĂ SUPREMĂ: Checklist obligatoriu la FIECARE release (2026-08-25)
+Valabilă pentru TOATE aplicațiile ecosistemului GDC (CursorPro, GDC Plugin
+Manager + Furnizor, GDC Plugin Manager Windows, DataMover, GDC Production
+Manager, și orice proiect nou). Înainte de a raporta un release ca fiind
+gata, TREBUIE bifate intern toate cele 4 puncte de mai jos — dacă unul
+lipsește, spune-o explicit, nu declara release-ul "gata".
+
+1. **Versiune vizibilă în UI** — About/Meniu/Settings/Footer trebuie să
+   arate versiunea curentă (`v1.2.21` etc.), fără excepție.
+2. **Verificator de actualizări** — la pornire sau printr-un buton
+   „Caută actualizări", aplicația verifică versiunea de pe server/GitHub
+   și notifică userul când există un release mai nou.
+3. **Pachetul standard de release** — orice arhivă livrată clientului
+   conține FĂRĂ EXCEPȚIE:
+   - executabilul/installer-ul semnat + notarizat,
+   - `Dezinstalare_[NumeAplicație].command` (dezinstalare completă:
+     procese, permisiuni TCC, toate fișierele din `~/Library/`),
+   - un ghid/PDF de instrucțiuni.
+4. **Sincronizare site ↔ GitHub Releases** — linkurile de download de pe
+   site trebuie să pointeze mereu la `releases/latest/download/...`
+   (HTTP 200 verificat, nu presupus) și să menționeze numărul ultimei
+   versiuni.
