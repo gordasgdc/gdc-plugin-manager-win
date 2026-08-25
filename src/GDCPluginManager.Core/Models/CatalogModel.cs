@@ -406,6 +406,37 @@ public sealed record PartnerStore
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
+/// Port 1:1 al ServiceCategory.swift. JsonStringEnumConverter e case-
+/// insensitive la citire, deci "drone"/"camera"/etc. din catalog.json
+/// (valorile raw ale enum-ului Swift) se potrivesc direct cu Drone/Camera.
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum ServiceCategory
+{
+    Drone,
+    Camera,
+    Optics,
+    Urgent,
+}
+
+/// Port 1:1 al ServiceCenter.swift — partener de service/reparatii
+/// echipament foto-video (drone/camere/optica/urgente). Doar informativ,
+/// niciun fisier, nicio licenta.
+public sealed record ServiceCenter
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required ServiceCategory Category { get; init; }
+    public required string Specialization { get; init; }
+    /// Link de contact rapid — `tel:`, `https://wa.me/...` sau `mailto:`.
+    public required string ContactURL { get; init; }
+    /// Site sau locatie (Google Maps) — optional.
+    public string? WebsiteURL { get; init; }
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
+}
+
 /// Port 1:1 al Catalog.swift. Fiecare colectie default la lista goala daca
 /// lipseste din JSON (catalog mai vechi, fara acea cheie inca) — System.Text.Json
 /// lasa proprietatea la valoarea implicita din initializator cand cheia
@@ -419,4 +450,5 @@ public sealed class Catalog
     public IReadOnlyList<EducationalResource> EducationalResources { get; init; } = [];
     public IReadOnlyList<Event> Events { get; init; } = [];
     public IReadOnlyList<PartnerStore> PartnerStores { get; init; } = [];
+    public IReadOnlyList<ServiceCenter> ServiceCenters { get; init; } = [];
 }

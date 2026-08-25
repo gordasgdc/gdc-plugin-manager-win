@@ -372,6 +372,30 @@
                 </StackPanel>
             </Border>
         </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vm:ServiceCenterViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280" MinHeight="120">
+                <StackPanel>
+                    <Button Style="{StaticResource CoverButtonStyle}"
+                            Command="{Binding Cover.ShowCommand}"
+                            Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                        <Border CornerRadius="6" ClipToBounds="True" Height="110"
+                                Background="{StaticResource InkSurfaceRaisedBrush}">
+                            <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                        </Border>
+                    </Button>
+                    <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                    <TextBlock Text="{Binding Specialization}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                    <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                        <Button Content="Contact rapid" Command="{Binding ContactCommand}" Margin="0,0,8,0" />
+                        <Button Content="Website / Locație" Command="{Binding OpenWebsiteCommand}"
+                                Visibility="{Binding HasWebsite, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
     </Window.Resources>
 
     <Grid>
@@ -441,6 +465,14 @@
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="ShoppingBag24" FontSize="16" Margin="0,0,10,0" />
                         <TextBlock Text="Magazine partenere" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowServiceCentersCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=ServiceCenters, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Wrench24" FontSize="16" Margin="0,0,10,0" />
+                        <TextBlock Text="Service &amp; Reparații" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
@@ -565,6 +597,31 @@
                 </Border>
                 <TextBlock Text="{Binding LoadError}" Foreground="#FFE8544D" TextWrapping="Wrap" Margin="0,6,0,0"
                            Visibility="{Binding LoadError, Converter={StaticResource NullToVisibility}}" />
+
+                <!-- Banner dependinte de sistem lipsa — port 1:1 al DependencyBanner (Mac). -->
+                <ItemsControl ItemsSource="{Binding MissingDependencies}"
+                              Visibility="{Binding MissingDependencies.Count, Converter={StaticResource ZeroToVisibility}}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="#FFFCE8CD" CornerRadius="4" Padding="12,8" Margin="0,6,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+                                    <StackPanel Grid.Column="0" Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="Warning24" FontSize="16" Margin="0,0,8,0"
+                                                       Foreground="#FFB05B00" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" Foreground="#FFB05B00" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                    <Button Grid.Column="1" Content="Instalează"
+                                            Command="{Binding DataContext.InstallDependencyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                            CommandParameter="{Binding}" />
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
             </StackPanel>
 
             <!-- Pagina Catalog -->
@@ -638,6 +695,23 @@
                     <TextBlock Text="Niciun magazin partener momentan." Style="{StaticResource MutedTextStyle}"
                                Visibility="{Binding PartnerStores.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding PartnerStores}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Pagina Service & Reparatii -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=ServiceCenters}">
+                <StackPanel>
+                    <TextBlock Text="Service &amp; Reparații Echipament" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Niciun service partener momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding ServiceCenters.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding ServiceCenters}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal" />

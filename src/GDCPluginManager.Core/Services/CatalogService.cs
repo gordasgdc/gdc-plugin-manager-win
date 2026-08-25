@@ -27,6 +27,7 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<EducationalResource> EducationalResources { get; private set; } = [];
     public IReadOnlyList<Event> Events { get; private set; } = [];
     public IReadOnlyList<PartnerStore> PartnerStores { get; private set; } = [];
+    public IReadOnlyList<ServiceCenter> ServiceCenters { get; private set; } = [];
     public bool IsLoading { get; private set; }
     public string? LoadError { get; private set; }
 
@@ -78,12 +79,14 @@ public sealed class CatalogService : INotifyPropertyChanged
             EducationalResources = catalog.EducationalResources;
             Events = catalog.Events;
             PartnerStores = catalog.PartnerStores;
+            ServiceCenters = catalog.ServiceCenters;
             Raise(nameof(Items));
             Raise(nameof(Courses));
             Raise(nameof(Apps));
             Raise(nameof(EducationalResources));
             Raise(nameof(Events));
             Raise(nameof(PartnerStores));
+            Raise(nameof(ServiceCenters));
             SaveToCache(data);
         }
         catch (CatalogFetchException ex)
@@ -135,6 +138,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             EducationalResources = catalog.EducationalResources;
             Events = catalog.Events;
             PartnerStores = catalog.PartnerStores;
+            ServiceCenters = catalog.ServiceCenters;
         }
         catch
         {

@@ -29,6 +29,7 @@ public enum SidebarPage
     EducationalResources,
     Events,
     PartnerStores,
+    ServiceCenters,
     Apps,
     Android,
     License,
@@ -48,6 +49,7 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<EducationalResourceViewModel> EducationalResources { get; } = [];
     public ObservableCollection<EventViewModel> Events { get; } = [];
     public ObservableCollection<PartnerStoreViewModel> PartnerStores { get; } = [];
+    public ObservableCollection<ServiceCenterViewModel> ServiceCenters { get; } = [];
     public ObservableCollection<AppLinkViewModel> Apps { get; } = [];
 
     public LicensePaneViewModel LicensePane { get; }
@@ -92,6 +94,11 @@ public sealed partial class MainViewModel : ObservableObject
     /// legatura cu DownloadUpdateCommand.
     [ObservableProperty]
     private string? _updateDownloadUrl;
+
+    /// Dependinte de sistem lipsa (ex. DaVinci Resolve neinstalat) — vezi
+    /// SystemDependencyChecker.cs. Port 1:1 al DependencyBanner din
+    /// ContentView.swift.
+    public ObservableCollection<SystemDependency> MissingDependencies { get; } = [];
 
     // Aplicatia mobila companion (fost APK/TWA, RETRAS 2026-08-24 — cerut
     // explicit de Cristi: "scapam complet de problemele cu certificatele,
@@ -169,6 +176,21 @@ public sealed partial class MainViewModel : ObservableObject
                                 (string.IsNullOrWhiteSpace(info.Changes) ? "" : $" — {info.Changes}");
             UpdateDownloadUrl = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
         }
+
+        MissingDependencies.Clear();
+        foreach (var dep in SystemDependencyChecker.CheckAll().Where(d => !d.IsPresent))
+        {
+            MissingDependencies.Add(dep);
+        }
+    }
+
+    [RelayCommand]
+    private void InstallDependency(SystemDependency dependency)
+    {
+        if (dependency.DownloadUrl is { } url)
+        {
+            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        }
     }
 
     [RelayCommand]
@@ -201,6 +223,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowPartnerStores() => CurrentPage = SidebarPage.PartnerStores;
+
+    [RelayCommand]
+    private void ShowServiceCenters() => CurrentPage = SidebarPage.ServiceCenters;
 
     [RelayCommand]
     private void ShowApps() => CurrentPage = SidebarPage.Apps;
@@ -292,6 +317,12 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var store in CatalogService.Shared.PartnerStores)
         {
             PartnerStores.Add(new PartnerStoreViewModel(store));
+        }
+
+        ServiceCenters.Clear();
+        foreach (var center in CatalogService.Shared.ServiceCenters)
+        {
+            ServiceCenters.Add(new ServiceCenterViewModel(center));
         }
 
         Apps.Clear();
