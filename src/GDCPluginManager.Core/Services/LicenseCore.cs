@@ -23,13 +23,29 @@ namespace GDCPluginManager.Core.Services;
 [SupportedOSPlatform("windows")]
 public static class LicenseCore
 {
-    public readonly record struct Payload(long ExpiresAt, bool MachineLocked); // ExpiresAt: unix seconds, 0 = nu expira niciodata
+    /// GDC-LICENSE-PLATFORM (Etapa 2, 2026-08-25): al 23-lea octet, ADAUGAT
+    /// la finalul payload-ului v1 (22 octeti) — niciodata repurposand nonce-ul
+    /// existent, ca sa ramana byte-cu-byte compatibil cu codurile v1 deja emise.
+    ///   0 = legacy/oricare platforma (orice cod v1 decodeaza mereu asa)
+    ///   1 = mac_only, 2 = windows_only, 3 = cross_platform
+    public enum LicensePlatform : byte
+    {
+        Any = 0,
+        MacOnly = 1,
+        WindowsOnly = 2,
+        CrossPlatform = 3,
+    }
+
+    public readonly record struct Payload(long ExpiresAt, bool MachineLocked, LicensePlatform Platform = LicensePlatform.Any); // ExpiresAt: unix seconds, 0 = nu expira niciodata
 
     public enum ValidationErrorKind
     {
         MalformedCode,
         BadSignature,
         WrongProduct,
+        /// Codul e valid, dar emis pentru alta platforma. Codurile v1 (fara
+        /// byte de platforma) nu pot avea niciodata aceasta eroare.
+        WrongPlatform,
         WrongMachine,
         /// GDC-SEC (kill-switch diferentiat, decizie 2026-08-24): board UUID
         /// n-a putut fi citit acum (WMI restrictionat, VM etc.) — distinct de
@@ -55,6 +71,7 @@ public static class LicenseCore
     private const string PublicKeyBase64 = "I1h23MNMRbOhc0ObKJrfa3oFHKA9w+SzbNrroAIy8hs=";
 
     public const int PayloadSize = 22;
+    public const int PayloadSizeV2 = 23;
 
     /// Valideaza un serial introdus/lipit de user fata de expectedProductID.
     /// hwidAvailable=false (grace-period / re-verificare periodica, vezi
@@ -63,16 +80,30 @@ public static class LicenseCore
     /// WrongMachine (evita un fals-pozitiv pentru un client cinstit). La
     /// activarea interactiva (default hwidAvailable=true) comportamentul
     /// ramane neschimbat.
+    ///
+    /// GDC-LICENSE-PLATFORM: accepta AMBELE dimensiuni de payload — 86 octeti
+    /// bruti (22+64, coduri v1, deja emise) si 87 (23+64, coduri noi). Un cod
+    /// v1 decodeaza mereu platforma ca Any, deci comportamentul lui ramane
+    /// identic dinainte de aceasta schimbare.
     public static Payload Validate(string serial, string expectedProductId, bool hwidAvailable = true)
     {
         var packed = Base32Decode(serial);
-        if (packed is null || packed.Length != PayloadSize + 64)
+        int effectiveSize;
+        if (packed is not null && packed.Length == PayloadSize + 64)
+        {
+            effectiveSize = PayloadSize;
+        }
+        else if (packed is not null && packed.Length == PayloadSizeV2 + 64)
+        {
+            effectiveSize = PayloadSizeV2;
+        }
+        else
         {
             throw new ValidationError(ValidationErrorKind.MalformedCode);
         }
 
-        var payloadBytes = packed[..PayloadSize];
-        var signature = packed[PayloadSize..];
+        var payloadBytes = packed[..effectiveSize];
+        var signature = packed[effectiveSize..];
 
         var publicKeyBytes = Convert.FromBase64String(PublicKeyBase64);
         var publicKey = new Ed25519PublicKeyParameters(publicKeyBytes, 0);
@@ -96,7 +127,16 @@ public static class LicenseCore
 
         var storedMachineHash = payloadBytes[16..22];
         var isMachineLocked = storedMachineHash.Any(b => b != 0);
-        var payload = new Payload(expiresAt, isMachineLocked);
+        var platform = effectiveSize == PayloadSizeV2
+            ? (Enum.IsDefined(typeof(LicensePlatform), payloadBytes[22]) ? (LicensePlatform)payloadBytes[22] : LicensePlatform.Any)
+            : LicensePlatform.Any;
+        var payload = new Payload(expiresAt, isMachineLocked, platform);
+
+        if (platform is not (LicensePlatform.Any or LicensePlatform.CrossPlatform or LicensePlatform.WindowsOnly))
+        {
+            throw new ValidationError(ValidationErrorKind.WrongPlatform, payload: payload);
+        }
+
         if (isMachineLocked)
         {
             if (!hwidAvailable)

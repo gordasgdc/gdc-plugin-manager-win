@@ -238,6 +238,7 @@ public sealed class LicenseManager : INotifyPropertyChanged
         LicenseCore.ValidationErrorKind.MalformedCode => "Cod invalid — verifica sa fie copiat complet, fara spatii lipsa.",
         LicenseCore.ValidationErrorKind.BadSignature => "Cod invalid — semnatura nu corespunde.",
         LicenseCore.ValidationErrorKind.WrongProduct => "Acest cod nu e valabil pentru niciun produs din catalog.",
+        LicenseCore.ValidationErrorKind.WrongPlatform => "Acest cod e valabil pentru alta platforma (Mac/Windows).",
         LicenseCore.ValidationErrorKind.WrongMachine => "Acest cod e legat de o alta masina.",
         LicenseCore.ValidationErrorKind.HwidUnavailable => "Nu am putut citi identificatorul hardware acum — incearca din nou.",
         LicenseCore.ValidationErrorKind.Expired => "Acest cod a expirat.",
