@@ -81,10 +81,19 @@ jobs:
             <Var name="InPath" value="$publishDir" />
             <Var name="OutPath" value="$outDir" />
             <Var name="KeepPublicApi" value="true" />
-            <Var name="HidePrivateApi" value="true" />
+            <!-- HidePrivateApi DEZACTIVAT (2026-08-25): renumirea de tipuri
+                 (chiar si private) a produs un BadImageFormatException real
+                 la un client Windows viu ("Duplicate type", crash la pornire
+                 in MainWindow -> LicensePaneViewModel), DUPA ce un fix
+                 anterior (ReuseNames=false) parea sa-l fi rezolvat la
+                 smoke-test-ul simplu din CI, dar nu si pe fluxul complet al
+                 aplicatiei. Nu merita riscul: obfuscarea de STRINGURI ramane
+                 activa (ascunde constante sensibile din cod), doar
+                 redenumirea de TIPURI/MEMBRI e oprita definitiv. -->
+            <Var name="HidePrivateApi" value="false" />
             <Var name="HideStrings" value="true" />
             <Var name="AnalyzeXaml" value="true" />
-            <!-- Fix real (2026-08-25): fara asta, Obfuscar poate genera acelasi
+            <!-- Fix anterior (2026-08-25, insuficient de unul singur): fara asta, Obfuscar poate genera acelasi
                  nume scurt ("A") pentru doua tipuri diferite - nedeterminist,
                  depinde de randomizarea hash-ului de string per proces - si
                  exe-ul crapa la incarcare cu BadImageFormatException
