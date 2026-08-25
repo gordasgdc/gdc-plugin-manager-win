@@ -84,6 +84,13 @@ jobs:
             <Var name="HidePrivateApi" value="true" />
             <Var name="HideStrings" value="true" />
             <Var name="AnalyzeXaml" value="true" />
+            <!-- Fix real (2026-08-25): fara asta, Obfuscar poate genera acelasi
+                 nume scurt ("A") pentru doua tipuri diferite - nedeterminist,
+                 depinde de randomizarea hash-ului de string per proces - si
+                 exe-ul crapa la incarcare cu BadImageFormatException
+                 "Duplicate type with name 'A'". Reprodus local (obfuscar.console
+                 direct) si confirmat ca disparea cu acest flag. -->
+            <Var name="ReuseNames" value="false" />
             <AssemblySearchPath path="$publishDir" />
             <Module file="$publishDir\GDCPluginManager.Core.dll" />
           </Obfuscator>
