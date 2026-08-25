@@ -22,11 +22,11 @@
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
         <conv:ZeroToVisibilityConverter x:Key="ZeroToVisibility" />
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
-        <!-- PITFALL FIXED 2026-08-24: Image.Source nu accepta un Uri direct
-             (ImageSourceConverter stie sa converteasca doar din string) -
-             fara acest converter, NICIO coperta nu se vede pe Windows,
-             oricare ar fi categoria. Vezi UriToImageSourceConverter.cs. -->
-        <conv:UriToImageSourceConverter x:Key="UriToImageSource" />
+        <!-- UriToImageSourceConverter A FOST ELIMINAT (2026-08-25): descarcarea
+             se face acum direct in CoverViewModel (Bitmap, cu DownloadFailed
+             ascultat explicit) - vezi CoverViewModel.cs pentru motivul fix-ului
+             (fallback vizual real la esec de descarcare). Image.Source leaga
+             acum la `Cover.Bitmap`, nu la `Cover.Url` printr-un converter. -->
         <conv:PriceFilterWeightConverter x:Key="PriceFilterWeight" />
 
         <!-- =====================================================================
@@ -66,7 +66,7 @@
                             <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                  proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                  In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
-                            <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>
@@ -85,8 +85,7 @@
                                     Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
                                 <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
                             </Button>
-                            <TextBlock Text="{Binding OSBadgeEmoji}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"
-                                       Visibility="{Binding ShowOSBadge, Converter={StaticResource BoolToVisibility}}" />
+                            <TextBlock Text="{Binding OSBadgeEmoji}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center" />
                             <Border Style="{StaticResource BadgeBorderStyle}">
                                 <TextBlock Text="{Binding TypeLabel}" FontSize="10" FontWeight="SemiBold"
                                            Foreground="{StaticResource BrandBrush}" />
@@ -226,7 +225,7 @@
                             <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                  proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                  In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
-                            <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>
@@ -269,7 +268,7 @@
                                 Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                             <Border CornerRadius="6" ClipToBounds="True" Height="56"
                                     Background="{StaticResource InkSurfaceRaisedBrush}">
-                                <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                                <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
@@ -305,7 +304,7 @@
                                 <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                      proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                      In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
-                                <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                                <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
@@ -338,7 +337,7 @@
                                 <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                      proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                      In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
-                                <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                                <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
@@ -371,7 +370,7 @@
                             <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                  proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                  In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
-                            <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>
@@ -391,7 +390,7 @@
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                         <Border CornerRadius="6" ClipToBounds="True" Height="110"
                                 Background="{StaticResource InkSurfaceRaisedBrush}">
-                            <Image Source="{Binding Cover.Url, Converter={StaticResource UriToImageSource}}" Stretch="UniformToFill"
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>

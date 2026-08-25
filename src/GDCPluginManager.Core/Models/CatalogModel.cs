@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using System.Linq;
 
 namespace GDCPluginManager.Core.Models;
 
@@ -206,15 +207,27 @@ public static class CatalogAssets
 
     /// Transforma valoarea din catalog intr-un URL descarcabil, indiferent de
     /// varianta. null daca produsul nu are inca o coperta.
+    ///
+    /// FIX explicit de encoding (2026-08-25): desi `new Uri(base, relativ)`
+    /// codifica deja corect spatiile (verificat cu teste .NET dedicate),
+    /// nu ne bazam pe comportamentul implicit de combinare pentru ORICE
+    /// caracter special posibil intr-un nume de fisier ales liber de
+    /// furnizor (apostrof, diacritice etc.) — escapam explicit fiecare
+    /// segment din PATH, dar pastram query-ul ("?v=hash") neatins, ca sa
+    /// nu stricam parametrul de cache-busting.
     public static Uri? ImageUrl(string? coverImage)
     {
         if (string.IsNullOrEmpty(coverImage)) return null;
         // Uri(BaseUrl, x) ignora oricum base-ul cand x e absolut, dar
         // verificam explicit ca sa fie evident ca sistemul hibrid e
         // intentionat, nu un efect secundar.
-        return IsExternal(coverImage)
-            ? new Uri(coverImage)
-            : new Uri(BaseUrl, coverImage);
+        if (IsExternal(coverImage)) return new Uri(coverImage);
+
+        var queryIndex = coverImage.IndexOf('?');
+        var path = queryIndex >= 0 ? coverImage[..queryIndex] : coverImage;
+        var query = queryIndex >= 0 ? coverImage[queryIndex..] : string.Empty;
+        var escapedPath = string.Join("/", path.Split('/').Select(Uri.EscapeDataString));
+        return new Uri(BaseUrl, escapedPath + query);
     }
 }
 

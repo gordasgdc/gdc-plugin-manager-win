@@ -72,9 +72,10 @@ public sealed partial class ProductViewModel : ObservableObject
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Item.YoutubeURL);
 
     /// Vezi cerinta "Selector Compatibilitate OS": badge emoji pe card,
-    /// ascuns pentru CrossPlatform (starea normala, nu merita zgomot
-    /// vizual pe fiecare card din grila).
-    public bool ShowOSBadge => Item.SupportedOS != SupportedOS.CrossPlatform;
+    /// vizibil pentru toate cele 3 stari, inclusiv CrossPlatform (2026-08-25:
+    /// "Ambele" trebuie sa se vada explicit pe card, nu doar sa fie absenta
+    /// unui badge - decizia initiala de a-l ascunde a fost o presupunere
+    /// gresita despre asteptarile UX, corectata la cererea explicita).
     public string OSBadgeEmoji => Item.SupportedOS.BadgeEmoji();
     public bool IsCompatible => Item.SupportedOS.Allows(SupportedOSExtensions.Current);
 
