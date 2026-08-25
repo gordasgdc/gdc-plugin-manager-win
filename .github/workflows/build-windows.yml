@@ -49,86 +49,31 @@ jobs:
           dotnet publish src\GDCPluginManager.Client -c Release -r win-x64 --self-contained -o publish
 
       # ─────────────────────────────────────────────────────────────────────
-      # Obfuscare (Obfuscar, https://github.com/obfuscar/obfuscar) — DOAR pe
-      # GDCPluginManager.Core.dll, unde traieste LicenseCore. NU si pe
-      # GDCPluginManager.exe (clientul WPF): un obfuscator care redenumeste
-      # tipuri legate de XAML poate rupe randarea la runtime (XamlParseException
-      # - BAML-ul refera tipuri dupa nume din x:Class), risc pe care nu-l pot
-      # verifica interactiv de pe un Mac. Core.dll nu are nicio dependinta de
-      # WPF/XAML, deci e sigur de obfuscat integral.
+      # OBFUSCARE DEZACTIVATA PERMANENT (2026-08-25) — vezi CHANGELOG.md.
+      # Obfuscar 3.0.0-beta.19 produce un DLL cu METADATA CORUPTA (tipuri
+      # duplicate) de doua ori la rand, in doua configuratii diferite:
+      #   1. Cu HidePrivateApi=true: "Duplicate type with name 'A'" — crash
+      #      real la un client Windows viu, la pornire (MainWindow ->
+      #      LicensePaneViewModel). Fix incercat: ReuseNames=false — a trecut
+      #      smoke-test-ul simplu din CI, dar NU a rezolvat crash-ul real.
+      #   2. Cu HidePrivateApi=false (doar HideStrings): "Duplicate type with
+      #      name '<>c'" — clase generate de compilator (closures) tratate
+      #      gresit la salvare. Confirma ca bug-ul e in Obfuscar insusi
+      #      (metadata NestedClass), nu in setarile de renumire.
+      # Concluzie: niciun DLL obfuscat cu acest tool nu poate fi garantat
+      # corect. Corectitudinea conteaza mai mult decat obscurizarea —
+      # Core.dll ramane NEOBFUSCAT pana se gaseste/verifica alt tool.
+      # Smoke test-ul de mai jos ramane activ neschimbat, testand acum
+      # direct DLL-ul din publish\ (deja identic cu ce ajunge la client).
       #
-      # KeepPublicApi=true (implicit din Obfuscar 2.2.0+, setat explicit mai
-      # jos oricum) pastreaza neatinse tipurile/membrii publici — GDCPluginManager.exe
-      # a fost compilat impotriva semnaturii ORIGINALE a lui Core.dll; daca
-      # obfuscarea ar redenumi ceva public, exe-ul ar crapa la incarcare
-      # (MissingMethodException), fiindca el nu e recompilat dupa obfuscare.
-      #
-      # Versiune FIXATA (3.0.0-beta.19) in loc de "latest": un tool de
-      # obfuscare care isi schimba comportamentul intre build-uri, neobservat,
-      # e exact genul de risc care merita evitat pe un build de productie.
-      - name: Instaleaza Obfuscar (obfuscare cod, doar Core.dll)
-        run: dotnet tool install --global Obfuscar.GlobalTool --version 3.0.0-beta.19
-
-      - name: Genereaza configuratia Obfuscar (cai absolute, cerute de v3)
-        shell: pwsh
-        run: |
-          $publishDir = (Resolve-Path "publish").Path
-          $outDir = Join-Path $publishDir "..\obfuscated"
-          New-Item -ItemType Directory -Force -Path $outDir | Out-Null
-          $config = @"
-          <?xml version='1.0'?>
-          <Obfuscator>
-            <Var name="InPath" value="$publishDir" />
-            <Var name="OutPath" value="$outDir" />
-            <Var name="KeepPublicApi" value="true" />
-            <!-- HidePrivateApi DEZACTIVAT (2026-08-25): renumirea de tipuri
-                 (chiar si private) a produs un BadImageFormatException real
-                 la un client Windows viu ("Duplicate type", crash la pornire
-                 in MainWindow -> LicensePaneViewModel), DUPA ce un fix
-                 anterior (ReuseNames=false) parea sa-l fi rezolvat la
-                 smoke-test-ul simplu din CI, dar nu si pe fluxul complet al
-                 aplicatiei. Nu merita riscul: obfuscarea de STRINGURI ramane
-                 activa (ascunde constante sensibile din cod), doar
-                 redenumirea de TIPURI/MEMBRI e oprita definitiv. -->
-            <Var name="HidePrivateApi" value="false" />
-            <Var name="HideStrings" value="true" />
-            <Var name="AnalyzeXaml" value="true" />
-            <!-- Fix anterior (2026-08-25, insuficient de unul singur): fara asta, Obfuscar poate genera acelasi
-                 nume scurt ("A") pentru doua tipuri diferite - nedeterminist,
-                 depinde de randomizarea hash-ului de string per proces - si
-                 exe-ul crapa la incarcare cu BadImageFormatException
-                 "Duplicate type with name 'A'". Reprodus local (obfuscar.console
-                 direct) si confirmat ca disparea cu acest flag. -->
-            <Var name="ReuseNames" value="false" />
-            <AssemblySearchPath path="$publishDir" />
-            <Module file="$publishDir\GDCPluginManager.Core.dll" />
-          </Obfuscator>
-          "@
-          Set-Content -Path obfuscar.xml -Value $config
-          Write-Host $config
-
-      - name: Obfusca GDCPluginManager.Core.dll
-        run: obfuscar.console obfuscar.xml
-
-      - name: Inlocuieste Core.dll cu versiunea obfuscata
-        shell: pwsh
-        run: |
-          $obfuscated = "obfuscated\GDCPluginManager.Core.dll"
-          if (-not (Test-Path $obfuscated)) {
-            Write-Error "Obfuscarea nu a produs $obfuscated - opresc build-ul, mai bine un build esuat vizibil decat unul care publica silentios DLL-ul neobfuscat."
-            exit 1
-          }
-          Copy-Item $obfuscated "publish\GDCPluginManager.Core.dll" -Force
-          Write-Host "Core.dll obfuscat, copiat peste versiunea din publish\"
-
-      # Smoke test: dovedeste ca API-ul PUBLIC al Core.dll obfuscat inca
+      # Smoke test: dovedeste ca API-ul PUBLIC al Core.dll inca
       # functioneaza EXACT ca inainte, apelat dintr-un binar separat — exact
       # cum face GDCPluginManager.exe. "Build-ul a reusit" nu e suficient:
       # KeepPublicApi=true e o SETARE, nu o garantie — asta chiar RULEAZA
       # DLL-ul obfuscat si verifica un rezultat cunoscut dinainte (calculat
       # independent, in Python, pe Mac — vezi valoarea asteptata mai jos).
       # Daca obfuscarea a rupt ceva, build-ul pica AICI, nu la un utilizator.
-      - name: Smoke test — Core.dll obfuscat raspunde corect
+      - name: Smoke test — Core.dll raspunde corect
         shell: pwsh
         run: |
           $coreDll = (Resolve-Path "publish\GDCPluginManager.Core.dll").Path
