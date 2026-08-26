@@ -553,13 +553,46 @@
                                  Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
                     </Grid>
                 </Border>
-                <Button Grid.Column="1" Margin="10,0,0,0" Command="{Binding RefreshCommand}"
-                        IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolean}}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="15" Margin="0,0,8,0" />
-                        <TextBlock Text="Reincarca" />
-                    </StackPanel>
-                </Button>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <!-- Indicator global 🔴/🟢 Dependinte (vezi CLAUDE.md, Partea 1,
+                         Regula 4) — click deschide DependencyPanelWindow. -->
+                    <Button Margin="0,0,10,0" Padding="8,4" Background="Transparent" BorderThickness="0"
+                            Click="DependencyBadge_Click">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
+                                <Ellipse.Style>
+                                    <Style TargetType="Ellipse">
+                                        <Setter Property="Fill" Value="#FFE2584A" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
+                                                <Setter Property="Fill" Value="#FF4CAF7D" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Ellipse.Style>
+                            </Ellipse>
+                            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource InkTextMutedBrush}" FontSize="12">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Text" Value="Necesită atenție" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
+                                                <Setter Property="Text" Value="Sistem pregătit" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
+                        </StackPanel>
+                    </Button>
+                    <Button Command="{Binding RefreshCommand}"
+                            IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolean}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="15" Margin="0,0,8,0" />
+                            <TextBlock Text="Reincarca" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
 
                 <!-- Filtru rapid Toate/Gratuite/Premium — cerut explicit
                      2026-08-24, ca cine vrea doar uneltele gratuite sa le

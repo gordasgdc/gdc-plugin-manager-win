@@ -63,6 +63,15 @@ public partial class MainWindow : Window
     /// MainViewModel) — e aceeași sursă pe care InitializeCommand a folosit-o
     /// deja ca să populeze bannerul, deci nu mai trebuie dus un al doilea
     /// obiect prin ViewModel doar pentru popup.
+    /// Deschide DependencyPanelWindow — indicatorul 🔴/🟢 din header (vezi
+    /// CLAUDE.md, Partea 1, Regula 4). Fereastra citeste live din
+    /// _viewModel.AllDependencies (DataContext), deci "Reverifica tot" din
+    /// panou actualizeaza fara sa inchida/redeschida nimic.
+    private void DependencyBadge_Click(object sender, RoutedEventArgs e)
+    {
+        Views.DependencyPanelWindow.ShowFor(_viewModel);
+    }
+
     private async Task MaybeShowUpdatePopupAsync()
     {
         var info = UpdateChecker.Shared.AvailableUpdate;

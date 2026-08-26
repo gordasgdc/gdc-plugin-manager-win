@@ -95,10 +95,22 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string? _updateDownloadUrl;
 
-    /// Dependinte de sistem lipsa (ex. DaVinci Resolve neinstalat) — vezi
-    /// SystemDependencyChecker.cs. Port 1:1 al DependencyBanner din
-    /// ContentView.swift.
+    /// Dependinte de sistem lipsa OBLIGATORII (ex. DaVinci Resolve
+    /// neinstalat) — vezi SystemDependencyChecker.cs. Port 1:1 al
+    /// DependencyBanner din ContentView.swift. Cele optionale NU intra
+    /// aici (nu declanseaza bannerul de sus), doar in AllDependencies
+    /// (panoul dedicat).
     public ObservableCollection<SystemDependency> MissingDependencies { get; } = [];
+
+    /// TOATE componentele (inclusiv optionale) — sursa panoului dedicat
+    /// "Verificare & Dependinte Sistem", deschis din indicatorul
+    /// 🔴/🟢 din header. Port 1:1 al DependencyPanel.swift (Mac).
+    public ObservableCollection<SystemDependency> AllDependencies { get; } = [];
+
+    /// Indicatorul global e verde DOAR daca toate componentele
+    /// OBLIGATORII (IsOptional == false) sunt prezente — cele optionale
+    /// (foldere, Scripting API) nu blocheaza starea globala.
+    public bool IsDependenciesReady => AllDependencies.Count == 0 || AllDependencies.Where(d => !d.IsOptional).All(d => d.IsPresent);
 
     // Aplicatia mobila companion (fost APK/TWA, RETRAS 2026-08-24 — cerut
     // explicit de Cristi: "scapam complet de problemele cu certificatele,
@@ -177,8 +189,22 @@ public sealed partial class MainViewModel : ObservableObject
             UpdateDownloadUrl = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
         }
 
+        RefreshDependencies();
+    }
+
+    /// Reverifica toate componentele — apelata la lansare (InitializeAsync)
+    /// si din butonul "Reverifica tot" al panoului dedicat.
+    [RelayCommand]
+    private void RefreshDependencies()
+    {
+        var all = SystemDependencyChecker.CheckAll();
+
+        AllDependencies.Clear();
+        foreach (var dep in all) AllDependencies.Add(dep);
+        OnPropertyChanged(nameof(IsDependenciesReady));
+
         MissingDependencies.Clear();
-        foreach (var dep in SystemDependencyChecker.CheckAll().Where(d => !d.IsPresent))
+        foreach (var dep in all.Where(d => !d.IsPresent && !d.IsOptional))
         {
             MissingDependencies.Add(dep);
         }
@@ -192,6 +218,7 @@ public sealed partial class MainViewModel : ObservableObject
             Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
         }
     }
+
 
     [RelayCommand]
     public async Task RefreshAsync()
