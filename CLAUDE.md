@@ -289,3 +289,9 @@ raționamentul complet. Aici, nou:
   `DependencyPanelWindow`/`LightboxWindow`).
 - `RevocationCheck.cs` — RPC `is_license_revoked`, fail-open. Verificat
   prin CI real (`windows-latest`) — XAML compilează curat.
+
+## Faza 4 (2026-08-26) — Update Checker popup cu Release Notes (Windows)
+Port 1:1 al Mac — `MainWindow.xaml.cs`, `MaybeShowUpdatePopupAsync()`
+include acum `info.Changes` în conținutul `Wpf.Ui.Controls.MessageBox` +
+buton redenumit "Actualizează acum". Verificat prin CI real
+(`windows-latest`) — success.
