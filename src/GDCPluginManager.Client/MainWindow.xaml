@@ -516,7 +516,18 @@
 
                 <Separator Margin="16,16" />
 
-                <TextBlock Text="ID MASINA" Style="{StaticResource MutedTextStyle}" Margin="16,0,0,4" />
+                <!-- Profil Utilizator opțional (vezi CLAUDE.md, Partea 1,
+                     Regula 12) - Nume/Anonim + Email + Machine ID, editabil
+                     prin buton. Port 1:1 al ProfileSidebarBlock.swift (Mac). -->
+                <TextBlock Text="PROFIL UTILIZATOR" Style="{StaticResource MutedTextStyle}" Margin="16,0,0,4" />
+                <Button Click="ProfileEditor_Click" Background="Transparent" BorderThickness="0"
+                        HorizontalContentAlignment="Left" Padding="16,0,16,0" Margin="0,0,0,4">
+                    <StackPanel>
+                        <TextBlock Text="{Binding ProfileDisplayName}" FontSize="12" FontWeight="Medium" />
+                        <TextBlock Text="{Binding ProfileEmail}" FontSize="11" Style="{StaticResource MutedTextStyle}" />
+                    </StackPanel>
+                </Button>
+                <TextBlock Text="ID MASINA" Style="{StaticResource MutedTextStyle}" Margin="16,4,0,4" />
                 <TextBlock Text="{Binding MachineIdDisplay}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"
                            Margin="16,0,16,0" Style="{StaticResource MutedTextStyle}" />
             </StackPanel>

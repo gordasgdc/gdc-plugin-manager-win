@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Versioning;
 using System.Text.Json;
@@ -76,7 +77,13 @@ public sealed class LicenseManager : INotifyPropertyChanged
     /// de a lor proprie. Fara proba globala de aplicatie: aplicatia e
     /// gratuita, doar produsele platite se deblocheaza, iar cele gratuite
     /// sunt pur si simplu... gratuite.
-    public bool IsUnlocked(PluginItem item) => item.IsFree || _licensedProducts.ContainsKey(item.Id);
+    public bool IsUnlocked(PluginItem item) =>
+        item.IsFree || (_licensedProducts.ContainsKey(item.Id) && !RevocationCheck.IsRevoked(item.Id));
+
+    /// Reverifica revocarea online (fail-open, vezi RevocationCheck.cs)
+    /// pentru toate produsele licentiate curent. Apelata la pornire -
+    /// niciodata sincron/blocanta pentru UI.
+    public Task RefreshRevocationsAsync() => RevocationCheck.RefreshAsync(_licensedProducts.Keys.ToList());
 
     /// Valideaza un cod lipit fata de fiecare produs din catalog. Un serial
     /// contine doar un HASH al product id-ului (vezi formatul din
@@ -109,6 +116,7 @@ public sealed class LicenseManager : INotifyPropertyChanged
                 _licensedProducts[productId] = payload;
                 Raise(nameof(LicensedProducts));
                 Raise(nameof(IsLicensed));
+                _ = RevocationCheck.RefreshAsync(new[] { productId });
                 return true;
             }
             catch (LicenseCore.ValidationError ex) when (ex.Kind == LicenseCore.ValidationErrorKind.WrongProduct)

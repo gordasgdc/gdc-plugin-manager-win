@@ -126,6 +126,20 @@ public sealed partial class MainViewModel : ObservableObject
 
     public string MachineIdDisplay => MachineID.Display;
 
+    /// Profil Utilizator opțional in sidebar (vezi CLAUDE.md, Partea 1,
+    /// Regula 12) — port 1:1 al ProfileSidebarBlock.swift (Mac).
+    public string ProfileDisplayName => UserProfileStore.Shared.DisplayName;
+    public string ProfileEmail => UserProfileStore.Shared.Email;
+    public string ProfileMachineId => UserProfileStore.Shared.MachineId;
+
+    /// Apelată din ProfileEditorWindow după salvare — reface bindings
+    /// derivate (DisplayName/Email) fără să reîncarce tot ViewModel-ul.
+    public void NotifyProfileChanged()
+    {
+        OnPropertyChanged(nameof(ProfileDisplayName));
+        OnPropertyChanged(nameof(ProfileEmail));
+    }
+
     public MainViewModel()
     {
         _selectedCategory = Categories[0];
@@ -190,6 +204,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         RefreshDependencies();
+        await GDCPluginManager.Core.Services.LicenseManager.Shared.RefreshRevocationsAsync();
     }
 
     /// Reverifica toate componentele — apelata la lansare (InitializeAsync)

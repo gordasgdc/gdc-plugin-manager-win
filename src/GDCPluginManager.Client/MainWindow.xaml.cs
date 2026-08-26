@@ -72,6 +72,11 @@ public partial class MainWindow : Window
         Views.DependencyPanelWindow.ShowFor(_viewModel);
     }
 
+    private void ProfileEditor_Click(object sender, RoutedEventArgs e)
+    {
+        Views.ProfileEditorWindow.ShowFor(_viewModel);
+    }
+
     private async Task MaybeShowUpdatePopupAsync()
     {
         var info = UpdateChecker.Shared.AvailableUpdate;
