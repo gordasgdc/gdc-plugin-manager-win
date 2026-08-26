@@ -127,5 +127,6 @@ jobs:
       - name: Incarca instalatorul ca artefact descarcabil
         uses: actions/upload-artifact@v4
         with:
+          retention-days: 1
           name: GDCPluginManager-Windows-Installer
           path: Output\GDCPluginManagerSetup.exe
