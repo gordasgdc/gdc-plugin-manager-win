@@ -13,12 +13,14 @@ public sealed class UserProfileStore
 
     private const string NameKey = "gdcpm_profile_name";
     private const string EmailKey = "gdcpm_profile_email";
+    private const string OnboardedKey = "gdcpm_onboarded";
     private static string SettingsPath => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
         "GDCPluginManager", "profile.txt");
 
     public string Name { get; private set; } = "";
     public string Email { get; private set; } = "";
+    public bool HasOnboarded { get; private set; }
     public string MachineId => MachineID.Display;
 
     public string DisplayName
@@ -49,6 +51,16 @@ public sealed class UserProfileStore
         }
     }
 
+    /// Marcheaza modalul de onboarding ca aratat, indiferent daca userul a
+    /// completat sau a inchis fereastra fara sa salveze (Skip) - nu mai
+    /// trebuie sa reapara la fiecare pornire. Port 1:1 al
+    /// "gdcpm_onboarded" (UserDefaults, Mac).
+    public void MarkOnboarded()
+    {
+        HasOnboarded = true;
+        Persist();
+    }
+
     private void Load()
     {
         try
@@ -63,6 +75,7 @@ public sealed class UserProfileStore
                 var value = line[(idx + 1)..];
                 if (key == NameKey) Name = value;
                 else if (key == EmailKey) Email = value;
+                else if (key == OnboardedKey) HasOnboarded = value == "1";
             }
         }
         catch { /* fisier lipsa/corupt - ramane profil gol */ }
@@ -73,7 +86,10 @@ public sealed class UserProfileStore
         try
         {
             Directory.CreateDirectory(Path.GetDirectoryName(SettingsPath)!);
-            File.WriteAllLines(SettingsPath, new[] { $"{NameKey}={Name}", $"{EmailKey}={Email}" });
+            File.WriteAllLines(SettingsPath, new[]
+            {
+                $"{NameKey}={Name}", $"{EmailKey}={Email}", $"{OnboardedKey}={(HasOnboarded ? "1" : "0")}",
+            });
         }
         catch { /* nu bloca UI-ul daca scrierea esueaza */ }
     }

@@ -46,6 +46,18 @@ public partial class MainWindow : Window
         }
 
         await MaybeShowUpdatePopupAsync();
+
+        // Onboarding opțional la prima pornire - port 1:1 al
+        // "gdcpm_onboarded" din ContentView.swift (Mac). Lipsea complet
+        // pe Windows (gasit la audit 2026-08-26); reutilizeaza
+        // ProfileEditorWindow ca modal de onboarding - inchiderea ei in
+        // orice fel (Salveaza sau X) marcheaza onboarding-ul facut, nu
+        // mai reapare la urmatoarele porniri.
+        if (!UserProfileStore.Shared.HasOnboarded)
+        {
+            Views.ProfileEditorWindow.ShowFor(_viewModel);
+            UserProfileStore.Shared.MarkOnboarded();
+        }
     }
 
     /// Pop-up modal, pe lânga bannerul din antet (nu în locul lui): bannerul
@@ -75,6 +87,29 @@ public partial class MainWindow : Window
     private void ProfileEditor_Click(object sender, RoutedEventArgs e)
     {
         Views.ProfileEditorWindow.ShowFor(_viewModel);
+    }
+
+    /// Buton manual "Cauta actualizari" (footer sidebar) - mereu arata
+    /// rezultatul real, chiar daca versiunea a fost deja inchisa/dismissed
+    /// anterior (altfel butonul manual ar minti "esti la zi" pe o versiune
+    /// reala doar respinsa candva). Port 1:1 al comportamentului cerut in
+    /// gdc-vault-win/CLAUDE.md pentru acelasi buton.
+    private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
+    {
+        await UpdateChecker.Shared.CheckAsync();
+        var info = UpdateChecker.Shared.AvailableUpdate;
+        if (info is null)
+        {
+            var upToDateBox = new Wpf.Ui.Controls.MessageBox
+            {
+                Title = "Actualizări",
+                Content = $"Ești la zi — rulezi deja ultima versiune ({_viewModel.AppVersionDisplay}).",
+                CloseButtonText = "OK",
+            };
+            await upToDateBox.ShowDialogAsync();
+            return;
+        }
+        await MaybeShowUpdatePopupAsync();
     }
 
     private async Task MaybeShowUpdatePopupAsync()

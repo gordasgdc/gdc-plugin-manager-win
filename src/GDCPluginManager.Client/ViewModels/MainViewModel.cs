@@ -126,6 +126,11 @@ public sealed partial class MainViewModel : ObservableObject
 
     public string MachineIdDisplay => MachineID.Display;
 
+    /// Versiune vizibila in UI, obligatoriu (CLAUDE.md, Partea 1, Regula 7) -
+    /// lipsea complet din sidebar-ul Windows (gasit la audit 2026-08-26).
+    public string AppVersionDisplay =>
+        $"v{System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "?"}";
+
     /// Profil Utilizator opțional in sidebar (vezi CLAUDE.md, Partea 1,
     /// Regula 12) — port 1:1 al ProfileSidebarBlock.swift (Mac).
     public string ProfileDisplayName => UserProfileStore.Shared.DisplayName;
@@ -374,5 +379,15 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         LicensePane.RebuildOwnedLicenses();
+
+        // BUG REAL gasit 2026-08-26: Products.Clear() + Add() individual
+        // (mai sus) nu re-aplica intotdeauna filtrul activ al ProductsView
+        // (ListCollectionView cu Filter setat) - daca SelectedCategory
+        // ramane "Toate" (neschimbata) intre doua rebuild-uri, OnSelectedCategoryChanged
+        // nu mai declanseaza ProductsView.Refresh(), iar lista ramane goala/
+        // stale pana userul comuta manual pe alta categorie si inapoi.
+        // Fix: Refresh() explicit, necondiționat, de fiecare data cand
+        // Products se reconstruieste.
+        ProductsView?.Refresh();
     }
 }

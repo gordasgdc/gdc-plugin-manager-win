@@ -151,7 +151,7 @@
                                 Visibility="{Binding IsUnlocked, Converter={StaticResource InverseBoolToVisibility}}">
                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                                 <ui:SymbolIcon Symbol="Cart24" FontSize="14" Margin="0,0,7,0" />
-                                <TextBlock Text="Cumpara" />
+                                <TextBlock Text="Doneaza" />
                             </StackPanel>
                         </Button>
 
@@ -314,7 +314,7 @@
                         <ui:SymbolIcon Symbol="Book24" FontSize="20" Margin="0,10,0,0" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
-                        <Button Content="Cumpara" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding BuyCommand}" />
+                        <Button Content="Doneaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding BuyCommand}" />
                     </StackPanel>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTip="Vezi tutorialul explicativ"
@@ -412,14 +412,33 @@
 
     <Grid>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="200" />
+            <!-- Redimensionabila (GridSplitter dedesubt) - lipsea complet,
+                 latimea 200 era fixa "in cod", nu doar valoarea implicita.
+                 240 implicit (mai generos, cerut explicit) intre 200-420. -->
+            <ColumnDefinition Width="240" MinWidth="200" MaxWidth="420" />
+            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
 
         <!-- Bara laterala -->
         <Border Grid.Column="0" Background="{StaticResource InkSurfaceBrush}" BorderBrush="{StaticResource InkBorderBrush}"
                 BorderThickness="0,0,1,0">
-            <StackPanel Margin="0,20,0,0">
+            <!-- BUG REAL gasit 2026-08-26: sidebar-ul era un StackPanel simplu,
+                 fara ScrollViewer - pe o fereastra mai scunda decat continutul
+                 (multe categorii + Cursuri/Materiale/etc. + Licenta), tot ce
+                 venea dupa "Licenta" (Profil/HWID, versiunea) era pur si simplu
+                 CLIPAT, invizibil, fara nicio bara de scroll care sa arate ca
+                 mai exista continut. Fix: Grid cu 2 randuri - continutul
+                 categoriilor scroll-abil (Row 0, *), footer-ul (Profil/HWID +
+                 versiune) FIX, mereu vizibil (Row 1, Auto), nu mai poate fi
+                 clipat sub nicio inaltime de fereastra. -->
+            <Grid Margin="0,20,0,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
+            <ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
                 <TextBlock Text="GDC PLUGIN MANAGER" Style="{StaticResource MutedTextStyle}" Margin="16,0,0,16"
                            FontWeight="SemiBold" />
                 <ItemsControl ItemsSource="{Binding Categories}">
@@ -517,27 +536,66 @@
                     </StackPanel>
                 </RadioButton>
 
-                <Separator Margin="16,16" />
+            </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer FIX (nu scroll-eaza cu restul) - Profil/HWID + versiune,
+                 mereu vizibile indiferent de inaltimea ferestrei sau numarul
+                 de categorii deasupra. -->
+            <StackPanel Grid.Row="1">
+                <Separator Margin="16,8" />
 
                 <!-- Profil Utilizator opțional (vezi CLAUDE.md, Partea 1,
                      Regula 12) - Nume/Anonim + Email + Machine ID, editabil
                      prin buton. Port 1:1 al ProfileSidebarBlock.swift (Mac). -->
-                <TextBlock Text="PROFIL UTILIZATOR" Style="{StaticResource MutedTextStyle}" Margin="16,0,0,4" />
+                <!-- Marit 2026-08-26 (cerut explicit: zona era "miniaturizata,
+                     greu de citit") - 12/11/11px -> 14/13/12px, padding
+                     vertical marit pe randul editabil. -->
+                <TextBlock Text="PROFIL UTILIZATOR" Style="{StaticResource MutedTextStyle}" Margin="16,0,0,6" />
                 <Button Click="ProfileEditor_Click" Background="Transparent" BorderThickness="0"
-                        HorizontalContentAlignment="Left" Padding="16,0,16,0" Margin="0,0,0,4">
+                        HorizontalContentAlignment="Left" Padding="16,4,16,4" Margin="0,0,0,6">
                     <StackPanel>
-                        <TextBlock Text="{Binding ProfileDisplayName}" FontSize="12" FontWeight="Medium" />
-                        <TextBlock Text="{Binding ProfileEmail}" FontSize="11" Style="{StaticResource MutedTextStyle}" />
+                        <TextBlock Text="{Binding ProfileDisplayName}" FontSize="14" FontWeight="Medium" />
+                        <TextBlock Text="{Binding ProfileEmail}" FontSize="13" Style="{StaticResource MutedTextStyle}" Margin="0,2,0,0" />
                     </StackPanel>
                 </Button>
                 <TextBlock Text="ID MASINA" Style="{StaticResource MutedTextStyle}" Margin="16,4,0,4" />
-                <TextBlock Text="{Binding MachineIdDisplay}" FontFamily="Consolas" FontSize="11" TextWrapping="Wrap"
+                <TextBlock Text="{Binding MachineIdDisplay}" FontFamily="Consolas" FontSize="12" TextWrapping="Wrap"
                            Margin="16,0,16,0" Style="{StaticResource MutedTextStyle}" />
+
+                <!-- Versiune vizibila in UI, obligatoriu (CLAUDE.md, Partea 1,
+                     Regula 7 + Checklist de release) - lipsea complet pe
+                     Windows, gasit la audit 2026-08-26 (jurnalul "Faza 3"
+                     mintea ca era deja facuta). + buton manual de verificare,
+                     mereu arata rezultatul real (nu respecta un dismissal
+                     anterior, ca sa nu minta "esti la zi" pe o versiune deja
+                     respinsa candva). -->
+                <Separator Margin="16,12,16,8" />
+                <Grid Margin="16,0,16,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0" Text="{Binding AppVersionDisplay}" FontSize="11"
+                               VerticalAlignment="Center" Style="{StaticResource MutedTextStyle}" />
+                    <Button Grid.Column="1" Content="Caută actualizări" FontSize="11" Padding="8,3"
+                            Background="Transparent" BorderThickness="1" BorderBrush="{StaticResource InkBorderBrush}"
+                            Click="CheckForUpdates_Click" />
+                </Grid>
             </StackPanel>
+            </Grid>
         </Border>
 
+        <!-- GridSplitter - face bara laterala redimensionabila manual, tras
+             de mouse. Latime vizuala minima (Width="4") dar cu o zona de
+             hit-test mai larga (Padding negativ prin ShowsPreview=False
+             implicit + cursor SizeWE), usor de apucat fara sa fie un bloc
+             vizual gros intre sidebar si continut. -->
+        <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
+                      Background="{StaticResource InkBorderBrush}" ResizeBehavior="PreviousAndNext" />
+
         <!-- Continut principal -->
-        <Grid Grid.Column="1">
+        <Grid Grid.Column="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -569,35 +627,55 @@
                 </Border>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <!-- Indicator global 🔴/🟢 Dependinte (vezi CLAUDE.md, Partea 1,
-                         Regula 4) — click deschide DependencyPanelWindow. -->
-                    <Button Margin="0,0,10,0" Padding="8,4" Background="Transparent" BorderThickness="0"
+                         Regula 4) — click deschide DependencyPanelWindow.
+                         Redesenat 2026-08-26 ca pill Shift real (fundal +
+                         bordura definita), aliniat vizual cu varianta Mac
+                         (badge-ul "Sistem pregatit" din header), nu doar
+                         text plat pe fundal transparent. -->
+                    <Button Margin="0,0,10,0" Padding="0" Background="Transparent" BorderThickness="0"
                             Click="DependencyBadge_Click">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="8" Height="8" Margin="0,0,6,0" VerticalAlignment="Center">
-                                <Ellipse.Style>
-                                    <Style TargetType="Ellipse">
-                                        <Setter Property="Fill" Value="#FFE2584A" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
-                                                <Setter Property="Fill" Value="#FF4CAF7D" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Ellipse.Style>
-                            </Ellipse>
-                            <TextBlock VerticalAlignment="Center" Foreground="{StaticResource InkTextMutedBrush}" FontSize="12">
-                                <TextBlock.Style>
-                                    <Style TargetType="TextBlock">
-                                        <Setter Property="Text" Value="Necesită atenție" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
-                                                <Setter Property="Text" Value="Sistem pregătit" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </TextBlock.Style>
-                            </TextBlock>
-                        </StackPanel>
+                        <Border CornerRadius="12" Padding="10,5" BorderThickness="1">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="Background" Value="#332A1D" />
+                                    <Setter Property="BorderBrush" Value="#FFE2584A" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
+                                            <Setter Property="Background" Value="#1D2E24" />
+                                            <Setter Property="BorderBrush" Value="#FF4CAF7D" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="8" Height="8" Margin="0,0,7,0" VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="#FFE2584A" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
+                                                    <Setter Property="Fill" Value="#FF4CAF7D" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock VerticalAlignment="Center" FontSize="12" FontWeight="Medium">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock">
+                                            <Setter Property="Text" Value="Necesită atenție" />
+                                            <Setter Property="Foreground" Value="#FFE2584A" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsDependenciesReady}" Value="True">
+                                                    <Setter Property="Text" Value="Sistem pregătit" />
+                                                    <Setter Property="Foreground" Value="#FF4CAF7D" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
                     </Button>
                     <Button Command="{Binding RefreshCommand}"
                             IsEnabled="{Binding IsLoading, Converter={StaticResource InverseBoolean}}">
@@ -932,7 +1010,7 @@
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,14,0,0">
                         <StackPanel>
                             <TextBlock Text="Vrei sa deblochezi un produs?" Style="{StaticResource HeadingTextStyle}" />
-                            <TextBlock Text="Pretul de pe fiecare card e o donatie, o singura data, care ajuta la dezvoltarea in continuare a produselor."
+                            <TextBlock Text="Suma de pe fiecare card e o donatie, o singura data, care ajuta la dezvoltarea in continuare a produselor - nu un pret de vanzare."
                                        Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,10" />
                             <Button Style="{StaticResource PrimaryButtonStyle}" HorizontalAlignment="Left" Padding="20,7"
                                     Command="{Binding OpenWhatsAppCommand}">
