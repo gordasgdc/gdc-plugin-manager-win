@@ -36,3 +36,4 @@ src/GDCPluginManager.Core/Services/PrivateCatalogAuth.cs
 *.key
 *.pem
 *.mobileprovision
+.DS_Store
