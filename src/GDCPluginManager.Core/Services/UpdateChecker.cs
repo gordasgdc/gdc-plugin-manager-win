@@ -46,6 +46,20 @@ public sealed class UpdateChecker : INotifyPropertyChanged
 
     public UpdateInfo? AvailableUpdate { get; private set; }
 
+    /// PITFALL FIXED 2026-08-26: `AvailableUpdate` respecta filtrul de
+    /// dismissal (corect pentru bannerul/pop-up-ul PASIV, care nu trebuie
+    /// sa reaparea pe o versiune deja inchisa). Dar butonul MANUAL "Cauta
+    /// actualizari" citea tot `AvailableUpdate` — deci daca o versiune
+    /// fusese respinsa o data (chiar din greseala), butonul manual minea
+    /// "Esti la zi" desi exista clar o versiune mai noua. Reprodus live:
+    /// log real cu `info.Version=1.3.0, IsNewer=True, dismissed=1.3.0`,
+    /// urmat de popup/banner ascunse — exact ce comentariul de la
+    /// CheckForUpdates_Click avertiza sa NU se intample.
+    /// `LatestInfo` e sursa ADEVARATA, necenzurata de dismissal — orice
+    /// verificare declansata manual de user trebuie sa citeasca DE AICI,
+    /// niciodata din `AvailableUpdate`.
+    public UpdateInfo? LatestInfo { get; private set; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private static string CurrentVersion =>
@@ -55,10 +69,17 @@ public sealed class UpdateChecker : INotifyPropertyChanged
     {
         Log.Write($"CheckAsync start. CurrentVersion={CurrentVersion}");
         UpdateInfo? info;
+        // Cache-buster pe fiecare cerere: GitHub Pages (Fastly) serveste
+        // docs/update.json cu max-age=600 - un nod CDN care a raspuns o
+        // data la un update.json vechi il tine cache-uit pana la 10 minute,
+        // indiferent ce publicam intre timp. Acelasi pitfall deja documentat
+        // pentru coperti (CoverImageStore); aici avem nevoie de proaspat la
+        // fiecare check, nu de stabilitate, deci timestamp, nu hash.
+        var bustedUri = new Uri($"{UpdateUri}?t={DateTimeOffset.UtcNow.ToUnixTimeSeconds()}");
         try
         {
-            using var response = await _http.GetAsync(UpdateUri);
-            Log.Write($"GET {UpdateUri} -> {(int)response.StatusCode} {response.StatusCode}");
+            using var response = await _http.GetAsync(bustedUri);
+            Log.Write($"GET {bustedUri} -> {(int)response.StatusCode} {response.StatusCode}");
             if (!response.IsSuccessStatusCode) return;
             var data = await response.Content.ReadAsByteArrayAsync();
             Log.Write($"Body: {System.Text.Encoding.UTF8.GetString(data)}");
@@ -83,7 +104,9 @@ public sealed class UpdateChecker : INotifyPropertyChanged
         if (!isNewer)
         {
             AvailableUpdate = null;
+            LatestInfo = null;
             Raise(nameof(AvailableUpdate));
+            Raise(nameof(LatestInfo));
             return;
         }
 
@@ -92,6 +115,9 @@ public sealed class UpdateChecker : INotifyPropertyChanged
         // UpdateChecker.swift: un update mandatory ignora inchiderea
         // anterioara si reapare la fiecare CheckAsync() (lansare/refresh)
         // cat timp versiunea instalata ramane veche.
+        LatestInfo = info;
+        Raise(nameof(LatestInfo));
+
         var dismissed = ReadDismissedVersion();
         Log.Write($"dismissed={dismissed ?? "(none)"}");
         var alreadyDismissed = dismissed == info.Version && info.Mandatory != true;

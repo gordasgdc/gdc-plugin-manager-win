@@ -96,7 +96,14 @@ public partial class MainWindow : Window
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         await UpdateChecker.Shared.CheckAsync();
-        var info = UpdateChecker.Shared.AvailableUpdate;
+        // PITFALL FIXED 2026-08-26: citea AvailableUpdate, care e null si
+        // pentru "nu exista versiune noua" SI pentru "exista, dar a fost
+        // deja respinsa candva" — butonul manual minea "Esti la zi" pe o
+        // versiune reala doar inchisa anterior din popup/banner. Reprodus
+        // live cu un log real (info.Version=1.3.0, IsNewer=True,
+        // dismissed=1.3.0). `LatestInfo` nu e filtrat de dismissal — sursa
+        // corecta pentru orice verificare declansata explicit de user.
+        var info = UpdateChecker.Shared.LatestInfo;
         if (info is null)
         {
             var upToDateBox = new Wpf.Ui.Controls.MessageBox
@@ -108,12 +115,15 @@ public partial class MainWindow : Window
             await upToDateBox.ShowDialogAsync();
             return;
         }
-        await MaybeShowUpdatePopupAsync();
+        await MaybeShowUpdatePopupAsync(info);
     }
 
-    private async Task MaybeShowUpdatePopupAsync()
+    private async Task MaybeShowUpdatePopupAsync(UpdateInfo? info = null)
     {
-        var info = UpdateChecker.Shared.AvailableUpdate;
+        // Apelul pasiv (din OnLoaded, la lansare) tot respecta dismissal-ul
+        // — foloseste AvailableUpdate. Apelul din CheckForUpdates_Click
+        // trece explicit LatestInfo (vezi comentariul de mai sus).
+        info ??= UpdateChecker.Shared.AvailableUpdate;
         if (info is null) return;
 
         var url = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
