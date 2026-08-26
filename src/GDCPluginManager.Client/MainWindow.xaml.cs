@@ -84,15 +84,26 @@ public partial class MainWindow : Window
 
         var url = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
 
+        // Faza 4 (vezi CLAUDE.md Partea 1 Regula 13): rezumatul modificarilor
+        // (Release Notes) din update.json (`Changes`) - camp optional,
+        // degradeaza elegant daca lipseste. Buton redenumit "Actualizeaza
+        // acum" (nu doar "Descarca") - tot NU e self-update silentios (vezi
+        // WARNING din UpdateChecker.cs), doar o denumire de actiune clara.
+        var content = $"Este disponibilă o nouă versiune! Te rugăm să descarci ultimul installer " +
+                      $"și să îl instalezi peste versiunea actuală. (v{info.Version})";
+        if (!string.IsNullOrWhiteSpace(info.Changes))
+        {
+            content += $"\n\nNoutăți:\n{info.Changes}";
+        }
+
         // Update marcat mandatory (docs/update.json): fara "Mai tarziu" —
         // vezi UpdateChecker.Dismiss(), nu se mai persista inchiderea
         // pentru mandatory, deci butonul ar fi oricum inutil aici.
         var box = new Wpf.Ui.Controls.MessageBox
         {
             Title = "Actualizare disponibilă",
-            Content = "Este disponibilă o nouă versiune! Te rugăm să descarci ultimul installer " +
-                      $"și să îl instalezi peste versiunea actuală. (v{info.Version})",
-            PrimaryButtonText = url is not null ? "Descarcă" : string.Empty,
+            Content = content,
+            PrimaryButtonText = url is not null ? "Actualizează acum" : string.Empty,
             CloseButtonText = info.Mandatory == true ? string.Empty : "Mai târziu",
         };
 
