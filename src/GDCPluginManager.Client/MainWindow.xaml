@@ -158,14 +158,17 @@
                         <Button Grid.Column="0"
                                 Command="{Binding InstallCommand}" IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolean}}"
                                 Visibility="{Binding IsUnlocked, Converter={StaticResource BoolToVisibility}}">
-                            <!-- Portocaliu-viu cand e disponibila o versiune noua — port 1:1 al
-                                 stilizarii butonului "Actualizeaza" din ContentView.swift (Mac). -->
+                            <!-- Albastru distinct cand e disponibila o versiune noua — dupa
+                                 retema Shift (2026-08-26), butonul Primary e deja amber, deci
+                                 vechiul portocaliu de aici s-ar fi confundat cu el; albastru
+                                 (aceeasi nuanta ca badge-ul "APLICATIE" de mai jos) ramane
+                                 clar distinct de accentul amber. -->
                             <Button.Style>
                                 <Style TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
                                     <Style.Triggers>
                                         <DataTrigger Binding="{Binding HasUpdate}" Value="True">
-                                            <Setter Property="Background" Value="#FFF08A24" />
-                                            <Setter Property="BorderBrush" Value="#FFF08A24" />
+                                            <Setter Property="Background" Value="#FF4EA1F5" />
+                                            <Setter Property="BorderBrush" Value="#FF4EA1F5" />
                                         </DataTrigger>
                                     </Style.Triggers>
                                 </Style>
