@@ -278,3 +278,14 @@ lipsește, spune-o explicit, nu declara release-ul "gata".
    site trebuie să pointeze mereu la `releases/latest/download/...`
    (HTTP 200 verificat, nu presupus) și să menționeze numărul ultimei
    versiuni.
+
+## Faza 3 (2026-08-26) — Profil/HWID sidebar + Sistem de Revocare Licențe (Windows)
+Port 1:1 al `gdc-plugin-manager` (Mac) — vezi CLAUDE.md de acolo pentru
+raționamentul complet. Aici, nou:
+- `SupabaseConfig.cs`/`AnalyticsClient.cs` — infrastructura Supabase
+  lipsea complet pe Windows înainte de asta.
+- `UserProfileStore.cs` (persistă Nume/Email în `%AppData%\GDCPluginManager\profile.txt`)
+  + `ProfileEditorWindow.xaml(.cs)` (fereastră modală, pattern identic cu
+  `DependencyPanelWindow`/`LightboxWindow`).
+- `RevocationCheck.cs` — RPC `is_license_revoked`, fail-open. Verificat
+  prin CI real (`windows-latest`) — XAML compilează curat.
