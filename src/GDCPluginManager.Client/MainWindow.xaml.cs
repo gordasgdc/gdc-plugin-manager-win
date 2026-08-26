@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -143,9 +142,11 @@ public partial class MainWindow : Window
         };
 
         var result = await box.ShowDialogAsync();
+        // Nu mai deschide browserul — vezi SelfUpdater.cs. `info` e acelasi
+        // obiect citit mai sus din UpdateChecker.Shared.AvailableUpdate.
         if (result == Wpf.Ui.Controls.MessageBoxResult.Primary && url is not null)
         {
-            Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+            await Services.SelfUpdater.DownloadAndInstallAsync(info);
         }
 
         // Inchiderea popup-ului (din orice buton) ascunde si bannerul si

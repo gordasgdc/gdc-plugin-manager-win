@@ -1,0 +1,23 @@
+<Window x:Class="GDCPluginManager.Client.Views.UpdateProgressWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Actualizare"
+        Width="380" SizeToContent="Height" MinWidth="380"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource InkSurfaceBrush}"
+        ShowInTaskbar="False"
+        ResizeMode="NoResize">
+    <!-- Fereastra minimala de progres pentru self-update — pereche a
+         UpdateProgressWindow din GDCPluginManager (Mac), AppKit acolo, WPF
+         aici. Doar text + o bara indeterminata: arhiva se descarca/
+         dezarhiveaza/lanseaza in cateva secunde-minute, nu justifica un
+         progres granular pe octeti. -->
+    <StackPanel Margin="20,18">
+        <TextBlock x:Name="TitleText" FontSize="13" FontWeight="SemiBold"
+                   Foreground="{StaticResource InkTextBrush}" />
+        <TextBlock x:Name="StatusText" FontSize="11" Margin="0,6,0,12"
+                   Foreground="{StaticResource InkTextMutedBrush}"
+                   TextWrapping="Wrap" />
+        <ProgressBar IsIndeterminate="True" Height="4" />
+    </StackPanel>
+</Window>

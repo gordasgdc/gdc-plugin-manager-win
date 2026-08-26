@@ -299,13 +299,15 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void ShowLicense() => CurrentPage = SidebarPage.License;
 
-    /// Deschide in browser pagina de descarcare a versiunii noi de aplicatie.
+    /// Descarca si instaleaza automat versiunea noua de aplicatie — vezi
+    /// SelfUpdater.cs pentru fluxul complet (descarcare, dezarhivare,
+    /// redenumire cu versiunea, lansare instalator).
     ///
-    /// NOTE — de ce browser si nu instalare automata: actualizarea APLICATIEI
-    /// nu e (inca) un self-update in-app. Pe Windows instalarea se face cu
-    /// GDCPluginManagerSetup.exe, iar un instalator nu poate suprascrie un
-    /// .exe care ruleaza — ar fi nevoie de un proces separat care asteapta
-    /// iesirea aplicatiei, ruleaza setup-ul si o reporneste.
+    /// PROCESS (2026-08-26): pana acum deschidea doar pagina de descarcare
+    /// in browser. Portat 1:1 dupa DataMover (Mac), care a verificat live
+    /// ca reteta functioneaza. Aici, spre deosebire de Mac, instalatorul
+    /// Inno ramane NESILENTIOS — vezi WARNING din SelfUpdater.cs despre
+    /// AppMutex/CloseApplications, care nu sunt configurate in installer.iss.
     ///
     /// WARNING: a NU se confunda cu actualizarea PRODUSELOR (LUT/DCTL/OFX/
     /// PowerGrade), care e complet in-app, cu un click, prin
@@ -313,18 +315,13 @@ public sealed partial class MainViewModel : ObservableObject
     /// afisat cand versiunea din catalog e mai noua decat cea instalata.
     /// Sunt doua fluxuri diferite, cu doua surse diferite:
     ///   produse   -> catalog.json  -> InstallManager (1 click, in-app)
-    ///   aplicatia -> update.json   -> acest buton     (deschide browserul)
+    ///   aplicatia -> update.json   -> acest buton     -> SelfUpdater
     [RelayCommand]
-    private void DownloadUpdate()
+    private async Task DownloadUpdate()
     {
-        var url = UpdateDownloadUrl;
-        // Doar http/https: update.json e al nostru, dar un URL invalid aici
-        // ar ajunge direct in ShellExecute.
-        if (string.IsNullOrWhiteSpace(url)) return;
-        if (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
-            && !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)) return;
-
-        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+        var info = UpdateChecker.Shared.AvailableUpdate;
+        if (info is null) return;
+        await SelfUpdater.DownloadAndInstallAsync(info);
     }
 
     [RelayCommand]
