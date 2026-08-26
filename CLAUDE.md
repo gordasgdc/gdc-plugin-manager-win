@@ -295,3 +295,10 @@ Port 1:1 al Mac — `MainWindow.xaml.cs`, `MaybeShowUpdatePopupAsync()`
 include acum `info.Changes` în conținutul `Wpf.Ui.Controls.MessageBox` +
 buton redenumit "Actualizează acum". Verificat prin CI real
 (`windows-latest`) — success.
+
+## Etapa finală (2026-08-26) — Shift UI redesign complet (Windows)
+`Theme.xaml`: toate cele 8 token-uri de culoare (Brand/Ink*) înlocuite cu
+paleta Shift (identică Mac/gordas.dev) — cascadează automat în toate
+ferestrele prin `StaticResource`. Buton "Actualizează" (stare HasUpdate)
+recolorat albastru distinct (portocaliul vechi s-ar fi confundat cu
+accentul Primary, care e amber acum). Verificat prin CI real — success.
