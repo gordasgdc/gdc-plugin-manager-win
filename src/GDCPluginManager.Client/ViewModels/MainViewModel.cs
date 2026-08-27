@@ -25,6 +25,7 @@ public enum PriceFilter { All, Free, Paid }
 public enum SidebarPage
 {
     Catalog,
+    AudioTracks,
     Courses,
     EducationalResources,
     Events,
@@ -51,6 +52,7 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<PartnerStoreViewModel> PartnerStores { get; } = [];
     public ObservableCollection<ServiceCenterViewModel> ServiceCenters { get; } = [];
     public ObservableCollection<AppLinkViewModel> Apps { get; } = [];
+    public ObservableCollection<AudioTrackViewModel> AudioTracks { get; } = [];
 
     public LicensePaneViewModel LicensePane { get; }
 
@@ -259,6 +261,13 @@ public sealed partial class MainViewModel : ObservableObject
     [RelayCommand]
     private void SelectCategory(CategoryFilter category) => SelectedCategory = category;
 
+    // Plasata imediat langa categoriile LUT/DCTL/OFX/PowerGrade in sidebar
+    // (nu langa Cursuri/Materiale/etc.) — la fel ca pe Mac (SidebarSection.audio,
+    // ContentView.swift), chiar daca arhitectural AudioTrack e mai aproape de
+    // AppLink (fara PluginType/install/licenta).
+    [RelayCommand]
+    private void ShowAudioTracks() => CurrentPage = SidebarPage.AudioTracks;
+
     [RelayCommand]
     private void ShowCourses() => CurrentPage = SidebarPage.Courses;
 
@@ -373,6 +382,12 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var app in CatalogService.Shared.Apps)
         {
             Apps.Add(new AppLinkViewModel(app));
+        }
+
+        AudioTracks.Clear();
+        foreach (var track in CatalogService.Shared.AudioTracks)
+        {
+            AudioTracks.Add(new AudioTrackViewModel(track));
         }
 
         LicensePane.RebuildOwnedLicenses();

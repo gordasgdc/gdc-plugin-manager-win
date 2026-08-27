@@ -366,6 +366,35 @@ Jurnal append-only. Un rând nou de fiecare dată când găsim/rezolvăm un bug 
 - **2026-08-24 — Badge GRATUIT/LICENȚĂ/PROBĂ + filtru Toate/Gratuite/Premium pe Produse.** `ProductViewModel` capătă `BadgeText`/`BadgeBrush`/`BadgeTooltip`/`ShowPrice`; `MainViewModel` capătă `PriceFilter` (enum) + `SetPriceFilterCommand`, integrat în `FilterProduct`. Filtrul e randat ca al doilea rând în grid-ul deja existent al barei de căutare (Grid.Row="0", cu RowDefinitions noi LOCALE acelui Grid) — NU ca rând nou în grid-ul părinte de nivel superior, ca să nu deranjeze numerotarea `Grid.Row`/`RowSpan` deja folosită mai jos de ScrollViewer-e. Detalii complete (inclusiv investigația imaginilor Facebook) în `gdc-plugin-manager-catalog-vendor/CLAUDE.md`.
 - **2026-08-24 — REZOLVAT: codul QR lipsea pe Windows din pagina Android, DELIBERAT (nu bug) — comentariul vechi din `MainWindow.xaml` spunea explicit "WPF nu are un generator inclus si nu merita o dependinta noua doar pentru asta".** Cristi a cerut parity cu Mac-ul. Fix: pachet nou `QRCoder` (MIT, 1.6.0) — `PngByteQRCode` produce PNG pur managed, fără `System.Drawing.Common`. `QrCodeImageGenerator.cs` (Client/Services) generează un `BitmapImage` din `AndroidRelease.ApkUrl` — port 1:1 al `AndroidPane.qrImage(from:)` (Mac, `CIFilter.qrCodeGenerator`, correction level M, scalare ×10). `MainViewModel.OnAndroidReleaseChanged` regenerează `AndroidQrImage` automat de fiecare dată când `android.json` se reîncarcă. Fundal alb obligatoriu (contrast necesar pt. citire), `RenderOptions.BitmapScalingMode="NearestNeighbor"` — echivalentul `.interpolation(.none)` de pe Mac, altfel QR-ul iese neclar la scalare.
 
+## Secțiune nouă "Audio" (2026-08-27) — port 1:1 al Mac
+Port al `AudioTrack`/`SidebarSection.audio` din `gdc-plugin-manager`
+(Mac). `CatalogModel.cs`: record `AudioTrack` (Id/Name/Description/Url/
+YoutubeURL/CoverImage) + `Catalog.AudioTracks`, default `[]` (retrocompatibil,
+`PropertyNameCaseInsensitive` mapeaza `audioTracks` fara conflict).
+`CatalogService.cs`: proprietate + populare in `RefreshAsync`/`LoadFromCache`,
+`Raise(nameof(AudioTracks))`. `AudioTrackViewModel.cs` (nou) — port 1:1 al
+`AppLinkViewModel`, cu `Description` in plus. `MainViewModel.cs`:
+`SidebarPage.AudioTracks`, `ObservableCollection<AudioTrackViewModel> AudioTracks`,
+`ShowAudioTracksCommand`, populare in `RefreshDataAsync` (langa `Apps`).
+`MainWindow.xaml`: `RadioButton` plasat imediat langa categoriile
+LUT/DCTL/OFX/PowerGrade (ItemsControl `Categories`), NU langa Cursuri/
+Materiale — identic cu plasarea din `ContentView.swift` (Mac); `DataTemplate`
+pentru `AudioTrackViewModel` (mirror `AppLinkViewModel` + rand de descriere
+ca la Materiale) si pagina de continut (mirror pagina Aplicatii). Icon
+`MusicNote224` (Wpf.Ui 3.0.5) — verificat prezent prin `strings` pe
+`Wpf.Ui.dll` inainte de folosire (vezi pitfall `Symbol="Phone24"`
+2026-08-24 — `MusicNote2Play24` NU exista, doar varianta `20`; folosit
+`MusicNote224` in loc). **`dotnet build` pe Mac a trecut curat inclusiv pe
+Client (`net8.0-windows`), dar asta NU e o dovada ca XAML-ul e valid**
+(vezi pitfall 2026-08-23 — `PresentationBuildTasks` e Windows-only) —
+validat manual in schimb: XML well-formed (`xml.etree.ElementTree`) +
+toate cheile `StaticResource` folosite (`CardBorderStyle`, `BadgeBorderStyle`,
+`CoverButtonStyle`, etc.) sunt refolosite verbatim din `DataTemplate`-ul
+`AppLinkViewModel` deja existent, deci deja confirmate valide. Test real pe
+Windows tot recomandat inainte de release. Versiune: `1.3.1`→`1.4.0`
+(MINOR), sincron cu `docs/update.json` (Mac, `gdc-plugin-manager-catalog-vendor`)
+si cu Client Mac (`gdc-plugin-manager-catalog-vendor/Info.plist`, 1.4.0).
+
 ## DIRECTIVĂ PERMANENTĂ SUPREMĂ: Checklist obligatoriu la FIECARE release (2026-08-25)
 Valabilă pentru TOATE aplicațiile ecosistemului GDC (CursorPro, GDC Plugin
 Manager + Furnizor, GDC Plugin Manager Windows, DataMover, GDC Production

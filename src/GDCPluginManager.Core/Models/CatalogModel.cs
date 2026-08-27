@@ -408,6 +408,24 @@ public sealed record AppLink
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
+/// Port 1:1 al AudioTrack.swift — element din sectiunea "Audio", modelat
+/// pe AppLink dar cu Description in plus (un fisier/pachet audio are
+/// nevoie de mai mult context decat un simplu nume+link: format, metadate).
+public sealed record AudioTrack
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Description { get; init; }
+    public required string Url { get; init; }
+    public string? YoutubeURL { get; init; }
+
+    /// Coperta — preset `.icon`, la fel ca AppLink.
+    public string? CoverImage { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
+}
+
 /// Port 1:1 al EducationalResource.Kind din CatalogModel.swift. CamelCase
 /// naming policy pe un enum cu un singur cuvant produce exact "course" /
 /// "book" / "guide" (litera intai coborata), identic cu rawValue-ul din
@@ -531,6 +549,7 @@ public sealed class Catalog
     public IReadOnlyList<PluginItem> Items { get; init; } = [];
     public IReadOnlyList<Course> Courses { get; init; } = [];
     public IReadOnlyList<AppLink> Apps { get; init; } = [];
+    public IReadOnlyList<AudioTrack> AudioTracks { get; init; } = [];
     public IReadOnlyList<EducationalResource> EducationalResources { get; init; } = [];
     public IReadOnlyList<Event> Events { get; init; } = [];
     public IReadOnlyList<PartnerStore> PartnerStores { get; init; } = [];

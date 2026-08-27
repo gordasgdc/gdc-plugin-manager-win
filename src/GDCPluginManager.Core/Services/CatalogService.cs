@@ -24,6 +24,7 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<PluginItem> Items { get; private set; } = [];
     public IReadOnlyList<Course> Courses { get; private set; } = [];
     public IReadOnlyList<AppLink> Apps { get; private set; } = [];
+    public IReadOnlyList<AudioTrack> AudioTracks { get; private set; } = [];
     public IReadOnlyList<EducationalResource> EducationalResources { get; private set; } = [];
     public IReadOnlyList<Event> Events { get; private set; } = [];
     public IReadOnlyList<PartnerStore> PartnerStores { get; private set; } = [];
@@ -76,6 +77,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Items = catalog.Items;
             Courses = catalog.Courses;
             Apps = catalog.Apps;
+            AudioTracks = catalog.AudioTracks;
             EducationalResources = catalog.EducationalResources;
             Events = catalog.Events;
             PartnerStores = catalog.PartnerStores;
@@ -83,6 +85,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(Items));
             Raise(nameof(Courses));
             Raise(nameof(Apps));
+            Raise(nameof(AudioTracks));
             Raise(nameof(EducationalResources));
             Raise(nameof(Events));
             Raise(nameof(PartnerStores));
@@ -135,6 +138,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Items = catalog.Items;
             Courses = catalog.Courses;
             Apps = catalog.Apps;
+            AudioTracks = catalog.AudioTracks;
             EducationalResources = catalog.EducationalResources;
             Events = catalog.Events;
             PartnerStores = catalog.PartnerStores;

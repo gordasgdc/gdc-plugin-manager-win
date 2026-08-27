@@ -290,6 +290,40 @@
             </Border>
         </DataTemplate>
 
+        <!-- Un card audio (sectiunea Audio, modelata pe Aplicatii + Description ca la Materiale). -->
+        <DataTemplate DataType="{x:Type vm:AudioTrackViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="240" MinHeight="110">
+                <Grid>
+                    <StackPanel>
+                        <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Center">
+                            <TextBlock Text="AUDIO" FontSize="9" FontWeight="Bold" Foreground="#7C7CF0" />
+                        </Border>
+                        <!-- Coperta, daca elementul are una — altfel cade pe simbolul de mai jos. -->
+                        <Button Style="{StaticResource CoverButtonStyle}"
+                                Command="{Binding Cover.ShowCommand}"
+                                Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                            <Border CornerRadius="6" ClipToBounds="True" Height="56"
+                                    Background="{StaticResource InkSurfaceRaisedBrush}">
+                                <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
+                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                            </Border>
+                        </Button>
+                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="20" Margin="0,10,0,0" Foreground="#7C7CF0"
+                                       Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="54" TextTrimming="CharacterEllipsis" />
+                        <Button Content="Descarca" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
+                    </StackPanel>
+                    <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
+                            ToolTip="Vezi tutorialul explicativ pentru acest element audio"
+                            Command="{Binding OpenTutorialCommand}"
+                            Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
+                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
+                    </Button>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
         <!-- Un card de material (carte/curs online/ghid). -->
         <DataTemplate DataType="{x:Type vm:EducationalResourceViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320" MinHeight="140">
@@ -463,6 +497,17 @@
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
+
+                <!-- Audio — plasata aici, langa categoriile LUT/DCTL/OFX/PowerGrade
+                     de mai sus (nu langa Cursuri/Materiale/etc.), la fel ca pe Mac. -->
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowAudioTracksCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=AudioTracks, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
+                        <TextBlock Text="Audio" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
 
                 <Separator Margin="16,16" />
 
@@ -846,6 +891,23 @@
                     <TextBlock Text="Niciun service partener momentan." Style="{StaticResource MutedTextStyle}"
                                Visibility="{Binding ServiceCenters.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding ServiceCenters}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Pagina Audio -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=AudioTracks}">
+                <StackPanel>
+                    <TextBlock Text="Audio" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Niciun element audio listat momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding AudioTracks.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding AudioTracks}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal" />
