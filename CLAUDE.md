@@ -394,6 +394,11 @@ toate cheile `StaticResource` folosite (`CardBorderStyle`, `BadgeBorderStyle`,
 Windows tot recomandat inainte de release. Versiune: `1.3.1`→`1.4.0`
 (MINOR), sincron cu `docs/update.json` (Mac, `gdc-plugin-manager-catalog-vendor`)
 si cu Client Mac (`gdc-plugin-manager-catalog-vendor/Info.plist`, 1.4.0).
+**Verificat prin CI real** (`gh run watch`, commit `d747abc`, run
+`33039378596`, `windows-latest`) — `build-windows` succes complet:
+publish self-contained, smoke test, compilare Inno Setup, artefact
+incarcat. XAML-ul (`MainWindow.xaml`) a compilat efectiv pe Windows,
+nu doar validat manual ca mai sus — confirmare reala, nu presupunere.
 
 ## DIRECTIVĂ PERMANENTĂ SUPREMĂ: Checklist obligatoriu la FIECARE release (2026-08-25)
 Valabilă pentru TOATE aplicațiile ecosistemului GDC (CursorPro, GDC Plugin
