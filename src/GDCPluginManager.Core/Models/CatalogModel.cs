@@ -114,14 +114,16 @@ public static class SupportedOSExtensions
     public static bool Allows(this SupportedOS self, SupportedOS current) =>
         self == SupportedOS.CrossPlatform || self == current;
 
-    /// Emoji-badge afisat pe cardul din catalog — vezi cerinta "Selector
-    /// Compatibilitate OS": 🍎 doar Mac, 🪟 doar Windows, 🔄 ambele.
-    public static string BadgeEmoji(this SupportedOS self) => self switch
+    /// Simbol Fluent (Wpf.Ui SymbolRegular) pentru badge-ul de pe card —
+    /// inlocuieste emoji-urile 🍎/🪟/🔄 (2026-08-29, cerut explicit, port
+    /// 1:1 al fix-ului identic de pe Mac/badgeSymbol, SF Symbols). Vectorial,
+    /// tint-uibil, nativ Fluent Design — nu emoji color.
+    public static string BadgeSymbol(this SupportedOS self) => self switch
     {
-        SupportedOS.MacOS => "🍎",
-        SupportedOS.Windows => "🪟",
-        SupportedOS.CrossPlatform => "🔄",
-        _ => "",
+        SupportedOS.MacOS => "DesktopMac24",
+        SupportedOS.Windows => "DesktopTower24",
+        SupportedOS.CrossPlatform => "ArrowSync24",
+        _ => "Circle24",
     };
 }
 

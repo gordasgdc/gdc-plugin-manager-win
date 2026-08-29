@@ -16,6 +16,7 @@
     <Window.Resources>
         <conv:InverseBooleanConverter x:Key="InverseBoolean" />
         <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+        <conv:SymbolNameConverter x:Key="SymbolName" />
         <conv:CategoryEqualsMultiConverter x:Key="CategoryEquals" />
         <conv:EnumEqualsVisibilityConverter x:Key="PageVisible" />
         <conv:EnumEqualsBoolConverter x:Key="PageEquals" />
@@ -85,7 +86,9 @@
                                     Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
                                 <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
                             </Button>
-                            <TextBlock Text="{Binding OSBadgeEmoji}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}"
+                                           FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"
+                                           Foreground="{StaticResource InkTextMutedBrush}" />
                             <Border Style="{StaticResource BadgeBorderStyle}">
                                 <TextBlock Text="{Binding TypeLabel}" FontSize="10" FontWeight="SemiBold"
                                            Foreground="{StaticResource BrandBrush}" />

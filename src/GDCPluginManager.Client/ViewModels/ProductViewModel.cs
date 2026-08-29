@@ -76,7 +76,7 @@ public sealed partial class ProductViewModel : ObservableObject
     /// "Ambele" trebuie sa se vada explicit pe card, nu doar sa fie absenta
     /// unui badge - decizia initiala de a-l ascunde a fost o presupunere
     /// gresita despre asteptarile UX, corectata la cererea explicita).
-    public string OSBadgeEmoji => Item.SupportedOS.BadgeEmoji();
+    public string OSBadgeSymbol => Item.SupportedOS.BadgeSymbol();
     public bool IsCompatible => Item.SupportedOS.Allows(SupportedOSExtensions.Current);
 
     public bool IsInstalled => InstallManager.Shared.IsInstalled(Item);
