@@ -1319,3 +1319,33 @@ asta EROAREA REALA (nu doar simptomul), ceea ce restrange diagnosticul
 urmator la ceva concret — proxy/firewall/certificat, nu presupuneri noi.
 
 Versiune: `1.19.6`→`1.19.7` (PATCH).
+
+## [DIAGNOSTIC REAL 2026-08-29, val 4] Cauza reala gasita din log: SSL handshake esuat, probabil ceas gresit in Parallels VM
+
+Dupa v1.19.7, logul real (multumita fix-ului WinINet->HttpClient) a aratat
+pentru prima data EROAREA REALA, nu doar simptomul: `HttpRequestException:
+The SSL connection could not be established, see inner exception.` — pe
+`black-friday-seeklogo` (filigran), repetat la mai multe incercari.
+
+**Ipoteza principala (cel mai probabil, nu confirmata inca 100%)**: masina
+lui Cristi ruleaza intr-un VM Parallels (confirmat de el direct in aceasta
+sesiune) — un simptom FOARTE comun pe VM-uri este drift de ceas de sistem
+dupa sleep/resume, care face validarea certificatului TLS sa esueze
+intermitent ("not yet valid"/"expired" din cauza ceasului gresit din
+guest), nu o problema reala de retea/server. Explica exact tiparul
+raportat: unele fetch-uri merg, altele nu, aleatoriu, chiar catre acelasi
+domeniu (`gordas.dev`).
+
+**Fix aplicat, indiferent de cauza exacta**: `DiagnosticLog.Describe(ex)`
+(Core, nou) — desface lantul COMPLET de `InnerException`, nu doar mesajul
+wrapper-ului generic. Aplicat in toate cele 3 locuri de fetch de imagine
+(`SeasonalBackgroundLoader.cs`, `CoverViewModel.cs`,
+`LightboxWindow.xaml.cs`) — daca problema persista, urmatorul log va arata
+EXCEPTIA REALA din spatele "SSL connection could not be established"
+(ex. `AuthenticationException`, detaliu de certificat), nu doar wrapper-ul.
+
+**Recomandare data lui Cristi**: `Start-Service W32Time` + `w32tm /resync
+/force` in Windows-ul din Parallels, verificare manuala a orei sistemului.
+
+Versiune: `1.19.7`→`1.19.8` (PATCH).
+**Verificat**: `dotnet build` — 0 erori.

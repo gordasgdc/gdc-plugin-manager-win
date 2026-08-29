@@ -94,7 +94,7 @@ public static class SeasonalBackgroundLoader
             catch (Exception ex)
             {
                 lastError = ex;
-                DiagnosticLog.Write("SeasonalBackground", $"id={id}: fetch ESUAT la incercarea {attempt}: {ex.GetType().Name}: {ex.Message}");
+                DiagnosticLog.Write("SeasonalBackground", $"id={id}: fetch ESUAT la incercarea {attempt}: {DiagnosticLog.Describe(ex)}");
                 if (attempt == 1) await Task.Delay(800);
             }
         }

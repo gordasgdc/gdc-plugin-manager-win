@@ -5,6 +5,12 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.8 (2026-08-29) — Logare detaliată a erorii SSL reale
+
+- Eroarea de rețea din log arată acum lanțul COMPLET de InnerException
+  (nu doar "SSL connection could not be established") — diagnostic direct
+  pentru cazuri de VM cu ceas de sistem greșit.
+
 ## v1.19.7 (2026-08-29) — Fix critic: imagini invizibile peste tot
 
 - Cauza reală: `BitmapImage.UriSource` trecea prin WinINet (stack de rețea

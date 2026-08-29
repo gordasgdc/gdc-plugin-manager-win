@@ -81,7 +81,7 @@ public partial class LightboxWindow : Window
             }
             catch (Exception ex)
             {
-                DiagnosticLog.Write("LightboxWindow", $"Esuat la incercarea {attempt} pentru {url}: {ex.GetType().Name}: {ex.Message}");
+                DiagnosticLog.Write("LightboxWindow", $"Esuat la incercarea {attempt} pentru {url}: {DiagnosticLog.Describe(ex)}");
                 if (attempt == 1) await Task.Delay(800);
             }
         }

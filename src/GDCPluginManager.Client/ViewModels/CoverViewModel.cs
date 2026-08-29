@@ -117,7 +117,7 @@ public sealed partial class CoverViewModel : ObservableObject
                 // Cristi. `DiagnosticLog` (Core, acum public — vezi
                 // SeasonalBackgroundLoader.cs) scrie in %TEMP%\gdcpm-crash.log,
                 // citibil chiar si dintr-un build normal.
-                DiagnosticLog.Write("CoverViewModel", $"Esuat la incercarea {_attempt} pentru {url}: {ex.GetType().Name}: {ex.Message}");
+                DiagnosticLog.Write("CoverViewModel", $"Esuat la incercarea {_attempt} pentru {url}: {DiagnosticLog.Describe(ex)}");
                 if (_attempt == 1) await Task.Delay(800);
             }
         }
