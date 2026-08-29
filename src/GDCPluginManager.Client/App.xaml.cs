@@ -32,7 +32,15 @@ public partial class App : Application
         // alert vizibil, nu doar in consola de debug.
         DispatcherUnhandledException += OnDispatcherUnhandledException;
 
-        Startup += (_, _) => Log("App.Startup event fired.");
+        Startup += (_, _) =>
+        {
+            Log("App.Startup event fired.");
+            // Tema salvată (Regula 24) — trebuie aplicată AICI (Startup),
+            // nu în constructor: `Application.Resources` nu e populat
+            // decât după ce `InitializeComponent()` a rulat, ceea ce se
+            // întâmplă între constructor și evenimentul Startup.
+            Services.WindowsThemeManager.ApplyNow();
+        };
         Exit += (_, e) => Log($"App.Exit event fired, ExitCode={e.ApplicationExitCode}.");
     }
 

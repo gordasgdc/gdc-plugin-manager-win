@@ -4,23 +4,32 @@
         Title="Setări"
         Width="340" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource InkSurfaceBrush}"
+        Background="{DynamicResource InkSurfaceBrush}"
         ShowInTaskbar="False">
     <StackPanel Margin="20">
         <TextBlock Text="Setări" FontSize="15" FontWeight="SemiBold"
-                   Foreground="{StaticResource InkTextBrush}" Margin="0,0,0,14" />
+                   Foreground="{DynamicResource InkTextBrush}" Margin="0,0,0,14" />
 
         <!-- Marime text (2026-08-29, CLAUDE.md Partea 1, Regula 24) - port
              al selectorului de pe Mac (dynamicTypeSize). WPF n-are un
              echivalent nativ de "dynamic type", deci scalam tot arborele
              vizual printr-un ScaleTransform aplicat in MainWindow.xaml.cs
              (ApplyTextScale) - un singur punct de schimbare, risc minim. -->
-        <TextBlock Text="Mărime text" FontSize="11" Foreground="{StaticResource InkTextMutedBrush}" Margin="0,0,0,6" />
+        <TextBlock Text="Mărime text" FontSize="11" Foreground="{DynamicResource InkTextMutedBrush}" Margin="0,0,0,6" />
         <ComboBox x:Name="TextScaleCombo" Margin="0,0,0,16" SelectionChanged="TextScaleCombo_SelectionChanged">
             <ComboBoxItem Content="Mic" Tag="Small" />
             <ComboBoxItem Content="Normal" Tag="Normal" />
             <ComboBoxItem Content="Mare" Tag="Large" />
             <ComboBoxItem Content="Foarte mare" Tag="XLarge" />
+        </ComboBox>
+
+        <!-- Tema System/Light/Dark (2026-08-29, Regula 18/24) - port al
+             selectorului de pe Mac. Vezi WindowsThemeManager.cs. -->
+        <TextBlock Text="Temă" FontSize="11" Foreground="{DynamicResource InkTextMutedBrush}" Margin="0,0,0,6" />
+        <ComboBox x:Name="ThemeCombo" Margin="0,0,0,16" SelectionChanged="ThemeCombo_SelectionChanged">
+            <ComboBoxItem Content="Sistem" Tag="System" />
+            <ComboBoxItem Content="Luminoasă" Tag="Light" />
+            <ComboBoxItem Content="Întunecată" Tag="Dark" />
         </ComboBox>
 
         <Grid>

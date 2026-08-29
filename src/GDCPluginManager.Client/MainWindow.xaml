@@ -66,7 +66,7 @@
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                         <Border CornerRadius="6" ClipToBounds="True" Height="140"
-                                Background="{StaticResource InkSurfaceRaisedBrush}">
+                                Background="{DynamicResource InkSurfaceRaisedBrush}">
                             <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                  proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                  In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
@@ -87,14 +87,14 @@
                                     ToolTip="Vezi tutorialul explicativ pentru acest produs"
                                     Command="{Binding OpenTutorialCommand}"
                                     Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
-                                <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
+                                <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{DynamicResource InkTextMutedBrush}" />
                             </Button>
                             <ui:SymbolIcon Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}"
                                            FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"
-                                           Foreground="{StaticResource InkTextMutedBrush}" />
+                                           Foreground="{DynamicResource InkTextMutedBrush}" />
                             <Border Style="{StaticResource BadgeBorderStyle}">
                                 <TextBlock Text="{Binding TypeLabel}" FontSize="10" FontWeight="SemiBold"
-                                           Foreground="{StaticResource BrandBrush}" />
+                                           Foreground="{DynamicResource BrandBrush}" />
                             </Border>
                         </StackPanel>
                     </Grid>
@@ -139,7 +139,7 @@
                         <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
                     </Border>
 
-                    <TextBlock Text="Actualizare disponibila" Foreground="{StaticResource BrandBrush}" FontSize="11"
+                    <TextBlock Text="Actualizare disponibila" Foreground="{DynamicResource BrandBrush}" FontSize="11"
                                Margin="0,6,0,0" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
 
                     <TextBlock Text="{Binding StatusMessage}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
@@ -301,13 +301,13 @@
                         </Grid.ColumnDefinitions>
                         <!-- Iconita categoriei, ca fallback vizual cand nu exista coperta. -->
                         <ui:SymbolIcon Grid.Column="0" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"
-                                       Foreground="{StaticResource BrandBrush}"
+                                       Foreground="{DynamicResource BrandBrush}"
                                        Symbol="{Binding CategorySymbol, Converter={StaticResource SymbolName}}"
                                        Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
                                    FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
                         <ui:SymbolIcon Grid.Column="2" FontSize="15" VerticalAlignment="Center"
-                                       Foreground="{StaticResource InkTextMutedBrush}"
+                                       Foreground="{DynamicResource InkTextMutedBrush}"
                                        Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}" />
                     </Grid>
 
@@ -476,7 +476,7 @@
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
-                        <Border Grid.Column="0" Background="{StaticResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="8,5">
+                        <Border Grid.Column="0" Background="{DynamicResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="8,5">
                             <TextBlock Text="{Binding CouponCode}" FontFamily="Consolas" FontSize="13" />
                         </Border>
                         <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding CopyCouponCommand}" ToolTip="Copiaza codul">
@@ -560,7 +560,7 @@
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
                                     <ui:SymbolIcon FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center"
-                                                   Foreground="{StaticResource InkTextMutedBrush}"
+                                                   Foreground="{DynamicResource InkTextMutedBrush}"
                                                    Symbol="{Binding Symbol, Converter={StaticResource SymbolName}}" />
                                     <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center"
                                                TextWrapping="Wrap" />
@@ -606,7 +606,7 @@
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                         <Border CornerRadius="6" ClipToBounds="True" Height="150"
-                                Background="{StaticResource InkSurfaceRaisedBrush}">
+                                Background="{DynamicResource InkSurfaceRaisedBrush}">
                             <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                  proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                  In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
@@ -614,7 +614,7 @@
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>
-                    <ui:SymbolIcon Symbol="HatGraduation24" FontSize="20" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <ui:SymbolIcon Symbol="HatGraduation24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
                     <ItemsControl ItemsSource="{Binding Options}" Margin="0,10,0,0">
@@ -653,7 +653,7 @@
                                 Command="{Binding Cover.ShowCommand}"
                                 Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                             <Border CornerRadius="6" ClipToBounds="True" Height="56"
-                                    Background="{StaticResource InkSurfaceRaisedBrush}">
+                                    Background="{DynamicResource InkSurfaceRaisedBrush}">
                                 <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
@@ -668,7 +668,7 @@
                             ToolTip="Vezi tutorialul explicativ pentru aceasta aplicatie"
                             Command="{Binding OpenTutorialCommand}"
                             Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
-                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
+                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{DynamicResource InkTextMutedBrush}" />
                     </Button>
                 </Grid>
             </Border>
@@ -687,7 +687,7 @@
                                 Command="{Binding Cover.ShowCommand}"
                                 Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                             <Border CornerRadius="6" ClipToBounds="True" Height="56"
-                                    Background="{StaticResource InkSurfaceRaisedBrush}">
+                                    Background="{DynamicResource InkSurfaceRaisedBrush}">
                                 <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
@@ -702,7 +702,7 @@
                             ToolTip="Vezi tutorialul explicativ pentru acest element audio"
                             Command="{Binding OpenTutorialCommand}"
                             Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
-                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
+                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{DynamicResource InkTextMutedBrush}" />
                     </Button>
                 </Grid>
             </Border>
@@ -721,7 +721,7 @@
                                 Command="{Binding Cover.ShowCommand}"
                                 Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                             <Border CornerRadius="6" ClipToBounds="True" Height="170"
-                                    Background="{StaticResource InkSurfaceRaisedBrush}">
+                                    Background="{DynamicResource InkSurfaceRaisedBrush}">
                                 <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                      proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                      In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
@@ -729,7 +729,7 @@
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
-                        <ui:SymbolIcon Symbol="Book24" FontSize="20" Margin="0,10,0,0" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <ui:SymbolIcon Symbol="Book24" FontSize="20" Margin="0,10,0,0" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
                         <Button Content="Doneaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding BuyCommand}" />
@@ -739,7 +739,7 @@
                             ToolTip="Vezi tutorialul explicativ"
                             Command="{Binding OpenTutorialCommand}"
                             Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
-                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
+                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{DynamicResource InkTextMutedBrush}" />
                     </Button>
                 </Grid>
             </Border>
@@ -755,7 +755,7 @@
                                 Command="{Binding Cover.ShowCommand}"
                                 Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                             <Border CornerRadius="6" ClipToBounds="True" Height="190"
-                                    Background="{StaticResource InkSurfaceRaisedBrush}">
+                                    Background="{DynamicResource InkSurfaceRaisedBrush}">
                                 <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                      proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                      In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
@@ -763,7 +763,7 @@
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
-                        <ui:SymbolIcon Symbol="Calendar24" FontSize="20" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <ui:SymbolIcon Symbol="Calendar24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Title}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding DateAndLocation}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
@@ -785,7 +785,7 @@
                             ToolTip="Vezi tutorialul explicativ"
                             Command="{Binding OpenTutorialCommand}"
                             Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
-                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
+                        <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{DynamicResource InkTextMutedBrush}" />
                     </Button>
                 </Grid>
             </Border>
@@ -800,7 +800,7 @@
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                         <Border CornerRadius="6" ClipToBounds="True" Height="130"
-                                Background="{StaticResource InkSurfaceRaisedBrush}">
+                                Background="{DynamicResource InkSurfaceRaisedBrush}">
                             <!-- UniformToFill + clip: cardurile au latime fixa, coperile nu au
                                  proportii fixe. Umplem si taiem, ca sa nu ramana benzi goale.
                                  In lightbox e invers (Uniform) — acolo vrem imaginea intreaga. -->
@@ -808,7 +808,7 @@
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>
-                    <ui:SymbolIcon Symbol="ShoppingBag24" FontSize="20" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <ui:SymbolIcon Symbol="ShoppingBag24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
                     <Button Content="Viziteaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding VisitCommand}" />
@@ -835,12 +835,12 @@
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
                         <Border CornerRadius="6" ClipToBounds="True" Height="110"
-                                Background="{StaticResource InkSurfaceRaisedBrush}">
+                                Background="{DynamicResource InkSurfaceRaisedBrush}">
                             <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                    RenderOptions.BitmapScalingMode="HighQuality" />
                         </Border>
                     </Button>
-                    <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{StaticResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                    <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Specialization}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
@@ -880,7 +880,7 @@
         </Grid.ColumnDefinitions>
 
         <!-- Bara laterala -->
-        <Border Grid.Column="0" Background="{StaticResource InkSurfaceBrush}" BorderBrush="{StaticResource InkBorderBrush}"
+        <Border Grid.Column="0" Background="{DynamicResource InkSurfaceBrush}" BorderBrush="{DynamicResource InkBorderBrush}"
                 BorderThickness="0,0,1,0">
             <!-- BUG REAL gasit 2026-08-26: sidebar-ul era un StackPanel simplu,
                  fara ScrollViewer - pe o fereastra mai scunda decat continutul
@@ -1113,14 +1113,14 @@
                     <TextBlock Grid.Column="0" Text="{Binding AppVersionDisplay}" FontSize="11"
                                VerticalAlignment="Center" Style="{StaticResource MutedTextStyle}" />
                     <Button Grid.Column="1" Content="Caută actualizări" FontSize="11" Padding="8,3" Margin="0,0,6,0"
-                            Background="Transparent" BorderThickness="1" BorderBrush="{StaticResource InkBorderBrush}"
+                            Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource InkBorderBrush}"
                             Click="CheckForUpdates_Click" />
                 </Grid>
                 <!-- Setari (2026-08-29, Regula 24) - deocamdata doar Marime
                      text; vezi SettingsWindow.xaml. -->
                 <Button Content="Setări" FontSize="11" Padding="8,3" Margin="16,0,16,10"
                         HorizontalAlignment="Stretch"
-                        Background="Transparent" BorderThickness="1" BorderBrush="{StaticResource InkBorderBrush}"
+                        Background="Transparent" BorderThickness="1" BorderBrush="{DynamicResource InkBorderBrush}"
                         Click="Settings_Click" />
             </StackPanel>
             </Grid>
@@ -1132,7 +1132,7 @@
              implicit + cursor SizeWE), usor de apucat fara sa fie un bloc
              vizual gros intre sidebar si continut. -->
         <GridSplitter Grid.Column="1" Width="4" HorizontalAlignment="Stretch" VerticalAlignment="Stretch"
-                      Background="{StaticResource InkBorderBrush}" ResizeBehavior="PreviousAndNext" />
+                      Background="{DynamicResource InkBorderBrush}" ResizeBehavior="PreviousAndNext" />
 
         <!-- Continut principal -->
         <Grid Grid.Column="2">
@@ -1193,7 +1193,7 @@
                             <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <ui:SymbolIcon Grid.Column="0" Symbol="Search24" FontSize="15" Margin="10,0,4,0"
-                                       Foreground="{StaticResource InkTextMutedBrush}" VerticalAlignment="Center" />
+                                       Foreground="{DynamicResource InkTextMutedBrush}" VerticalAlignment="Center" />
                         <!-- Enter salveaza termenul in istoric (CommitSearchCommand);
                              filtrarea in sine e live, la fiecare tasta
                              (UpdateSourceTrigger=PropertyChanged) — istoricul se
@@ -1208,7 +1208,7 @@
                         </TextBox>
                         <Button Grid.Column="2" Content="✕" Command="{Binding ClearSearchCommand}"
                                 Background="Transparent" BorderThickness="0" Padding="8,0" FontSize="12"
-                                Foreground="{StaticResource InkTextMutedBrush}"
+                                Foreground="{DynamicResource InkTextMutedBrush}"
                                 Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                 </Border>
@@ -1339,14 +1339,14 @@
                     </ItemsControl>
                     <Button Content="Sterge istoricul" Margin="6,0,0,0" Padding="8,3" FontSize="11"
                             Background="Transparent" BorderThickness="0"
-                            Foreground="{StaticResource InkTextMutedBrush}"
+                            Foreground="{DynamicResource InkTextMutedBrush}"
                             Command="{Binding ClearSearchHistoryCommand}" />
                 </StackPanel>
             </Grid>
 
             <!-- Banner update / eroare -->
             <StackPanel Grid.Row="1" Margin="20,10,20,0">
-                <Border Background="{StaticResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="12,8"
+                <Border Background="{DynamicResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="12,8"
                         Visibility="{Binding UpdateBannerText, Converter={StaticResource NullToVisibility}}">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -1355,8 +1355,8 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="ArrowCircleUp24" FontSize="16" Margin="0,0,8,0"
-                                           Foreground="{StaticResource BrandBrush}" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding UpdateBannerText}" Foreground="{StaticResource BrandBrush}"
+                                           Foreground="{DynamicResource BrandBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding UpdateBannerText}" Foreground="{DynamicResource BrandBrush}"
                                        TextWrapping="Wrap" VerticalAlignment="Center" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -1641,7 +1641,7 @@
                             <TextBlock Text="Trimite acest ID cand cumperi licenta — codul e legat de acest calculator."
                                        Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,10" />
                             <StackPanel Orientation="Horizontal">
-                                <Border Background="{StaticResource InkBackgroundBrush}" BorderBrush="{StaticResource InkBorderBrush}"
+                                <Border Background="{DynamicResource InkBackgroundBrush}" BorderBrush="{DynamicResource InkBorderBrush}"
                                         BorderThickness="1" CornerRadius="4" Padding="10,6">
                                     <TextBlock Text="{Binding MachineIdDisplay}" FontFamily="Consolas" />
                                 </Border>
@@ -1658,8 +1658,8 @@
                                        Visibility="{Binding ActivationError, Converter={StaticResource NullToVisibility}}" />
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
                                         Visibility="{Binding JustActivated, Converter={StaticResource BoolToVisibility}}">
-                                <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="14" Foreground="{StaticResource BrandBrush}" Margin="0,0,6,0" />
-                                <TextBlock Text="Activat cu succes!" Foreground="{StaticResource BrandBrush}" />
+                                <ui:SymbolIcon Symbol="CheckmarkCircle24" FontSize="14" Foreground="{DynamicResource BrandBrush}" Margin="0,0,6,0" />
+                                <TextBlock Text="Activat cu succes!" Foreground="{DynamicResource BrandBrush}" />
                             </StackPanel>
                             <Button Content="Activeaza" Style="{StaticResource PrimaryButtonStyle}" Margin="0,10,0,0"
                                     HorizontalAlignment="Left" Padding="20,7" Command="{Binding ActivateCommand}" />

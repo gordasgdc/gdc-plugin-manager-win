@@ -5,7 +5,7 @@
         Title="Previzualizare imagine"
         Width="900" Height="680" MinWidth="480" MinHeight="360"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource InkSurfaceBrush}"
+        Background="{DynamicResource InkSurfaceBrush}"
         ShowInTaskbar="False">
     <Grid>
         <Grid.RowDefinitions>
@@ -21,14 +21,14 @@
             </Grid.ColumnDefinitions>
             <TextBlock Grid.Column="0" x:Name="TitleText" FontSize="15" FontWeight="SemiBold"
                        VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
-                       Foreground="{StaticResource InkTextBrush}" />
+                       Foreground="{DynamicResource InkTextBrush}" />
             <StackPanel Grid.Column="1" Orientation="Horizontal">
                 <Button x:Name="ResetButton" Content="Mărime normală" Margin="0,0,8,0"
                         Visibility="Collapsed" Click="ResetZoom_Click" />
                 <Button Padding="6" Background="Transparent" BorderThickness="0"
                         ToolTip="Închide (Esc)" Click="Close_Click">
                     <ui:SymbolIcon Symbol="Dismiss24" FontSize="16"
-                                   Foreground="{StaticResource InkTextMutedBrush}" />
+                                   Foreground="{DynamicResource InkTextMutedBrush}" />
                 </Button>
             </StackPanel>
         </Grid>
@@ -61,6 +61,6 @@
         <TextBlock Grid.Row="1" x:Name="FailedText" Visibility="Collapsed"
                    Text="Imaginea nu a putut fi încărcată"
                    HorizontalAlignment="Center" VerticalAlignment="Center"
-                   Foreground="{StaticResource InkTextMutedBrush}" />
+                   Foreground="{DynamicResource InkTextMutedBrush}" />
     </Grid>
 </Window>

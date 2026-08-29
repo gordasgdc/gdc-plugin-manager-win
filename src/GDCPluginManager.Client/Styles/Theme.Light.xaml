@@ -1,0 +1,31 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Varianta LIGHT a temei "Shift" (2026-08-29, CLAUDE.md Partea 1
+         Regula 18/24 — selector explicit System/Light/Dark, port al
+         `AppTheme.swift` de pe Mac). Pe Mac, culorile SwiftUI sunt
+         SEMANTICE (`.background`/`.secondary`) și se adaptează singure la
+         `NSApp.appearance` — pe WPF, `Theme.xaml` folosește culori
+         HARDCODATE (hex), deci lipsește un echivalent automat: acest
+         fișier e paleta Light explicită, cu ACELEAȘI 8 chei ca `Theme.xaml`
+         (Dark), doar valorile inversate/adaptate pentru contrast pe fundal
+         deschis. `ThemeManager.cs` schimbă la runtime CARE dintre cele
+         două e mers-uită în `Application.Resources`. -->
+    <Color x:Key="BrandColor">#FFB96A1E</Color>
+    <Color x:Key="BrandDarkColor">#FF8A4E14</Color>
+    <Color x:Key="InkBackgroundColor">#FFF5F5F7</Color>
+    <Color x:Key="InkSurfaceColor">#FFFFFFFF</Color>
+    <Color x:Key="InkSurfaceRaisedColor">#FFEDEDF0</Color>
+    <Color x:Key="InkBorderColor">#FFD8D8DC</Color>
+    <Color x:Key="InkTextColor">#FF1A1A1E</Color>
+    <Color x:Key="InkTextMutedColor">#FF6B6E74</Color>
+
+    <SolidColorBrush x:Key="BrandBrush" Color="{StaticResource BrandColor}" />
+    <SolidColorBrush x:Key="BrandDarkBrush" Color="{StaticResource BrandDarkColor}" />
+    <SolidColorBrush x:Key="InkBackgroundBrush" Color="{StaticResource InkBackgroundColor}" />
+    <SolidColorBrush x:Key="InkSurfaceBrush" Color="{StaticResource InkSurfaceColor}" />
+    <SolidColorBrush x:Key="InkSurfaceRaisedBrush" Color="{StaticResource InkSurfaceRaisedColor}" />
+    <SolidColorBrush x:Key="InkBorderBrush" Color="{StaticResource InkBorderColor}" />
+    <SolidColorBrush x:Key="InkTextBrush" Color="{StaticResource InkTextColor}" />
+    <SolidColorBrush x:Key="InkTextMutedBrush" Color="{StaticResource InkTextMutedColor}" />
+</ResourceDictionary>

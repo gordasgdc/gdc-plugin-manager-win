@@ -12,6 +12,16 @@
                      (confirmat pe masina de test — Windows fara acest font). -->
                 <ui:ThemesDictionary Theme="Dark" />
                 <ui:ControlsDictionary />
+                <!-- [2026-08-29, Regula 24] Dictionarul de CULORI e acum separat de
+                     stilurile din Theme.xaml — indexul lui (2, mai jos: 0=Themes,
+                     1=Controls, 2=Colors, 3=Styles) e cel pe care
+                     WindowsThemeManager.cs il inlocuieste la runtime intre
+                     Theme.Dark.xaml si Theme.Light.xaml. Theme.xaml (stilurile)
+                     foloseste DOAR DynamicResource pentru culori, ca schimbarea sa se
+                     vada instant, fara sa reconstruiasca nicio fereastra. Dark e
+                     implicit la pornire — WindowsThemeManager.ApplyNow() (apelat din
+                     App.xaml.cs) suprascrie cu preferinta salvata, daca exista. -->
+                <ResourceDictionary Source="Styles/Theme.Dark.xaml" />
                 <ResourceDictionary Source="Styles/Theme.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>

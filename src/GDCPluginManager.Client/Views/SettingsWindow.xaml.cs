@@ -1,11 +1,12 @@
 using System.Windows;
 using System.Windows.Controls;
+using GDCPluginManager.Client.Services;
 using GDCPluginManager.Core.Services;
 
 namespace GDCPluginManager.Client.Views;
 
-/// Fereastra de Setări — deocamdată doar "Mărime text" (CLAUDE.md Partea 1,
-/// Regula 24, port al selectorului de pe Mac). Urmează exact tiparul
+/// Fereastra de Setări — "Mărime text" + "Temă" (CLAUDE.md Partea 1,
+/// Regula 18/24, port al selectoarelor de pe Mac). Urmează exact tiparul
 /// `ProfileEditorWindow` (fereastră modală mică, `ShowFor` static).
 public partial class SettingsWindow : Window
 {
@@ -21,6 +22,14 @@ public partial class SettingsWindow : Window
             if ((string)item.Tag == current.ToString())
             {
                 TextScaleCombo.SelectedItem = item;
+                break;
+            }
+        }
+        foreach (ComboBoxItem item in ThemeCombo.Items)
+        {
+            if ((string)item.Tag == WindowsThemeManager.Current.ToString())
+            {
+                ThemeCombo.SelectedItem = item;
                 break;
             }
         }
@@ -53,6 +62,19 @@ public partial class SettingsWindow : Window
         {
             mainWindow.ApplyTextScale(preference);
         }
+    }
+
+    private void ThemeCombo_SelectionChanged(object sender, SelectionChangedEventArgs e)
+    {
+        if (_isLoadingSelection) return;
+        if (ThemeCombo.SelectedItem is not ComboBoxItem item) return;
+        if (!Enum.TryParse<AppThemePreference>((string)item.Tag, out var preference)) return;
+
+        // WindowsThemeManager.Apply() salvează local ȘI aplică instant
+        // (rescrie dicționarul de culori din Application.Resources) — nicio
+        // acțiune suplimentară necesară aici, spre deosebire de mărimea
+        // textului (aceea cere apel explicit pe fereastra principală).
+        WindowsThemeManager.Apply(preference);
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();

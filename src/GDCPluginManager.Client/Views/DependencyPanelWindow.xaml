@@ -6,19 +6,19 @@
         Title="Verificare &amp; Dependențe Sistem"
         Width="480" SizeToContent="Height" MinWidth="420"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource InkSurfaceBrush}"
+        Background="{DynamicResource InkSurfaceBrush}"
         ShowInTaskbar="False">
     <Window.Resources>
         <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
     </Window.Resources>
     <StackPanel Margin="20">
         <TextBlock Text="Verificare &amp; Dependențe Sistem" FontSize="16" FontWeight="SemiBold"
-                   Foreground="{StaticResource InkTextBrush}" />
+                   Foreground="{DynamicResource InkTextBrush}" />
         <TextBlock Text="Stare live a componentelor necesare instalării de pluginuri DaVinci Resolve."
-                   FontSize="12" Foreground="{StaticResource InkTextMutedBrush}"
+                   FontSize="12" Foreground="{DynamicResource InkTextMutedBrush}"
                    TextWrapping="Wrap" Margin="0,4,0,14" />
 
-        <Border Background="{StaticResource InkSurfaceRaisedBrush}" CornerRadius="8">
+        <Border Background="{DynamicResource InkSurfaceRaisedBrush}" CornerRadius="8">
             <ItemsControl x:Name="DependenciesList" ItemsSource="{Binding AllDependencies}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
@@ -49,8 +49,8 @@
                                 </Ellipse.Style>
                             </Ellipse>
                             <StackPanel Grid.Column="1">
-                                <TextBlock Text="{Binding Name}" FontWeight="Medium" Foreground="{StaticResource InkTextBrush}" />
-                                <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{StaticResource InkTextMutedBrush}" TextWrapping="Wrap" />
+                                <TextBlock Text="{Binding Name}" FontWeight="Medium" Foreground="{DynamicResource InkTextBrush}" />
+                                <TextBlock Text="{Binding Detail}" FontSize="11" Foreground="{DynamicResource InkTextMutedBrush}" TextWrapping="Wrap" />
                             </StackPanel>
                             <TextBlock Grid.Column="2" VerticalAlignment="Center" Margin="8,0" FontSize="11">
                                 <TextBlock.Style>

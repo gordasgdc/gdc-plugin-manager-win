@@ -4,16 +4,16 @@
         Title="Profil utilizator (opțional)"
         Width="360" SizeToContent="Height"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource InkSurfaceBrush}"
+        Background="{DynamicResource InkSurfaceBrush}"
         ShowInTaskbar="False">
     <StackPanel Margin="20">
         <TextBlock Text="Profil utilizator (opțional)" FontSize="15" FontWeight="SemiBold"
-                   Foreground="{StaticResource InkTextBrush}" Margin="0,0,0,12" />
-        <TextBlock Text="Nume" FontSize="11" Foreground="{StaticResource InkTextMutedBrush}" Margin="0,0,0,4" />
+                   Foreground="{DynamicResource InkTextBrush}" Margin="0,0,0,12" />
+        <TextBlock Text="Nume" FontSize="11" Foreground="{DynamicResource InkTextMutedBrush}" Margin="0,0,0,4" />
         <TextBox x:Name="NameBox" Margin="0,0,0,10" />
-        <TextBlock Text="Email" FontSize="11" Foreground="{StaticResource InkTextMutedBrush}" Margin="0,0,0,4" />
+        <TextBlock Text="Email" FontSize="11" Foreground="{DynamicResource InkTextMutedBrush}" Margin="0,0,0,4" />
         <TextBox x:Name="EmailBox" Margin="0,0,0,10" />
-        <TextBlock Text="ID mașină" FontSize="11" Foreground="{StaticResource InkTextMutedBrush}" Margin="0,0,0,4" />
+        <TextBlock Text="ID mașină" FontSize="11" Foreground="{DynamicResource InkTextMutedBrush}" Margin="0,0,0,4" />
         <TextBox x:Name="MachineIdBox" IsReadOnly="True" Margin="0,0,0,16" />
         <Grid>
             <Grid.ColumnDefinitions>

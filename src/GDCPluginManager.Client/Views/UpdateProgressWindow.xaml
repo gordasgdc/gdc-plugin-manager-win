@@ -4,7 +4,7 @@
         Title="Actualizare"
         Width="380" SizeToContent="Height" MinWidth="380"
         WindowStartupLocation="CenterOwner"
-        Background="{StaticResource InkSurfaceBrush}"
+        Background="{DynamicResource InkSurfaceBrush}"
         ShowInTaskbar="False"
         ResizeMode="NoResize">
     <!-- Fereastra minimala de progres pentru self-update — pereche a
@@ -14,9 +14,9 @@
          progres granular pe octeti. -->
     <StackPanel Margin="20,18">
         <TextBlock x:Name="TitleText" FontSize="13" FontWeight="SemiBold"
-                   Foreground="{StaticResource InkTextBrush}" />
+                   Foreground="{DynamicResource InkTextBrush}" />
         <TextBlock x:Name="StatusText" FontSize="11" Margin="0,6,0,12"
-                   Foreground="{StaticResource InkTextMutedBrush}"
+                   Foreground="{DynamicResource InkTextMutedBrush}"
                    TextWrapping="Wrap" />
         <ProgressBar IsIndeterminate="True" Height="4" />
     </StackPanel>
