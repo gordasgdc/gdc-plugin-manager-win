@@ -1,9 +1,9 @@
-using System.Diagnostics;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Client.Views;
+using GDCPluginManager.Core.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -62,6 +62,8 @@ public sealed partial class CoverViewModel : ObservableObject
     [ObservableProperty]
     private bool _loadFailed;
 
+    private int _attempt;
+
     public CoverViewModel(Uri? url, string title)
     {
         Url = url;
@@ -81,8 +83,14 @@ public sealed partial class CoverViewModel : ObservableObject
     /// Impachetat in try/catch: un URL invalid (nume de fisier neasteptat,
     /// caracter nesustinut) nu trebuie sa crape toata aplicatia la pornire —
     /// cade pur si simplu pe iconita de rezerva, ca orice alt esec.
+    /// [2026-08-29] Un singur retry, la 0.8s — acelasi fix ca la filigranul
+    /// sezonier (SeasonalBackgroundLoader.cs), pentru aceeasi clasa de cauza
+    /// probabila: blip-uri tranzitorii de CDN pe gordas.dev (Cloudflare +
+    /// Fastly/GitHub Pages). Nu costa nimic la succes (primul DownloadCompleted
+    /// castiga oricum), dar salveaza un card gol la un hiccup de-o clipa.
     private void BeginLoad(Uri url)
     {
+        _attempt++;
         try
         {
             var bmp = new BitmapImage();
@@ -91,13 +99,28 @@ public sealed partial class CoverViewModel : ObservableObject
             bmp.UriSource = url;
             bmp.DownloadFailed += (_, e) =>
             {
-                LoadFailed = true;
-                Debug.WriteLine($"[CoverViewModel] Descarcare esuata pentru {url}: {e.ErrorException?.Message}");
+                // [2026-08-29] `Debug.WriteLine` e INVIZIBIL cand aplicatia
+                // ruleaza normal (fara debugger atasat) — exact cazul lui
+                // Cristi. Raportase coperte lipsa la Magazine/Cursuri/
+                // Materiale pe Windows, dar n-aveam NICIO urma reala a
+                // erorii. `DiagnosticLog` (Core, acum public — vezi
+                // SeasonalBackgroundLoader.cs) scrie in %TEMP%\gdcpm-crash.log,
+                // citibil chiar si dintr-un build normal.
+                DiagnosticLog.Write("CoverViewModel", $"DownloadFailed (incercarea {_attempt}) pentru {url}: {e.ErrorException}");
+                if (_attempt < 2)
+                {
+                    _ = RetryAfterDelay(url);
+                }
+                else
+                {
+                    LoadFailed = true;
+                }
             };
             bmp.DownloadCompleted += (_, __) =>
             {
                 if (bmp.CanFreeze) bmp.Freeze();
                 Bitmap = bmp;
+                DiagnosticLog.Write("CoverViewModel", $"OK: {url}");
             };
             bmp.EndInit();
             // Daca imaginea era deja in cache-ul HTTP local si s-a terminat
@@ -107,13 +130,27 @@ public sealed partial class CoverViewModel : ObservableObject
             {
                 if (bmp.CanFreeze) bmp.Freeze();
                 Bitmap = bmp;
+                DiagnosticLog.Write("CoverViewModel", $"OK (sincron, deja in cache): {url}");
             }
         }
         catch (Exception ex)
         {
-            LoadFailed = true;
-            Debug.WriteLine($"[CoverViewModel] Eroare la initializarea descarcarii pentru {url}: {ex.Message}");
+            DiagnosticLog.Write("CoverViewModel", $"Eroare la initializarea descarcarii (incercarea {_attempt}) pentru {url}: {ex}");
+            if (_attempt < 2)
+            {
+                _ = RetryAfterDelay(url);
+            }
+            else
+            {
+                LoadFailed = true;
+            }
         }
+    }
+
+    private async Task RetryAfterDelay(Uri url)
+    {
+        await Task.Delay(800);
+        BeginLoad(url);
     }
 
     /// Deschide previewul marit. Nu face nimic daca nu exista imagine —

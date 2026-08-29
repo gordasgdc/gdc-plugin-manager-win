@@ -1,6 +1,7 @@
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
+using GDCPluginManager.Core.Services;
 
 namespace GDCPluginManager.Client.Views;
 
@@ -71,12 +72,17 @@ public partial class LightboxWindow : Window
             }
 
             bitmap.DownloadCompleted += (_, _) => PreviewImage.Source = bitmap;
-            bitmap.DownloadFailed += (_, _) => ShowFailure();
+            bitmap.DownloadFailed += (_, e) =>
+            {
+                DiagnosticLog.Write("LightboxWindow", $"DownloadFailed pentru {url}: {e.ErrorException}");
+                ShowFailure();
+            };
             PreviewImage.Source = bitmap;
         }
-        catch
+        catch (Exception ex)
         {
             // URI invalid sau format nesuportat — acelasi tratament vizual.
+            DiagnosticLog.Write("LightboxWindow", $"Eroare la initializarea descarcarii pentru {url}: {ex}");
             ShowFailure();
         }
     }

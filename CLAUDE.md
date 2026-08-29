@@ -1258,3 +1258,30 @@ efectivă a temei Light (culori alese acum, nu confirmate vizual de Cristi)
 
 Versiune: `1.16.1`→`1.19.2` (aliniat cu versiunea Client Mac, pentru
 `docs/update.json` comun).
+
+## [FIX ROBUSTEȚE 2026-08-29, val 2] Coperte Magazine/Cursuri/Materiale invizibile pe Windows
+
+**Raportat live de Cristi cu captură reală**: coperta magazinului MITMAG
+nu apărea deloc (doar iconița de rezervă), la fel și la Cursuri/Materiale.
+
+**Cauza reală, găsită direct în cod**: `CoverViewModel.BeginLoad` loga
+eroarea de `DownloadFailed` DOAR prin `Debug.WriteLine` — invizibil când
+aplicația rulează normal (fără Visual Studio/debugger atașat), exact
+situația lui Cristi. Nu exista NICIO urmă persistentă a eșecului real.
+
+**Fix, aceeași rețetă ca la filigran** (Regula 25):
+- `Debug.WriteLine` → `DiagnosticLog.Write` (Core, acum public).
+- Retry automat (1 reîncercare, 0.8s pauză) — aceeași ipoteză de blip
+  tranzitoriu CDN (Cloudflare + Fastly/GitHub Pages pe `gordas.dev`).
+- Verificat: fișierul `MITMAG.jpg` era disponibil pe server (HTTP 200,
+  22 KB) exact în momentul raportat — deci nu o problemă de date.
+- Adăugat logging și în `LightboxWindow.xaml.cs` (previewul mărit),
+  pentru consecvență.
+
+**Rămas de confirmat**: cu logul nou, la următorul test pe Windows vom
+avea EROAREA EXACTĂ (excepția .NET completă), nu doar simptomul — dacă
+problema persistă după acest fix, diagnosticul următor pornește de la
+date reale, nu presupuneri.
+
+Versiune: `1.19.5`→`1.19.6` (PATCH).
+**Verificat**: `dotnet build` — 0 erori.
