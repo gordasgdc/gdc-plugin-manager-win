@@ -1047,6 +1047,98 @@ public sealed record PartnerOffer
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
+/// Port 1:1 al BundleItemKind.swift (Etapa 9, 2026-08-29) — tipul de continut
+/// referit dintr-un pachet. Un pachet poate combina categorii DIFERITE (ex. un
+/// Curs + un pachet de LUT-uri), deci referinta trebuie sa spuna SI unde sa
+/// caute ID-ul.
+///
+/// Cele 6 tipuri sunt exact cele confirmate pe Mac. Oferte Parteneri (terti) si
+/// Evenimente (informativ) raman EXCLUSE deliberat — nu sunt produse proprii
+/// vandute.
+public enum BundleItemKind
+{
+    /// PluginItem (catalog.items)
+    Product,
+    /// DownloadableResource (catalog.downloadableResources)
+    Download,
+    /// Course (catalog.courses)
+    Course,
+    /// AudioTrack (catalog.audioTracks)
+    Audio,
+    /// AppLink (catalog.apps)
+    App,
+    /// EducationalResource (catalog.educationalResources)
+    Material,
+}
+
+/// Mapeaza BundleItemKind <-> stringul exact din JSON (rawValue-ul Swift).
+public sealed class BundleItemKindJsonConverter : JsonConverter<BundleItemKind>
+{
+    public override BundleItemKind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var raw = reader.GetString();
+        return raw switch
+        {
+            "product" => BundleItemKind.Product,
+            "download" => BundleItemKind.Download,
+            "course" => BundleItemKind.Course,
+            "audio" => BundleItemKind.Audio,
+            "app" => BundleItemKind.App,
+            "material" => BundleItemKind.Material,
+            _ => throw new JsonException($"Unknown BundleItemKind: {raw}"),
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, BundleItemKind value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value switch
+        {
+            BundleItemKind.Product => "product",
+            BundleItemKind.Download => "download",
+            BundleItemKind.Course => "course",
+            BundleItemKind.Audio => "audio",
+            BundleItemKind.App => "app",
+            BundleItemKind.Material => "material",
+            _ => throw new JsonException($"Unknown BundleItemKind: {value}"),
+        });
+    }
+}
+
+public sealed record BundleItemRef
+{
+    public required BundleItemKind Kind { get; init; }
+    public required string Id { get; init; }
+}
+
+/// Port 1:1 al ProductBundle.swift (Etapa 9, 2026-08-29) — un pachet/bundle.
+///
+/// DECIZIE ARHITECTURALA DELIBERATA, portata ca atare: e DOAR un construct de
+/// PREZENTARE/MARKETING (grupare + pret total afisat), **NU un mecanism nou de
+/// licentiere**. Achizitia ramane prin WhatsApp (ca la orice produs), iar
+/// Furnizorul genereaza in continuare, manual, cate o licenta per produs
+/// inclus. Fluxul de incredere bazat pe donatie+WhatsApp nu se schimba.
+public sealed record ProductBundle
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Description { get; init; }
+    public IReadOnlyList<BundleItemRef> Items { get; init; } = [];
+    /// Pretul TOTAL al pachetului (de obicei sub suma preturilor individuale)
+    /// — afisat langa suma individuala taiata, pe card.
+    public required double BundlePriceEUR { get; init; }
+    public string? CoverImage { get; init; }
+    public string? YoutubeURL { get; init; }
+    public SocialLinks? SocialLinks { get; init; }
+    public Scheduling? Scheduling { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
+
+    [JsonIgnore]
+    public string BundlePriceDisplay =>
+        BundlePriceEUR.ToString("C", new System.Globalization.CultureInfo("ro-RO") { NumberFormat = { CurrencySymbol = "EUR" } });
+}
+
 /// Port 1:1 al Catalog.swift. Fiecare colectie default la lista goala daca
 /// lipseste din JSON (catalog mai vechi, fara acea cheie inca) — System.Text.Json
 /// lasa proprietatea la valoarea implicita din initializator cand cheia
@@ -1069,6 +1161,9 @@ public sealed class Catalog
 
     /// Oferte/Promotii de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; init; } = [];
+
+    /// Pachete/Bundle-uri — Etapa 9 (2026-08-29). Default `[]`: retrocompatibil.
+    public IReadOnlyList<ProductBundle> ProductBundles { get; init; } = [];
 
     /// Filigran/fundal sezonier optional pentru Client — Etapa 6 (2026-08-29).
     /// NU un banner mic, ci o imagine mare, discreta, "gravata" in fundalul

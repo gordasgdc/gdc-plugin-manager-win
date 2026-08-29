@@ -39,6 +39,8 @@ public enum SidebarPage
     ServiceCenters,
     /// Oferte de la branduri partenere (Etapa 4, 2026-08-29).
     PartnerOffers,
+    /// Pachete/Bundle-uri (Etapa 9, 2026-08-29).
+    Bundles,
     Apps,
     Android,
     License,
@@ -78,6 +80,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<AudioTrackViewModel> AudioTracks { get; } = [];
     /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
     public ObservableCollection<PartnerOfferViewModel> PartnerOffers { get; } = [];
+    /// Pachete/Bundle-uri — Etapa 9 (2026-08-29).
+    public ObservableCollection<BundleViewModel> Bundles { get; } = [];
 
     // ---- Resurse Download (Etapa 2) --------------------------------------
     // Cate o colectie per categorie, ca fiecare rubrica din sidebar sa lege
@@ -115,6 +119,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<DownloadResourceViewModel> GlobalDownloadResources { get; } = [];
     /// A 10-a colectie din cautarea globala — Etapa 4.
     public ObservableCollection<PartnerOfferViewModel> GlobalPartnerOffers { get; } = [];
+    /// A 11-a colectie din cautarea globala — Etapa 9.
+    public ObservableCollection<BundleViewModel> GlobalBundles { get; } = [];
 
     /// Istoric de cautari recente, persistat local (max 8, fara duplicate) —
     /// vezi SearchHistoryStore.cs.
@@ -139,7 +145,8 @@ public sealed partial class MainViewModel : ObservableObject
         && GlobalEducationalResources.Count == 0 && GlobalEvents.Count == 0
         && GlobalPartnerStores.Count == 0 && GlobalServiceCenters.Count == 0
         && GlobalApps.Count == 0 && GlobalAudioTracks.Count == 0
-        && GlobalDownloadResources.Count == 0 && GlobalPartnerOffers.Count == 0;
+        && GlobalDownloadResources.Count == 0 && GlobalPartnerOffers.Count == 0
+        && GlobalBundles.Count == 0;
 
     public LicensePaneViewModel LicensePane { get; }
 
@@ -391,6 +398,7 @@ public sealed partial class MainViewModel : ObservableObject
         GlobalAudioTracks.Clear();
         GlobalDownloadResources.Clear();
         GlobalPartnerOffers.Clear();
+        GlobalBundles.Clear();
 
         var query = SearchText;
         if (!string.IsNullOrWhiteSpace(query))
@@ -458,6 +466,13 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 if (FuzzySearch.MatchesAny(query, offer.BrandName, offer.Description, offer.Offer.Id, offer.DiscountText))
                     GlobalPartnerOffers.Add(offer);
+            }
+
+            // A 11-a colectie (Etapa 9) — pachete.
+            foreach (var bundle in Bundles)
+            {
+                if (FuzzySearch.MatchesAny(query, bundle.Name, bundle.Description, bundle.Bundle.Id))
+                    GlobalBundles.Add(bundle);
             }
         }
 
@@ -559,6 +574,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowPartnerOffers() => CurrentPage = SidebarPage.PartnerOffers;
+
+    [RelayCommand]
+    private void ShowBundles() => CurrentPage = SidebarPage.Bundles;
 
     [RelayCommand]
     private void ShowApps() => CurrentPage = SidebarPage.Apps;
@@ -709,6 +727,15 @@ public sealed partial class MainViewModel : ObservableObject
                 case DownloadCategory.Vfx: DownloadVfx.Add(vm); break;
                 case DownloadCategory.Plugin: DownloadPlugins.Add(vm); break;
             }
+        }
+
+        // Pachetele se construiesc ULTIMELE: BundleViewModel rezolva
+        // elementele incluse direct din CatalogService, deci are nevoie ca
+        // acesta sa fie deja incarcat (ceea ce e adevarat aici).
+        Bundles.Clear();
+        foreach (var bundle in CatalogService.Shared.ProductBundles.Where(x => x.Scheduling.IsVisibleNow()))
+        {
+            Bundles.Add(new BundleViewModel(bundle));
         }
 
         LicensePane.RebuildOwnedLicenses();

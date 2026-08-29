@@ -994,3 +994,37 @@ model ca `catalog-cache.json`: la succes salvează bytes, la eșec de rețea
 succes. Altfel un răspuns corupt (sau o pagină HTML de eroare servită cu 200)
 ar fi fost cache-uită și reîncercată la infinit, fără ca filigranul să apară
 vreodată.
+
+### Etapa 9 — Pachete / Bundle-uri
+`BundleItemKind` (6 tipuri: `product`/`download`/`course`/`audio`/`app`/
+`material`), `BundleItemRef`, `ProductBundle` (Core, noi) +
+`Catalog.ProductBundles` (default `[]`). Sidebar nou "Pachete" (grup
+COMUNITATE) + grid + a 11-a colecție în căutarea globală.
+
+**Decizie arhitecturală portată ca atare**: pachetul e DOAR un construct de
+prezentare/marketing (grupare + preț total afișat), **NU un mecanism nou de
+licențiere** — achiziția rămâne prin WhatsApp, reutilizând exact tiparul din
+`ProductViewModel.Buy()` (mesaj + `MachineID.Display`), doar cu lista
+conținutului inclus adăugată în mesaj. Furnizorul generează în continuare,
+manual, câte o licență per produs inclus. Oferte Parteneri (terți) și
+Evenimente (informativ) rămân EXCLUSE din tipurile combinabile, ca pe Mac.
+
+Produsele incluse se rezolvă **live din catalog** la construirea cardului. **Un
+ID care nu mai există (produs retras între timp) e omis SILENȚIOS** — cardul nu
+crapă și nu afișează un rând gol; pachetul rămâne utilizabil cu ce a mai rămas.
+
+Suma individuală (afișată tăiată lângă prețul pachetului) însumează doar
+elementele care AU preț propriu în model: produse, resurse download, cursuri.
+Audio/Aplicații/Materiale n-au preț în model — apar în lista de conținut dar NU
+contribuie la sumă, exact ca pe Mac. Pentru un curs (care are mai multe opțiuni
+de preț) se ia **cea mai mică** — estimare conservatoare, ca suma tăiată să nu
+fie niciodată umflată artificial. Suma tăiată apare doar dacă e strict mai mare
+decât prețul pachetului.
+
+`BundleViewModel` se construiește ULTIMUL în `RebuildFromCatalog`, fiindcă
+rezolvă elementele direct din `CatalogService`.
+
+**Verificat**: `dotnet build` — 0 erori. Harness: toate cele 6 tipuri de
+`BundleItemKind` se decodează, plus **pachetul REAL din catalogul live** (9
+elemente, combinând `app` + `course` + `product`) și `seasonalBackground`-ul
+live cu query-ul de cache-busting păstrat corect în URL-ul absolut.

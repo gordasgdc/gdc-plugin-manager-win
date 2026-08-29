@@ -18,6 +18,8 @@ public static class CatalogJsonOptions
             // Etapa 2 (2026-08-29) — resurse de download direct.
             new DownloadCategoryJsonConverter(),
             new DownloadableResourceJsonConverter(),
+            // Etapa 9 (2026-08-29) — pachete/bundle-uri.
+            new BundleItemKindJsonConverter(),
         },
     };
 }
