@@ -16,11 +16,14 @@
     <Window.Resources>
         <conv:InverseBooleanConverter x:Key="InverseBoolean" />
         <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+        <conv:SymbolNameConverter x:Key="SymbolName" />
         <conv:CategoryEqualsMultiConverter x:Key="CategoryEquals" />
         <conv:EnumEqualsVisibilityConverter x:Key="PageVisible" />
         <conv:EnumEqualsBoolConverter x:Key="PageEquals" />
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
         <conv:ZeroToVisibilityConverter x:Key="ZeroToVisibility" />
+        <conv:NonZeroToVisibilityConverter x:Key="NonZeroToVisibility" />
+        <conv:RecentSearchesVisibleConverter x:Key="RecentSearchesVisible" />
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <!-- UriToImageSourceConverter A FOST ELIMINAT (2026-08-25): descarcarea
              se face acum direct in CoverViewModel (Bitmap, cu DownloadFailed
@@ -85,7 +88,9 @@
                                     Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
                                 <ui:SymbolIcon Symbol="Info24" FontSize="14" Foreground="{StaticResource InkTextMutedBrush}" />
                             </Button>
-                            <TextBlock Text="{Binding OSBadgeEmoji}" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center" />
+                            <ui:SymbolIcon Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}"
+                                           FontSize="13" Margin="0,0,6,0" VerticalAlignment="Center"
+                                           Foreground="{StaticResource InkTextMutedBrush}" />
                             <Border Style="{StaticResource BadgeBorderStyle}">
                                 <TextBlock Text="{Binding TypeLabel}" FontSize="10" FontWeight="SemiBold"
                                            Foreground="{StaticResource BrandBrush}" />
@@ -109,6 +114,12 @@
                                     ToolTip="{Binding BadgeTooltip}">
                                 <TextBlock Text="{Binding BadgeText}" FontSize="9" FontWeight="Bold" Foreground="White" />
                             </Border>
+                            <!-- Suma veche, TAIATA — apare doar cat timp promotia
+                                 e activa (Etapa 4), inaintea sumei curente. -->
+                            <TextBlock Text="{Binding OriginalPriceLabel}" Margin="8,0,0,0" FontSize="12"
+                                       VerticalAlignment="Center" Style="{StaticResource MutedTextStyle}"
+                                       TextDecorations="Strikethrough"
+                                       Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}" />
                             <TextBlock Text="{Binding PriceLabel}" FontWeight="SemiBold" Margin="8,0,0,0"
                                        VerticalAlignment="Center"
                                        Visibility="{Binding ShowPrice, Converter={StaticResource BoolToVisibility}}" />
@@ -116,6 +127,16 @@
                         <TextBlock Grid.Column="1" Text="{Binding VersionLabel}" Style="{StaticResource MutedTextStyle}"
                                     VerticalAlignment="Center" />
                     </Grid>
+
+                    <!-- Badge "Susținere promoțională" — NICIODATA
+                         "reducere"/"discount"/"-X% OFF" pe produse proprii GDC
+                         (Regula 3, Partea 1). Limbajul de discount exista
+                         exclusiv pe cardul PartnerOffer (brand tert). -->
+                    <Border Style="{StaticResource BadgeBorderStyle}" Background="#FFB05B00"
+                            HorizontalAlignment="Left" Margin="0,6,0,0"
+                            Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                    </Border>
 
                     <TextBlock Text="Actualizare disponibila" Foreground="{StaticResource BrandBrush}" FontSize="11"
                                Margin="0,6,0,0" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
@@ -211,6 +232,366 @@
                             <ui:SymbolIcon Symbol="Delete24" FontSize="15" />
                         </Button>
                     </Grid>
+
+                    <!-- Rand de linkuri suplimentare (Etapa 2, 2026-08-29) —
+                         port al `extraLinksRow` de pe Mac. Fiecare iconita
+                         apare DOAR daca linkul ei e completat; randul intreg
+                         dispare daca nu exista niciunul (StackPanel gol nu
+                         ocupa spatiu vizual, butoanele sunt Collapsed). -->
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenPurchaseCommand}"
+                                ToolTip="Cumpara extern"
+                                Visibility="{Binding HasPurchase, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Cart24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenDemoCommand}"
+                                ToolTip="Demo / previzualizare"
+                                Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Play24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenFacebookCommand}"
+                                ToolTip="Facebook"
+                                Visibility="{Binding HasFacebook, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Share24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenSocialYoutubeCommand}"
+                                ToolTip="YouTube"
+                                Visibility="{Binding HasSocialYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Video24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenInstagramCommand}"
+                                ToolTip="Instagram"
+                                Visibility="{Binding HasInstagram, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Camera24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTiktokCommand}"
+                                ToolTip="TikTok"
+                                Visibility="{Binding HasTiktok, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ================================================================
+             Un card de Resursa Download (Etapa 2, 2026-08-29).
+             Mirror al cardului Audio (descarcare directa, fara auto-install),
+             PLUS licentiere completa ca la Produse: badge Gratuit/Proba/
+             Licenta, buton WhatsApp cu ID masina cand e blocata, "Descarca"
+             doar dupa deblocare, si acelasi rand de linkuri suplimentare.
+             ================================================================ -->
+        <DataTemplate DataType="{x:Type vm:DownloadResourceViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
+                <StackPanel>
+                    <Button Style="{StaticResource CoverButtonStyle}"
+                            Command="{Binding Cover.ShowCommand}"
+                            Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                        <Border CornerRadius="6" ClipToBounds="True" Height="140">
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill" />
+                        </Border>
+                    </Button>
+
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <!-- Iconita categoriei, ca fallback vizual cand nu exista coperta. -->
+                        <ui:SymbolIcon Grid.Column="0" FontSize="18" Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{StaticResource BrandBrush}"
+                                       Symbol="{Binding CategorySymbol, Converter={StaticResource SymbolName}}"
+                                       Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
+                                   FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <ui:SymbolIcon Grid.Column="2" FontSize="15" VerticalAlignment="Center"
+                                       Foreground="{StaticResource InkTextMutedBrush}"
+                                       Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}" />
+                    </Grid>
+
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
+                               TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="{Binding BadgeBrush}">
+                            <TextBlock Text="{Binding BadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                        <TextBlock Text="{Binding PriceLabel}" Margin="8,0,0,0" VerticalAlignment="Center"
+                                   FontSize="12" Style="{StaticResource MutedTextStyle}"
+                                   Visibility="{Binding ShowPrice, Converter={StaticResource BoolToVisibility}}" />
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FF6E7681" Margin="8,0,0,0">
+                            <TextBlock Text="{Binding CategoryLabel}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                    </StackPanel>
+
+
+                    <!-- Susținere promoțională (Etapa 4). Suma veche apare
+                         TAIATA langa cea curenta, cu un badge care spune
+                         explicit "Susținere promoțională" — niciodata
+                         "reducere"/"discount"/"-X%" pe continut propriu GDC
+                         (Regula 3, Partea 1). Randul intreg apare doar cat
+                         timp promotia e activa. -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8"
+                                Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding OriginalPriceLabel}" FontSize="12" VerticalAlignment="Center"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   TextDecorations="Strikethrough" Margin="0,0,8,0" />
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FFB05B00">
+                            <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                    </StackPanel>
+                    <!-- Deblocata: buton de descarcare. Blocata: WhatsApp cu ID masina. -->
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding DownloadCommand}"
+                            Visibility="{Binding IsUnlocked, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="14" Margin="0,0,7,0" />
+                            <TextBlock Text="Descarca" />
+                        </StackPanel>
+                    </Button>
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding BuyCommand}"
+                            Visibility="{Binding IsUnlocked, Converter={StaticResource InverseBoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <ui:SymbolIcon Symbol="ChatBubblesQuestion24" FontSize="14" Margin="0,0,7,0" />
+                            <TextBlock Text="Deblocheaza" />
+                        </StackPanel>
+                    </Button>
+
+                    <!-- "Unde l-ai salvat?" (Etapa 5) — stare pur locala, per
+                         resursa. Apare DOAR pe resurse deblocate (nu are sens
+                         sa intrebi unde ai salvat ceva ce n-ai descarcat inca),
+                         exact ca pe Mac. -->
+                    <StackPanel Margin="0,10,0,0"
+                                Visibility="{Binding IsUnlocked, Converter={StaticResource BoolToVisibility}}">
+                        <!-- Fara folder ales inca. -->
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" HorizontalAlignment="Left"
+                                Command="{Binding ChooseFolderCommand}"
+                                Visibility="{Binding HasSavedFolder, Converter={StaticResource InverseBoolToVisibility}}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Folder24" FontSize="14" Margin="0,0,6,0" />
+                                <TextBlock Text="Unde l-ai salvat?" FontSize="12" />
+                            </StackPanel>
+                        </Button>
+                        <!-- Cu folder retinut: calea + deschide + schimba. -->
+                        <StackPanel Visibility="{Binding HasSavedFolder, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding SavedFolder}" Style="{StaticResource MutedTextStyle}"
+                                       FontSize="11" TextWrapping="Wrap" Margin="0,0,0,4" />
+                            <StackPanel Orientation="Horizontal">
+                                <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenFolderCommand}"
+                                        ToolTip="Deschide folderul">
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="FolderOpen24" FontSize="14" Margin="0,0,6,0" />
+                                        <TextBlock Text="Deschide" FontSize="12" />
+                                    </StackPanel>
+                                </Button>
+                                <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding ChooseFolderCommand}">
+                                    <TextBlock Text="Schimbă" FontSize="12" />
+                                </Button>
+                                <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding ForgetFolderCommand}">
+                                    <TextBlock Text="Uită" FontSize="12" />
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTutorialCommand}"
+                                ToolTip="Tutorial"
+                                Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Info24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenPurchaseCommand}"
+                                ToolTip="Cumpara extern"
+                                Visibility="{Binding HasPurchase, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Cart24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenDemoCommand}"
+                                ToolTip="Demo / previzualizare"
+                                Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Play24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenFacebookCommand}"
+                                ToolTip="Facebook"
+                                Visibility="{Binding HasFacebook, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Share24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenSocialYoutubeCommand}"
+                                ToolTip="YouTube"
+                                Visibility="{Binding HasSocialYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Video24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenInstagramCommand}"
+                                ToolTip="Instagram"
+                                Visibility="{Binding HasInstagram, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Camera24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTiktokCommand}"
+                                ToolTip="TikTok"
+                                Visibility="{Binding HasTiktok, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ================================================================
+             Un card de Oferta Partenera (Etapa 4, 2026-08-29).
+             SINGURUL card unde limbajul de "discount"/procent e permis — e o
+             relatie comerciala cu un brand TERT. Produsele/resursele proprii
+             GDC folosesc badge-ul "Sustinere promotionala", niciodata acesta.
+             ================================================================ -->
+        <DataTemplate DataType="{x:Type vm:PartnerOfferViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
+                <StackPanel>
+                    <Button Style="{StaticResource CoverButtonStyle}"
+                            Command="{Binding Cover.ShowCommand}"
+                            Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                        <Border CornerRadius="6" ClipToBounds="True" Height="140">
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill" />
+                        </Border>
+                    </Button>
+
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding BrandName}" Style="{StaticResource HeadingTextStyle}"
+                                   FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <!-- Badge ROSU de discount — doar aici, doar daca e completat. -->
+                        <Border Grid.Column="1" Style="{StaticResource BadgeBorderStyle}" Background="#FFE2584A"
+                                Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding DiscountText}" FontSize="11" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
+                               TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                    <!-- Cod de cupon + copiere rapida, daca exista. -->
+                    <Grid Margin="0,0,0,8" Visibility="{Binding HasCoupon, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{StaticResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="8,5">
+                            <TextBlock Text="{Binding CouponCode}" FontFamily="Consolas" FontSize="13" />
+                        </Border>
+                        <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding CopyCouponCommand}" ToolTip="Copiaza codul">
+                            <ui:SymbolIcon Symbol="Copy24" FontSize="15" />
+                        </Button>
+                    </Grid>
+
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding OpenCommand}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Open24" FontSize="14" Margin="0,0,7,0" />
+                            <TextBlock Text="Vezi oferta" />
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTutorialCommand}"
+                                ToolTip="Video"
+                                Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Info24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenFacebookCommand}"
+                                ToolTip="Facebook"
+                                Visibility="{Binding HasFacebook, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Share24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenSocialYoutubeCommand}"
+                                ToolTip="YouTube"
+                                Visibility="{Binding HasSocialYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Video24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenInstagramCommand}"
+                                ToolTip="Instagram"
+                                Visibility="{Binding HasInstagram, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Camera24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTiktokCommand}"
+                                ToolTip="TikTok"
+                                Visibility="{Binding HasTiktok, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ================================================================
+             Un card de Pachet/Bundle (Etapa 9, 2026-08-29).
+             Lista de continut e rezolvata LIVE din catalog (vezi
+             BundleViewModel.ResolveEntries) — un ID sters intre timp e omis
+             silentios, cardul nu crapa. Suma individuala apare TAIATA langa
+             pretul pachetului, si doar daca e strict mai mare.
+             ================================================================ -->
+        <DataTemplate DataType="{x:Type vm:BundleViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="340">
+                <StackPanel>
+                    <Button Style="{StaticResource CoverButtonStyle}"
+                            Command="{Binding Cover.ShowCommand}"
+                            Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                        <Border CornerRadius="6" ClipToBounds="True" Height="140">
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill" />
+                        </Border>
+                    </Button>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FF7C7CF0">
+                            <TextBlock Text="PACHET" FontSize="9" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                    </StackPanel>
+
+                    <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
+                               FontSize="15" TextWrapping="Wrap" Margin="0,0,0,4" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
+                               TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                    <!-- Continutul pachetului. -->
+                    <TextBlock Text="Include:" Style="{StaticResource MutedTextStyle}" FontSize="11"
+                               FontWeight="Bold" Margin="0,0,0,4"
+                               Visibility="{Binding Entries.Count, Converter={StaticResource NonZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding Entries}" Margin="0,0,0,8">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,3">
+                                    <ui:SymbolIcon FontSize="13" Margin="0,0,7,0" VerticalAlignment="Center"
+                                                   Foreground="{StaticResource InkTextMutedBrush}"
+                                                   Symbol="{Binding Symbol, Converter={StaticResource SymbolName}}" />
+                                    <TextBlock Text="{Binding Name}" FontSize="12" VerticalAlignment="Center"
+                                               TextWrapping="Wrap" />
+                                    <TextBlock Text="{Binding KindLabel}" FontSize="10" Margin="6,0,0,0"
+                                               VerticalAlignment="Center" Style="{StaticResource MutedTextStyle}" />
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Suma individuala taiata + pretul pachetului. -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <TextBlock Text="{Binding IndividualTotalDisplay}" FontSize="12" VerticalAlignment="Center"
+                                   Style="{StaticResource MutedTextStyle}" TextDecorations="Strikethrough"
+                                   Margin="0,0,8,0"
+                                   Visibility="{Binding ShowIndividualTotal, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding BundlePriceDisplay}" FontWeight="SemiBold" FontSize="15"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding BuyCommand}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <ui:SymbolIcon Symbol="ChatBubblesQuestion24" FontSize="14" Margin="0,0,7,0" />
+                            <TextBlock Text="Cumpără pachetul" />
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource ExtraLinkButtonStyle}" HorizontalAlignment="Left" Margin="0,6,0,0"
+                            Command="{Binding OpenTutorialCommand}" ToolTip="Video"
+                            Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
+                        <ui:SymbolIcon Symbol="Info24" FontSize="14" />
+                    </Button>
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -383,7 +764,18 @@
                         <TextBlock Text="{Binding DateAndLocation}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0" />
                         <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
                         <Button Content="Detalii/Inscriere" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenDetailsCommand}" />
-                    </StackPanel>
+                    
+                    <!-- Buton harta (Etapa 5) — nu se randeaza deloc daca
+                         adresa lipseste sau e non-fizica ("Online" etc.). -->
+                    <Button Style="{StaticResource ExtraLinkButtonStyle}" HorizontalAlignment="Left"
+                            Margin="0,6,0,0" Command="{Binding OpenMapsCommand}" ToolTip="Vezi pe harta"
+                            Visibility="{Binding HasMaps, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Location24" FontSize="14" Margin="0,0,6,0" />
+                            <TextBlock Text="Vezi pe hartă" FontSize="12" />
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTip="Vezi tutorialul explicativ"
                             Command="{Binding OpenTutorialCommand}"
@@ -415,6 +807,17 @@
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
                     <Button Content="Viziteaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding VisitCommand}" />
+                
+                    <!-- Buton harta (Etapa 5) — nu se randeaza deloc daca
+                         adresa lipseste sau e non-fizica ("Online" etc.). -->
+                    <Button Style="{StaticResource ExtraLinkButtonStyle}" HorizontalAlignment="Left"
+                            Margin="0,6,0,0" Command="{Binding OpenMapsCommand}" ToolTip="Vezi pe harta"
+                            Visibility="{Binding HasMaps, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Location24" FontSize="14" Margin="0,0,6,0" />
+                            <TextBlock Text="Vezi pe hartă" FontSize="12" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -439,6 +842,17 @@
                         <Button Content="Website / Locație" Command="{Binding OpenWebsiteCommand}"
                                 Visibility="{Binding HasWebsite, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
+                
+                    <!-- Buton harta (Etapa 5) — nu se randeaza deloc daca
+                         adresa lipseste sau e non-fizica ("Online" etc.). -->
+                    <Button Style="{StaticResource ExtraLinkButtonStyle}" HorizontalAlignment="Left"
+                            Margin="0,6,0,0" Command="{Binding OpenMapsCommand}" ToolTip="Vezi pe harta"
+                            Visibility="{Binding HasMaps, Converter={StaticResource BoolToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Location24" FontSize="14" Margin="0,0,6,0" />
+                            <TextBlock Text="Vezi pe hartă" FontSize="12" />
+                        </StackPanel>
+                    </Button>
                 </StackPanel>
             </Border>
         </DataTemplate>
@@ -509,6 +923,45 @@
                     </StackPanel>
                 </RadioButton>
 
+                <!-- RESURSE DOWNLOAD (Etapa 2, 2026-08-29) — 4 rubrici noi,
+                     una per DownloadCategory, langa Audio (acelasi tip de
+                     continut: descarcare directa, fara auto-instalare in
+                     Resolve), exact ca gruparea de pe Mac. -->
+                <TextBlock Text="RESURSE DOWNLOAD" Style="{StaticResource MutedTextStyle}"
+                           FontSize="10" FontWeight="Bold" Margin="16,14,0,6" />
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadLut}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadLut, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Eyedropper24" FontSize="16" Margin="0,0,10,0" Foreground="#4ECDA4" />
+                        <TextBlock Text="LUT-uri" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadSfx}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadSfx, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#4EBFCD" />
+                        <TextBlock Text="Efecte Audio" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadVfx}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadVfx, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Sparkle24" FontSize="16" Margin="0,0,10,0" Foreground="#A97CF0" />
+                        <TextBlock Text="Efecte Video" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPlugin}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPlugin, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="PuzzlePiece24" FontSize="16" Margin="0,0,10,0" Foreground="#E0A34E" />
+                        <TextBlock Text="Plugin-uri" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+
                 <Separator Margin="16,16" />
 
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
@@ -549,6 +1002,31 @@
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Wrench24" FontSize="16" Margin="0,0,10,0" />
                         <TextBlock Text="Service &amp; Reparații" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <!-- Oferte Parteneri (Etapa 4, 2026-08-29) — grup COMUNITATE. -->
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowPartnerOffersCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerOffers, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,10,0" Foreground="#E2584A" />
+                        <TextBlock Text="Oferte Parteneri" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowBundlesCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Bundles, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
+                        <TextBlock Text="Pachete" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowMyAppsCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=MyApps, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Rocket24" FontSize="16" Margin="0,0,10,0" />
+                        <TextBlock Text="Aplicatiile Mele" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
@@ -647,10 +1125,42 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Bara de sus: cautare + refresh — doar pe pagina de catalog. -->
-            <Grid Grid.Row="0" Margin="20,20,20,0"
-                  Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+            <!-- ================================================================
+                 FILIGRAN SEZONIER (Etapa 6, 2026-08-29)
+                 NU un banner mic in colt, ci o imagine MARE (~480x480),
+                 discreta, "gravata" in fundal: opacitate 7%, IN SPATELE
+                 intregului continut (declarat PRIMUL in Grid, deci desenat
+                 dedesubt) si cu IsHitTestVisible="False" ca sa nu inghita
+                 niciun click destinat cardurilor de deasupra.
+                 Stratul nu se randeaza deloc cat timp SeasonalBackground e
+                 null (fara filigran publicat, sau incarcare esuata).
+                 Randat prin SharpVectors ca DrawingImage — ramane VECTORIAL,
+                 deci nu se pixeleaza la dimensiunea asta. Vezi
+                 SeasonalBackgroundLoader.cs pentru motivul alegerii librariei.
+                 ================================================================ -->
+            <Image Grid.Row="0" Grid.RowSpan="3"
+                   Source="{Binding SeasonalBackground}"
+                   Width="480" Height="480"
+                   Opacity="0.07"
+                   Stretch="Uniform"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,0,24,24"
+                   IsHitTestVisible="False"
+                   Panel.ZIndex="-1"
+                   Visibility="{Binding SeasonalBackground, Converter={StaticResource NullToVisibility}}" />
+
+            <!-- Bara de sus: cautare GLOBALA + refresh.
+                 ETAPA 1 (2026-08-29): bara NU mai e legata de pagina de
+                 catalog (`Visibility` pe CurrentPage a fost ELIMINATA) — e
+                 vizibila pe ORICE rubrica, exact ca pe Mac dupa completarea
+                 "cautarea a devenit GLOBALA". Cand campul e nevid,
+                 `ContentPage` devine `GlobalSearch` si intreg panoul de mai
+                 jos se schimba in rezultate combinate din toate colectiile.
+                 Filtrul de PRET ramane specific paginii de catalog (randul 1
+                 de mai jos); filtrul OS se aplica peste tot. -->
+            <Grid Grid.Row="0" Margin="20,20,20,0">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -663,11 +1173,26 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <ui:SymbolIcon Grid.Column="0" Symbol="Search24" FontSize="15" Margin="10,0,4,0"
                                        Foreground="{StaticResource InkTextMutedBrush}" VerticalAlignment="Center" />
+                        <!-- Enter salveaza termenul in istoric (CommitSearchCommand);
+                             filtrarea in sine e live, la fiecare tasta
+                             (UpdateSourceTrigger=PropertyChanged) — istoricul se
+                             scrie doar la confirmare, altfel s-ar umple cu
+                             prefixe ("l", "lu", "lut"). -->
                         <TextBox Grid.Column="1" Style="{StaticResource SearchTextBoxStyle}"
-                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return" Command="{Binding CommitSearchCommand}" />
+                                <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Grid.Column="2" Content="✕" Command="{Binding ClearSearchCommand}"
+                                Background="Transparent" BorderThickness="0" Padding="8,0" FontSize="12"
+                                Foreground="{StaticResource InkTextMutedBrush}"
+                                Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                 </Border>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -737,12 +1262,68 @@
                      nou in grid-ul parinte, ca sa nu deranjez numerotarea
                      Grid.Row existenta mai jos, folosita si de RowSpan). -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
-                    <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.All}"
-                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
-                    <Button Content="Gratuite" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Free}"
-                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Free}" />
-                    <Button Content="Premium" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Paid}"
-                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Paid}" />
+                    <!-- Filtrul de PRET ramane specific paginii de catalog
+                         (produsele sunt singurele cu pret/licenta) — ascuns pe
+                         orice alta rubrica si in timpul cautarii globale. -->
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+                        <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.All}"
+                                FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
+                        <Button Content="Gratuite" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Free}"
+                                FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Free}" />
+                        <Button Content="Premium" Margin="0,0,20,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Paid}"
+                                FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Paid}" />
+                    </StackPanel>
+
+                    <!-- Filtru OS (Etapa 1) — vizibil pe orice rubrica si in
+                         cautarea globala. `CrossPlatform` apare la ORICE
+                         optiune (vezi MainViewModel.MatchesOS). Reutilizeaza
+                         PriceFilterWeightConverter (compara generic prin
+                         ToString), nu un converter nou. -->
+                    <TextBlock Text="Sistem:" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Style="{StaticResource MutedTextStyle}" />
+                    <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetOSFilterCommand}" CommandParameter="{x:Static vm:OSFilter.All}"
+                            FontWeight="{Binding SelectedOS, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
+                    <Button Content="Mac" Margin="0,0,8,0" Command="{Binding SetOSFilterCommand}" CommandParameter="{x:Static vm:OSFilter.Mac}"
+                            FontWeight="{Binding SelectedOS, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Mac}" />
+                    <Button Content="Windows" Command="{Binding SetOSFilterCommand}" CommandParameter="{x:Static vm:OSFilter.Windows}"
+                            FontWeight="{Binding SelectedOS, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Windows}" />
+                </StackPanel>
+
+                <!-- Istoric de cautari recente (max 8, persistat local — vezi
+                     SearchHistoryStore.cs). SIMPLIFICARE DELIBERATA fata de
+                     Mac: acolo e un dropdown de sugestii ancorat sub camp;
+                     aici e un rand de "chip"-uri sub bara, vizibil doar cand
+                     campul e GOL (cand se tasteaza, rezultatele live sunt deja
+                     sub el si un popup ar concura cu ele). Acelasi continut,
+                     fara complexitatea de focus/popup din WPF. -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
+                    <StackPanel.Visibility>
+                        <MultiBinding Converter="{StaticResource RecentSearchesVisible}">
+                            <Binding Path="RecentSearches.Count" />
+                            <Binding Path="IsSearching" />
+                        </MultiBinding>
+                    </StackPanel.Visibility>
+                    <TextBlock Text="Recente:" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Style="{StaticResource MutedTextStyle}" />
+                    <ItemsControl ItemsSource="{Binding RecentSearches}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}" Margin="0,0,6,0" Padding="8,3" FontSize="11"
+                                        Command="{Binding DataContext.ApplyRecentSearchCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="Sterge istoricul" Margin="6,0,0,0" Padding="8,3" FontSize="11"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{StaticResource InkTextMutedBrush}"
+                            Command="{Binding ClearSearchHistoryCommand}" />
                 </StackPanel>
             </Grid>
 
@@ -805,7 +1386,7 @@
 
             <!-- Pagina Catalog -->
             <ScrollViewer Grid.Row="2" Margin="20,10,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
                 <ItemsControl ItemsSource="{Binding ProductsView}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -817,7 +1398,7 @@
 
             <!-- Pagina Cursuri -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Courses}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Courses}">
                 <StackPanel>
                     <TextBlock Text="Cursuri" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun curs disponibil momentan." Style="{StaticResource MutedTextStyle}"
@@ -834,7 +1415,7 @@
 
             <!-- Pagina Materiale -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=EducationalResources}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=EducationalResources}">
                 <StackPanel>
                     <TextBlock Text="Materiale" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun material disponibil momentan." Style="{StaticResource MutedTextStyle}"
@@ -851,7 +1432,7 @@
 
             <!-- Pagina Evenimente -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Events}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Events}">
                 <StackPanel>
                     <TextBlock Text="Evenimente" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun eveniment momentan." Style="{StaticResource MutedTextStyle}"
@@ -868,7 +1449,7 @@
 
             <!-- Pagina Magazine partenere -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=PartnerStores}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=PartnerStores}">
                 <StackPanel>
                     <TextBlock Text="Magazine partenere" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun magazin partener momentan." Style="{StaticResource MutedTextStyle}"
@@ -885,7 +1466,7 @@
 
             <!-- Pagina Service & Reparatii -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=ServiceCenters}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=ServiceCenters}">
                 <StackPanel>
                     <TextBlock Text="Service &amp; Reparații Echipament" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun service partener momentan." Style="{StaticResource MutedTextStyle}"
@@ -902,7 +1483,7 @@
 
             <!-- Pagina Audio -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=AudioTracks}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=AudioTracks}">
                 <StackPanel>
                     <TextBlock Text="Audio" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun element audio listat momentan." Style="{StaticResource MutedTextStyle}"
@@ -919,7 +1500,7 @@
 
             <!-- Pagina Aplicatii -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Apps}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Apps}">
                 <StackPanel>
                     <TextBlock Text="Aplicatii" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Nicio aplicatie listata momentan." Style="{StaticResource MutedTextStyle}"
@@ -943,7 +1524,7 @@
                  (vezi QrCodeImageGenerator.cs). Fundal alb obligatoriu: QR-ul
                  are nevoie de contrast ca sa fie citit, la fel ca pe Mac. -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
                 <StackPanel MaxWidth="620" HorizontalAlignment="Left">
                     <TextBlock Text="Aplicatia mobila" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"
@@ -980,7 +1561,7 @@
 
             <!-- Pagina Licenta -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=License}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=License}">
                 <StackPanel MaxWidth="520" HorizontalAlignment="Left" DataContext="{Binding LicensePane}">
                     <TextBlock Text="Licenta" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
 
@@ -1083,6 +1664,361 @@
                             </Button>
                         </StackPanel>
                     </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
+                 PACHETE / BUNDLE-URI (Etapa 9, 2026-08-29)
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Bundles}">
+                <StackPanel>
+                    <TextBlock Text="Pachete" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Niciun pachet disponibil momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding Bundles.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding Bundles}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
+                 OFERTE PARTENERI (Etapa 4, 2026-08-29)
+                 Filtrate deja de scheduling in MainViewModel — o oferta
+                 expirata nu ajunge niciodata in colectie.
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=PartnerOffers}">
+                <StackPanel>
+                    <TextBlock Text="Oferte Parteneri" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio oferta activa momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding PartnerOffers.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding PartnerOffers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
+                 APLICATIILE MELE (Etapa 3, 2026-08-29)
+                 Aplicatiile GDC gasite instalate pe masina asta (Registry,
+                 cheile de dezinstalare Inno Setup) + scurtaturi personalizate
+                 alese de user. Port al `MyAppsLauncher.swift` (Mac).
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=MyApps}">
+                <StackPanel DataContext="{Binding MyApps}">
+                    <Grid Margin="0,0,0,14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Aplicatiile Mele" Style="{StaticResource HeadingTextStyle}" FontSize="20" />
+                        <Button Grid.Column="1" Command="{Binding RefreshCommand}"
+                                IsEnabled="{Binding IsChecking, Converter={StaticResource InverseBoolean}}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="ArrowClockwise24" FontSize="14" Margin="0,0,7,0" />
+                                <TextBlock Text="Rescaneaza" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,14"
+                               Text="Aplicatiile GDC instalate pe acest calculator. Detectarea se face dupa prezenta aplicatiei (nu dupa licenta) — fiecare aplicatie GDC isi tine activarea separat." />
+
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Text="Nicio aplicatie GDC gasita pe acest calculator."
+                               Visibility="{Binding HasNoApps, Converter={StaticResource BoolToVisibility}}" />
+
+                    <ItemsControl ItemsSource="{Binding InstalledApps}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="300">
+                                    <StackPanel>
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
+                                                       FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                            <!-- Badge ACTUALIZARE doar cand chiar stim ca exista
+                                                 o versiune mai noua (verificarea a reusit). -->
+                                            <Border Grid.Column="1" Style="{StaticResource BadgeBorderStyle}" Background="#FF4EA1F5"
+                                                    ToolTip="{Binding UpdateTooltip}"
+                                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
+                                                <TextBlock Text="ACTUALIZARE" FontSize="9" FontWeight="Bold" Foreground="White" />
+                                            </Border>
+                                        </Grid>
+                                        <TextBlock Text="{Binding InstalledVersionDisplay}" Style="{StaticResource MutedTextStyle}"
+                                                   FontSize="12" Margin="0,0,0,10" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding LaunchCommand}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="Play24" FontSize="14" Margin="0,0,7,0" />
+                                                    <TextBlock Text="Lanseaza" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Margin="8,0,0,0" Command="{Binding OpenSiteCommand}"
+                                                    ToolTip="Deschide pagina aplicatiei"
+                                                    Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
+                                                <ui:SymbolIcon Symbol="ArrowCircleUp24" FontSize="15" />
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Scurtaturi personalizate — orice .exe (Resolve, Premiere,
+                         Photoshop...), persistate local. -->
+                    <Separator Margin="0,18,0,14" />
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Scurtaturile mele" Style="{StaticResource HeadingTextStyle}"
+                                   FontSize="16" VerticalAlignment="Center" />
+                        <Button Grid.Column="1" Command="{Binding AddCustomLauncherCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="Add24" FontSize="14" Margin="0,0,7,0" />
+                                <TextBlock Text="Adauga aplicatie" />
+                            </StackPanel>
+                        </Button>
+                    </Grid>
+                    <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Text="Nicio scurtatura adaugata inca."
+                               Visibility="{Binding CustomLaunchers.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding CustomLaunchers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="300">
+                                    <StackPanel>
+                                        <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
+                                                   FontSize="14" TextWrapping="Wrap" />
+                                        <TextBlock Text="{Binding Path}" Style="{StaticResource MutedTextStyle}"
+                                                   FontSize="11" TextWrapping="Wrap" Margin="0,2,0,10" />
+                                        <StackPanel Orientation="Horizontal">
+                                            <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding LaunchCommand}">
+                                                <StackPanel Orientation="Horizontal">
+                                                    <ui:SymbolIcon Symbol="Play24" FontSize="14" Margin="0,0,7,0" />
+                                                    <TextBlock Text="Lanseaza" />
+                                                </StackPanel>
+                                            </Button>
+                                            <Button Margin="8,0,0,0" Command="{Binding RemoveCommand}" ToolTip="Elimina scurtatura">
+                                                <ui:SymbolIcon Symbol="Delete24" FontSize="15" />
+                                            </Button>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
+                 RESURSE DOWNLOAD (Etapa 2) — 4 pagini, una per categorie.
+                 Toate patru sunt identice ca structura (mirror al paginii
+                 Audio); difera doar titlul si colectia legata.
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=DownloadLut}">
+                <StackPanel>
+                    <TextBlock Text="LUT-uri" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding DownloadLuts.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding DownloadLuts}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=DownloadSfx}">
+                <StackPanel>
+                    <TextBlock Text="Efecte Audio" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding DownloadSfx.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding DownloadSfx}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=DownloadVfx}">
+                <StackPanel>
+                    <TextBlock Text="Efecte Video" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding DownloadVfx.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding DownloadVfx}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=DownloadPlugin}">
+                <StackPanel>
+                    <TextBlock Text="Plugin-uri" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding DownloadPlugins.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding DownloadPlugins}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
+                 REZULTATE CAUTARE GLOBALA (Etapa 1, 2026-08-29)
+                 Port 1:1 al `GlobalSearchResults` din ContentView.swift (Mac).
+                 Inlocuieste continutul rubricii curente cand campul de cautare
+                 e nevid (vezi MainViewModel.ContentPage). Fiecare sectiune se
+                 randa DOAR daca are cel putin o potrivire — un titlu fara
+                 rezultate nu apare deloc (NonZeroToVisibility).
+                 Reutilizeaza DataTemplate-urile de card deja definite in
+                 Window.Resources (rezolvate automat dupa DataType) — zero cod
+                 de UI duplicat, exact ca pe Mac.
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=GlobalSearch}">
+                <StackPanel>
+                    <TextBlock Text="Rezultatele cautarii" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+
+                    <TextBlock Text="Niciun rezultat. Incearca alt termen sau schimba filtrul de sistem."
+                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Visibility="{Binding HasNoSearchResults, Converter={StaticResource BoolToVisibility}}" />
+
+                    <!-- Produse -->
+                    <StackPanel Visibility="{Binding GlobalProducts.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Produse" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,6,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalProducts}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Resurse Download (a 9-a colectie, Etapa 2) -->
+                    <StackPanel Visibility="{Binding GlobalDownloadResources.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Resurse Download" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalDownloadResources}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Audio -->
+                    <StackPanel Visibility="{Binding GlobalAudioTracks.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Audio" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalAudioTracks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Cursuri -->
+                    <StackPanel Visibility="{Binding GlobalCourses.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Cursuri" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalCourses}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Materiale -->
+                    <StackPanel Visibility="{Binding GlobalEducationalResources.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Materiale" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalEducationalResources}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Evenimente -->
+                    <StackPanel Visibility="{Binding GlobalEvents.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Evenimente" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalEvents}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Magazine partenere -->
+                    <StackPanel Visibility="{Binding GlobalPartnerStores.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Magazine partenere" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalPartnerStores}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Service & Reparatii -->
+                    <StackPanel Visibility="{Binding GlobalServiceCenters.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Service &amp; Reparatii" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalServiceCenters}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Pachete (a 11-a colectie, Etapa 9) -->
+                    <StackPanel Visibility="{Binding GlobalBundles.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Pachete" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalBundles}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Oferte Parteneri (a 10-a colectie, Etapa 4) -->
+                    <StackPanel Visibility="{Binding GlobalPartnerOffers.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Oferte Parteneri" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalPartnerOffers}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Aplicatii -->
+                    <StackPanel Visibility="{Binding GlobalApps.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Aplicatii" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalApps}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

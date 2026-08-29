@@ -653,4 +653,399 @@ paleta Shift (identică Mac/gordas.dev) — cascadează automat în toate
 ferestrele prin `StaticResource`. Buton "Actualizează" (stare HasUpdate)
 recolorat albastru distinct (portocaliul vechi s-ar fi confundat cu
 accentul Primary, care e amber acum). Verificat prin CI real — success.
+- **2026-08-29 — Badge OS: `DesktopMac24`/`DesktopTower24`/`ArrowSync24` (Fluent `ui:SymbolIcon`), nu emoji 🍎/🪟/🔄.** Port 1:1 al fix-ului de pe Mac (Cristi: "simbolurile de măr... nu-mi place, prefer SVG... impecabil, profesionist"). `SupportedOSExtensions.BadgeSymbol()` (înlocuiește `BadgeEmoji()`) + `Converters/SymbolNameConverter.cs` (nou — `Enum.TryParse<SymbolRegular>`, fallback `Circle24`) + `MainWindow.xaml` (`ui:SymbolIcon Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}"` în loc de `TextBlock` cu emoji). Cele 3 nume de simbol confirmate PREZENTE prin `strings Wpf.Ui.dll` (vezi pitfall 2026-08-24 despre absență-nu-e-dovadă-dar-prezența-da). Versiune `1.4.0`→`1.5.0`. **Verificat**: `dotnet build` (C# only) — 0 erori; XML validat manual well-formed (XAML nu compilează pe Mac).
 - **2026-08-26 — Bug real: verificarea MANUALĂ de update ("Caută actualizări") minea "Ești la zi" pe o versiune deja respinsă.** Reprodus live, din log-ul real trimis de Cristi: `info.Version=1.3.0, IsNewer=True`, urmat de `dismissed=1.3.0`. Cauza: `AvailableUpdate` (populat de `CheckAsync()`) e filtrat de starea de dismissal — corect pentru bannerul/pop-up-ul PASIV, dar butonul manual citea tot `AvailableUpdate`, deci o respingere veche (chiar din greșeală, un "Mai târziu" apăsat în timp ce userul explora UI-ul) făcea verificarea manuală să mintă la infinit, indiferent câte versiuni noi apăreau după aceea. **Soluție**: `UpdateChecker.LatestInfo` — populat necenzurat de dismissal, la fiecare `CheckAsync()` reușit. `CheckForUpdates_Click` citește acum `LatestInfo`, nu `AvailableUpdate`; bannerul/pop-up-ul pasiv rămân neschimbate. **Notă**: prima mea ipoteză (cache CDN pe `gordas.dev/update.json`, `max-age=600`) a fost greșită — verificat direct că serverul răspundea mereu corect; log-ul real a dovedit altceva. Adăugat și un cache-buster (`?t=<timestamp>`) pe cerere, defensiv, dar NU era cauza acestui bug.
+
+## Paritate v2.0 cu Mac — cele 9 etape (2026-08-29, Windows display-only)
+Context: `gdc-plugin-manager-catalog-vendor` (Mac) a primit 9 etape de
+upgrade v2.0; Windows rămăsese la 1.5.0, fără niciuna. Windows NU are
+aplicație Furnizor — deci se portează DOAR modelele de date (deserializare
+identică, retrocompatibilă) + AFIȘAREA/filtrarea/licențierea din Client.
+Etapa 7 (filtrare avansată + export email pe loturi) e N/A: e exclusiv
+Furnizor, confirmat direct de jurnalul de pe Mac.
+
+- **[CORECȚIE IMPORTANTĂ a unui pitfall vechi] `dotnet build` pe macOS
+  COMPILEAZĂ acum XAML-ul.** Pitfall-ul din 2026-08-23 („`PresentationBuildTasks`
+  e Windows-only, build-ul verde pe Mac nu e o dovadă") NU mai e adevărat
+  cu SDK-ul .NET 10.0.400 instalat pe acest Mac. Verificat DIRECT, nu
+  presupus: `MainWindow.baml` + `MainWindow.g.cs` sunt regenerate la
+  fiecare build în `obj/Debug/net8.0-windows/`, iar o eroare XAML
+  introdusă deliberat (element rădăcină în plus) a fost prinsă la
+  compilare cu `error MC3000: 'There are multiple root elements.'`.
+  Deci XAML-ul din etapele de mai jos e validat de compilator, nu doar
+  "XML well-formed manual" ca la etapele vechi. **Nu șterge pitfall-ul
+  vechi din istoric** (regula append-only) — dar de-acum e ÎNVECHIT pe
+  această mașină; pe un SDK mai vechi s-ar putea reactiva, deci verifică
+  prezența `MainWindow.baml` înainte de a te baza pe el.
+
+### Etapa 1 — Căutare fuzzy globală + istoric + filtru OS
+`FuzzySearch.cs` (Core, nou) — port 1:1 al `FuzzySearch.swift`: substring
+pe text normalizat + Levenshtein mărginit per-cuvânt (prag 1 pentru
+interogări ≤4 caractere, altfel 2). `Normalize` folosește
+`NormalizationForm.FormD` + eliminarea `NonSpacingMark` + `ToLowerInvariant`
+(echivalentul `folding(.diacriticInsensitive, .caseInsensitive)` din Swift).
+**`ToLowerInvariant`, NU `ToLower()`** — pe o mașină cu locale turcească
+`ToLower()` mapează "I"→"ı" și căutarea s-ar rupe silențios.
+
+`SearchHistoryStore.cs` (Core, nou) — max 8, fără duplicate
+(case-insensitive), cea mai recentă prima. Mac folosește `UserDefaults`;
+aici e un JSON în `%AppData%\GDCPluginManager\search-history-global.json`,
+același tipar ca `licenses.json`/`catalog-cache.json`. Stare 100% locală.
+
+Client: bara de căutare NU mai e legată de pagina de catalog — e globală,
+vizibilă pe orice rubrică. `MainViewModel.ContentPage` (nou) e ce se randă
+efectiv: `CurrentPage` normal, `SidebarPage.GlobalSearch` cât timp câmpul e
+nevid. Toate cele 10 panouri de conținut din `MainWindow.xaml` s-au mutat de
+pe `CurrentPage` pe `ContentPage` — o singură condiție le ascunde pe toate
+în timpul căutării, fără s-o dubleze pe fiecare. `CurrentPage` rămâne
+neatinsă, deci sidebar-ul își păstrează selecția și revenirea la golirea
+câmpului e instantanee. Rezultatele globale acoperă toate cele 8 colecții
+existente, fiecare secțiune randată doar dacă are potriviri
+(`NonZeroToVisibilityConverter`, nou). Cardurile sunt `DataTemplate`-urile
+deja existente (rezolvate după `DataType`) — zero UI duplicat, ca pe Mac.
+
+Filtru OS (Toate/Mac/Windows) — `OSFilter` (enum nou) + `MatchesOS`.
+`CrossPlatform` apare la ORICE filtru (chiar rulează pe ambele platforme).
+**Notă de scop, nu omisiune**: doar `PluginItem` poartă `supportedOS` în
+model (la fel ca pe Mac) — Cursuri/Materiale/Evenimente/Magazine/Service/
+Aplicații/Audio nu au câmpul deloc, deci sunt tratate implicit ca
+`CrossPlatform` și apar la orice filtru.
+
+**Simplificare deliberată față de Mac**: istoricul e un rând de "chip"-uri
+sub bară (vizibil doar când câmpul e GOL), nu un dropdown de sugestii
+ancorat — același conținut, fără complexitatea de focus/popup din WPF.
+Enter salvează termenul în istoric, Escape golește câmpul; filtrarea în
+sine e live la fiecare tastă (altfel istoricul s-ar umple cu prefixe).
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente, XAML compilat real.
+
+### Etapa 2 — Linkuri multiple/Social pe produse + Resurse Download (LUT/SFX/VFX/Plugin)
+`SocialLinks` (Core, nou) — Facebook/YouTube/Instagram/TikTok, toate
+opționale. Cheile JSON sunt fixate EXPLICIT cu `[JsonPropertyName]`
+(`facebookURL` etc.), nu lăsate pe seama lui `PropertyNameCaseInsensitive`:
+acela ajută doar la CITIRE, iar la scriere System.Text.Json ar emite
+`FacebookURL` (PascalCase), divergent de ce scrie Furnizorul Mac. Windows nu
+publică azi, dar modelul rămâne simetric.
+`PluginItem` capătă `PurchaseURL`/`DemoURL`/`SocialLinks` (Etapa 2) —
+retrocompatibil (`TryGetProperty` → null). Client: rând de iconițe pe card,
+fiecare afișată DOAR dacă linkul ei e completat (`ExtraLinkButtonStyle`, nou
+în `Theme.xaml`).
+
+`DownloadCategory` (lut/sfx/vfx/plugin) + `DownloadableResource` (Core, noi)
+— model 1:1 pe `AudioTrack` + linkuri/social + `SupportedOS` + licențiere
+completă. 4 rubrici noi în sidebar (grup "RESURSE DOWNLOAD", lângă Audio,
+ca pe Mac) + 4 pagini + `DownloadResourceViewModel`/`DataTemplate` (mirror
+cardul Audio + badge/licențiere ca la Produse). A 9-a colecție în căutarea
+globală.
+
+**CAPCANA CRITICĂ, respectată și verificată**: `DownloadableResource.IsFree`
+decodează implicit **TRUE** când cheia lipsește, spre deosebire de
+`PluginItem.IsFree` care decodează **FALSE**. De-asta `DownloadableResource`
+are converter custom (nu deserializare implicită). Inversarea ar transforma
+orice resursă publicată înainte de acest câmp într-un "produs plătit fără
+licență activabilă". Ambele comportamente sunt verificate direct (vezi mai
+jos), nu doar presupuse din citirea Swift-ului.
+
+Licențiere: `LicenseManager.IsUnlocked(DownloadableResource)` (overload nou)
+refolosește ACELAȘI `_licensedProducts` (cheiat generic după ID de produs) și
+același `RevocationCheck` — zero infrastructură nouă, port 1:1 al deciziei de
+pe Mac. `MainViewModel` adaugă ID-urile resurselor la `allProductIds`
+(candidații la activare) și la `productName` — **fără asta o resursă plătită
+ar fi fost imposibil de deblocat**, deși cardul ar fi arătat corect.
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente (XAML compilat real).
+Plus un harness aruncabil (în scratchpad, NU în repo — nu există
+infrastructură de testare aici și nu s-a adăugat una) care rulează 25 de
+verificări pe `GDCPluginManager.Core` real: ambele default-uri opuse de
+`isFree`, `supportedOS` implicit, chei camelCase pe `socialLinks`,
+retrocompatibilitatea `Catalog` (colecție absentă → listă goală), și
+semantica `FuzzySearch` (diacritice în ambele sensuri, toleranță la typo,
+prag mai strict pe cuvinte scurte). Toate 25 au trecut.
+
+**Notă de metodă**: numele de simboluri Fluent (`Eyedropper24`, `Sparkle24`,
+`PuzzlePiece24`, `MusicNote224`, `Cart24`, `Play24`, `Share24`, `Video24`,
+`Camera24`, `Info24`) au fost confirmate punând COMPILATORUL să le valideze —
+un `ui:SymbolIcon Symbol="..."` literal e un membru de enum, deci un nume
+inexistent oprește build-ul. Metodă mult mai sigură decât `strings Wpf.Ui.dll`
+(care are false negative, vezi pitfall 2026-08-24).
+
+### Etapa 3 — "Aplicațiile Mele" (detectare prin Registry)
+`MyAppsService.cs` + `MyAppsViewModel.cs` (Client, noi) — sidebar nou
+"Aplicatiile Mele", lângă Aplicații.
+
+**Diferență reală de platformă**: Mac folosește
+`NSWorkspace.urlForApplication(withBundleIdentifier:)`. Windows n-are
+echivalent — sursa de adevăr e cheia de dezinstalare scrisă de Inno Setup:
+`HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\<AppId>_is1`.
+Căutăm în TREI locuri (HKLM view 64, HKLM view 32 / `WOW6432Node`, HKCU),
+fiindcă depinde cum a fost instalată aplicația; fallback pe Program Files
+pentru o copie dezarhivată manual. Versiunea instalată e `DisplayVersion` din
+acea cheie (NU versiunea din fișierul .exe — ar putea diferi de ce a
+înregistrat installer-ul).
+
+**3 aplicații, nu 4 — verificat, nu presupus.** Mac listează DataMover,
+CursorPro GDC, GDC Vault, MediaFlow Monitor. Inspectat direct `~/Developer`:
+`CursorPro` are DOAR `Package.swift`/`.icns`/`build_app.sh` — niciun
+`.csproj`, `.iss` sau folder Windows. **Nu există build Windows de detectat,
+deci e EXCLUS deliberat.** Celelalte trei au `installer.iss` real, iar
+`AppId`/`AppName`/`ExeName`/`DefaultDirName` din cod sunt copiate VERBATIM de
+acolo, nu ghicite:
+- DataMover — `{A4E1C3F0-2F0F-4B0E-9C1A-DATAMOVERSETUP1}`, `DataMover.exe`
+- GDC Vault — `{E4A9C2D1-7B3F-4E5A-9F0C-GDCVAULT00001}`, `GDCVault.exe`
+- MediaFlow Monitor — `{A3F1D9E4-6B27-4C88-9A45-MEDIAFLOWMON01}`, `MediaFlowMonitor.exe`
+
+**Endpoint-uri de versiune verificate LIVE** (nu presupuse): DataMover
+`api.github.com/repos/gordasgdc/datamover/releases/latest` → HTTP 200,
+`v2.7.1`; GDC Vault `.../gdc-vault-win/...` → HTTP 200, `v0.5.4`; MediaFlow
+Monitor are `update.json` propriu (`gordas.dev/media-flow-monitor/update.json`)
+→ HTTP 200, `1.8.0`, cu `download_url.windows` prezent (confirmă build Windows).
+Cele două surse diferite sunt portate ca atare (`VersionSourceKind`), exact ca
+pe Mac.
+
+**Capcană evitată**: `tag_name` de pe GitHub poartă prefixul `v` în tot
+ecosistemul GDC, dar `update.json`/`AssemblyVersion` nu — fără
+`VersionCompare.NormalizeTag`, "v2.7.1" s-ar parsa ca `0.7.1` și fiecare
+aplicație ar fi părut MEREU la zi (badge-ul n-ar fi apărut niciodată).
+Badge-ul "ACTUALIZARE" apare doar când verificarea a REUȘIT și versiunea
+publicată e strict mai nouă — la eșec de rețea nu apare nimic, nu un badge
+fals pe o informație pur opțională.
+
+**Refactor conex, nu gold-plating**: comparația de versiuni era `private` în
+`UpdateChecker`; extrasă în `VersionCompare` (Core) și refolosită de ambele —
+o a doua copie ar fi putut diverge tăcut de cea folosită la self-update.
+`HttpClientFactory` a devenit `public` (era `internal`): `api.github.com`
+răspunde **403 fără User-Agent**, iar un `HttpClient` gol creat în Client ar
+fi ratat antetul.
+
+Scurtături personalizate (`CustomLauncherStore`) — `OpenFileDialog` pe `.exe`,
+persistate în `%AppData%\GDCPluginManager\custom-launchers.json` (pe Mac:
+`fileImporter` + `UserDefaults`).
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente (XAML compilat real).
+**Neverificabil de aici, rămâne pentru testul pe Windows**: citirea efectivă
+a cheilor de Registry — acest Mac n-are Registry. Logica e scrisă defensiv
+(orice vedere inaccesibilă e sărită, nu oprește căutarea), dar detectarea în
+sine TREBUIE confirmată o dată pe mașina de test.
+
+### Etapa 4 — Scheduling pe toate modelele + Oferte Parteneri + sumă promoțională
+
+**CAPCANA DE ENCODING — verificată pe catalogul LIVE, nu presupusă.**
+Furnizorul Mac serializează cu `JSONEncoder()` fără `dateEncodingStrategy`.
+Strategia implicită a lui Foundation (`.deferredToDate`) scrie un `Date` ca
+**NUMĂR** — secunde (cu fracțiuni) de la **2001-01-01 00:00:00 UTC**
+(referința `NSDate`/Core Data). NU e ISO-8601 și NU e epoch Unix.
+
+Dovadă directă, luată cu `curl` din `gordas.dev/catalog.json` (2026-08-29):
+`"scheduling":{"startDate":809661338.592533,"endDate":815021738.592533}`
+- citit ca epoch Unix → **1995-08-29** (absurd)
+- citit cu referința 2001 → **2026-08-29** (exact ziua curentă)
+
+`SwiftDateJsonConverter` (Core, nou) face conversia explicit
+(`new DateTime(2001,1,1,0,0,0,DateTimeKind.Utc).AddSeconds(v)`), citind
+**Double** (valorile au fracțiuni de secundă, nu sunt întregi). O legare naivă
+la `DateTimeOffset`/ISO ar fi plasat TĂCUT toate datele în 1995, `IsActiveNow`
+ar fi fost false peste tot, și **fiecare element programat ar fi devenit
+invizibil în client, fără nicio eroare**. Converterul acceptă defensiv și un
+string ISO-8601, ca o eventuală schimbare viitoare de partea Furnizorului să
+nu spargă clienții deja instalați.
+
+`Scheduling` (Core, nou) + `SchedulingExtensions.IsVisibleNow()` (un singur
+loc care știe regula "fără scheduling = mereu vizibil"). Adăugat pe TOATE
+modelele: `PluginItem`, `AppLink`, `AudioTrack`, `Course`,
+`EducationalResource`, `Event`, `PartnerStore`, `ServiceCenter`,
+`DownloadableResource`, `PartnerOffer`. Filtrarea se aplică la popularea
+fiecărei colecții în `RebuildFromCatalog` — deci acoperă automat și căutarea
+globală (care derivă din aceleași colecții), fără o a doua listă de condiții.
+
+`PartnerOffer` (Core, nou) + sidebar + grid + a 10-a colecție în căutarea
+globală. **Decizie de scop explicită, portată de pe Mac**: badge-ul ROȘU cu
+limbaj de discount/procent există DOAR pe acest card — e o relație comercială
+cu un brand terț. `discountText` e text liber (acoperă și "2 la preț de 1").
+Cod de cupon cu buton de copiere.
+
+`PromoPriceEUR`/`EffectivePriceEUR`/`IsPromoActive` pe `PluginItem` și
+`DownloadableResource`. **CONFORMITATE (Regula 3, Partea 1)**: pe conținut
+PROPRIU GDC suma rămâne DONAȚIE — se afișează suma veche TĂIATĂ + badge
+**"Susținere promoțională"**, NICIODATĂ "reducere"/"discount"/"-X% OFF".
+Promoția e activă doar cât timp `scheduling` e activ (o promo fără scheduling
+NU se aplică — verificat, identic cu Mac). Mesajul WhatsApp de deblocare
+folosește `EffectivePriceDisplay`, deci suma promoțională activă ajunge automat
+în mesaj — altfel userul ar fi cerut deblocarea la suma veche, mai mare, în
+plină promoție.
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente. Harness-ul din
+scratchpad extins la 24 de verificări, dintre care decodarea
+**catalogului LIVE real** descărcat de pe gordas.dev: 4 produse, 7 evenimente,
+1 ofertă parteneră, scheduling-ul evenimentului real citit corect ca
+`2026-08-29`, plus round-trip de dată, ferestre expirate/viitoare/deschise, și
+comportamentul prețului promoțional în toate cele 4 combinații. Toate au trecut.
+
+**Observație reală despre catalogul live** (nu un bug al portului): oferta
+parteneră și pachetul publicate acum au ferestre de scheduling DEJA EXPIRATE
+(s-au încheiat la 23:57 și 01:10, ora curentă 03:43), iar oferta e o intrare de
+test (`brandName: "test"`, `discountText` gol). Cu filtrarea corectă, ele NU
+apar în client — comportament corect, de așteptat, nu o regresie.
+
+### Etapa 5 — Google Maps din adresă + memorare folder de descărcare
+`MapsLink` (Core, nou) — deep-link către endpoint-ul public de căutare Google
+Maps (`api=1&query=<text>`), fără cheie API. `PartnerStore` și `ServiceCenter`
+capătă câmpul nou `Address` (opțional, distinct de `WebsiteURL`/`Url`); `Event`
+folosește `Location`-ul deja existent (fără câmp nou), exact ca pe Mac.
+`MapsUrl` computed pe toate trei; butonul nu se randează DELOC când e null (nu
+apare dezactivat).
+
+**Stoplist de termeni non-fizici** (`online`, `webinar`, `virtual`, `remote`,
+`la distanta`, `distanta`, `zoom`, `internet`, `n/a`, `-`), comparat pe textul
+NORMALIZAT prin exact aceeași `FuzzySearch.Normalize` din Etapa 1 — deci
+"Online", "ONLINE", "  online  " și "la distanță" (cu diacritice) sunt toate
+prinse. Verificat cu 13 cazuri, inclusiv contra-exemplul "Online Studio
+Bucuresti", care NU trebuie prins de stoplist (e o adresă reală care se
+întâmplă să înceapă cu acel cuvânt — stoplist-ul compară textul ÎNTREG, nu un
+prefix).
+
+**BUG REAL GĂSIT ȘI REPARAT în timpul verificării** (nu ar fi apărut la
+compilare): comanda de deschidere folosea `url.ToString()`, iar
+`Uri.ToString()` întoarce forma **DEZESCAPATĂ** — `?query=Strada Victoriei 10,
+București`, cu spații brute și diacritice ne-encodate, exact așa cum ar fi
+ajuns la `ShellExecute`. Fix: `url.AbsoluteUri`, care păstrează
+percent-encoding-ul corect
+(`query=Strada%20Victoriei%2010%2C%20Bucure%C8%99ti`). Regulă practică nouă:
+**pentru orice `Uri` trimis către `Process.Start`, folosește `AbsoluteUri`,
+niciodată `ToString()`.**
+
+`DownloadLocationStore` (Core, nou) — memorează per resursă folderul unde
+userul și-a salvat descărcarea. Stare 100% locală
+(`%AppData%\GDCPluginManager\download-locations.json`), NU parte din
+catalog.json. `Get` verifică `Directory.Exists` înainte să întoarcă calea, ca
+să nu afișeze o cale moartă și un buton "Deschide" care eșuează. Pe card:
+"Unde l-ai salvat?" → alegere folder → apoi calea + "Deschide"/"Schimbă"/
+"Uită". Rândul apare doar pe resurse DEBLOCATE, ca pe Mac.
+
+**Simplificare față de plan**: s-a folosit `Microsoft.Win32.OpenFolderDialog`
+(nativ în WPF din .NET 8) în loc de `FolderBrowserDialog` — acela ar fi cerut o
+referință la Windows Forms doar pentru un selector de folder.
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente; 38 de verificări în
+harness, toate trecute.
+
+### Etapa 6 — Filigran sezonier (SVG randat real, nu fallback tăcut)
+`Catalog.SeasonalBackground` (Core, nou) + `SeasonalBackgroundUrl` (același
+sistem hibrid cale-relativă/URL-extern ca `CoverImage`).
+`SeasonalBackgroundLoader.cs` (Client, nou) + strat de fundal în
+`MainWindow.xaml`: imagine mare (480x480 bounding box), **opacitate 7%**, ÎN
+SPATELE conținutului (declarat primul în Grid + `Panel.ZIndex="-1"`), cu
+`IsHitTestVisible="False"` ca să nu înghită niciun click destinat cardurilor.
+
+**LIBRĂRIE NOUĂ: `SharpVectors.Reloaded` 1.8.5 — decizie documentată, nu
+preferință.** WPF **nu are decodor SVG nativ** (`BitmapImage` acceptă doar
+BMP/GIF/ICO/JPEG/PNG/TIFF/WMP), iar filigranul din producție **este SVG** —
+verificat live: `covers/seasonal/background.svg?v=27081ef5`, HTTP 200,
+`content-type: image/svg+xml`, 33 KB. Fără librărie ar fi eșuat TĂCUT și n-ar
+fi apărut niciodată — exact clasa de bug raportată pe Mac cu `AsyncImage`.
+
+**De ce SharpVectors și NU Svg.Skia**: `Svg.Skia` depinde de SkiaSharp, care
+livrează **binare NATIVE per arhitectură**. Regula 22 (Partea 1) documentează
+un bug REAL de pe DataMover: pe host-ul Windows al lui Cristi (Parallels pe Mac
+Apple Silicon) procesul rulează ca `win-arm64`, iar pachetele Skia native n-au
+build pentru acea arhitectură — cad tăcut cu `DllNotFoundException` doar la
+RUNTIME, niciodată la `dotnet build`. Ar fi fost exact aceeași clasă de eșec
+silențios pe care etapa asta o repară. `SharpVectors.Reloaded` e **100%
+managed** — verificat direct: toate assembly-urile din pachet sunt
+`Mono/.Net assembly`, iar pachetul **nu are folder `runtimes/`** cu binare
+native. Rulează identic pe x64 și pe ARM64 emulat, și randează în
+`DrawingImage` WPF, deci filigranul rămâne **vectorial**, nu rasterizat.
+
+Detectarea SVG se face **după conținut** (`<svg` în primii 512 bytes), nu doar
+după extensie — valoarea reală din producție are query (`?v=27081ef5`), iar un
+URL extern poate să n-aibă deloc extensie. Fallback automat pe decodor raster
+pentru PNG/JPG. Orice eșec (rețea, format, SVG invalid) → `null` → stratul pur
+și simplu nu se randează; filigranul e decorativ, nu produce nicio eroare
+vizibilă.
+
+**Ce e verificat și ce NU**: verificat — pachetul e pur managed; asset-ul live
+e SVG real, XML well-formed, compus DOAR din `<g>`/`<path>` (subsetul cel mai
+simplu, fără text/gradienți/filtre/CSS); codul compilează contra API-ului
+`FileSvgReader`/`WpfDrawingSettings` folosit. **NEVERIFICABIL de pe Mac**:
+randarea efectivă — SharpVectors e o librărie WPF, deci decodarea nu poate
+rula decât pe Windows. Rămâne de confirmat vizual, o dată, pe mașina de test.
+
+### Etapa 7 — N/A pe Windows (SKIP explicit, nu omisiune)
+Etapa 7 de pe Mac (filtrare avansată + export email pe loturi pentru BCC din
+`SalesHistoryView`) e **exclusiv Furnizor**. `GDCPluginManagerWin` nu are
+aplicație Furnizor — publicarea și CRM-ul rămân doar pe Mac. Jurnalul de pe Mac
+o spune direct: "TODO paritate: `GDCPluginManagerWin` nu are Furnizor — nu se
+aplică." Nimic de portat.
+
+### Etapa 8 — Cache offline
+**Constatare (verificată, nu presupusă)**: `CatalogService.cs` avea DEJA cache
+offline complet funcțional — `catalog-cache.json` în `%AppData%`, scris la
+fiecare fetch reușit, citit în constructor, cu fallback automat la eșec de
+rețea (`if (Items.Count > 0) return;` păstrează ce era deja încărcat). Nimic de
+adăugat acolo.
+
+**Gap real, același ca pe Mac**: filigranul sezonier (Etapa 6) se descărca de
+la zero la fiecare pornire, fără persistare — deci **offline dispărea complet**,
+deși restul aplicației funcționa din cache. Adăugat cache pe disc
+(`%AppData%\GDCPluginManager\seasonal-background-cache`), după exact același
+model ca `catalog-cache.json`: la succes salvează bytes, la eșec de rețea
+încearcă ultima variantă salvată.
+
+**Detaliu deliberat**: se salvează în cache DOAR bytes care s-au și DECODAT cu
+succes. Altfel un răspuns corupt (sau o pagină HTML de eroare servită cu 200)
+ar fi fost cache-uită și reîncercată la infinit, fără ca filigranul să apară
+vreodată.
+
+### Etapa 9 — Pachete / Bundle-uri
+`BundleItemKind` (6 tipuri: `product`/`download`/`course`/`audio`/`app`/
+`material`), `BundleItemRef`, `ProductBundle` (Core, noi) +
+`Catalog.ProductBundles` (default `[]`). Sidebar nou "Pachete" (grup
+COMUNITATE) + grid + a 11-a colecție în căutarea globală.
+
+**Decizie arhitecturală portată ca atare**: pachetul e DOAR un construct de
+prezentare/marketing (grupare + preț total afișat), **NU un mecanism nou de
+licențiere** — achiziția rămâne prin WhatsApp, reutilizând exact tiparul din
+`ProductViewModel.Buy()` (mesaj + `MachineID.Display`), doar cu lista
+conținutului inclus adăugată în mesaj. Furnizorul generează în continuare,
+manual, câte o licență per produs inclus. Oferte Parteneri (terți) și
+Evenimente (informativ) rămân EXCLUSE din tipurile combinabile, ca pe Mac.
+
+Produsele incluse se rezolvă **live din catalog** la construirea cardului. **Un
+ID care nu mai există (produs retras între timp) e omis SILENȚIOS** — cardul nu
+crapă și nu afișează un rând gol; pachetul rămâne utilizabil cu ce a mai rămas.
+
+Suma individuală (afișată tăiată lângă prețul pachetului) însumează doar
+elementele care AU preț propriu în model: produse, resurse download, cursuri.
+Audio/Aplicații/Materiale n-au preț în model — apar în lista de conținut dar NU
+contribuie la sumă, exact ca pe Mac. Pentru un curs (care are mai multe opțiuni
+de preț) se ia **cea mai mică** — estimare conservatoare, ca suma tăiată să nu
+fie niciodată umflată artificial. Suma tăiată apare doar dacă e strict mai mare
+decât prețul pachetului.
+
+`BundleViewModel` se construiește ULTIMUL în `RebuildFromCatalog`, fiindcă
+rezolvă elementele direct din `CatalogService`.
+
+**Verificat**: `dotnet build` — 0 erori. Harness: toate cele 6 tipuri de
+`BundleItemKind` se decodează, plus **pachetul REAL din catalogul live** (9
+elemente, combinând `app` + `course` + `product`) și `seasonalBackground`-ul
+live cu query-ul de cache-busting păstrat corect în URL-ul absolut.
+
+### Bump de versiune final — 1.5.0 → 1.13.2
+Sincronizat în ambele puncte (Regula 6 + Regula 14): `<Version>` din
+`GDCPluginManager.Client.csproj` și `MyAppVersion` din `installer.iss`.
+1.13.2 e exact versiunea Clientului Mac — `docs/update.json` are un singur câmp
+`version`, comun ambelor platforme, deci Windows trebuie să ajungă la aceeași
+valoare ca 404-ul de la `download_url.windows` (documentat ca RISC CUNOSCUT în
+jurnalul de pe Mac) să poată dispărea după un build+upload real.
+
+**Verificare finală**: `dotnet build` pe toată soluția, de la zero
+(`obj/`+`bin/` șterse) — **0 erori, 0 avertismente**. `MainWindow.baml` a
+crescut de la 37.967 la 67.135 bytes, dovadă că tot XAML-ul nou chiar a
+compilat, nu doar a trecut de C#.
+
+**Notă pentru un release viitor, NU rezolvată aici (în afara scopului)**:
+`installer.iss` are `OutputBaseFilename=GDCPluginManagerSetup`, fără versiune
+în nume — Regula 17 cere ca fișierul livrat să poarte versiunea
+(`GDCPluginManagerSetup-1.13.2.exe`), ALĂTURI de copia cu nume stabil necesară
+mecanismului `releases/latest/download/`. E o abatere PREEXISTENTĂ, care ține
+de plumbing-ul de release, nu de portul funcțional din etapele astea — n-am
+atins-o ca să nu schimb unilateral cum se numesc artefactele de release.

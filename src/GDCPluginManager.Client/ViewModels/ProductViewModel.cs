@@ -51,7 +51,21 @@ public sealed partial class ProductViewModel : ObservableObject
     public string Description => Item.Description;
     public string TypeLabel => Item.Type.Label();
     public string VersionLabel => $"v{Item.Version}";
-    public string PriceLabel => Item.IsFree ? (Item.IsTrial ? "Proba" : "Gratuit") : Item.PriceDisplay;
+    /// Suma AFISATA acum — cea promotionala cat timp promotia e activa
+    /// (Etapa 4), altfel cea normala.
+    public string PriceLabel => Item.IsFree ? (Item.IsTrial ? "Proba" : "Gratuit") : Item.EffectivePriceDisplay;
+
+    // ---- Sustinere promotionala (Etapa 4, 2026-08-29) --------------------
+    // CONFORMITATE (Regula 3, Partea 1): pe produsele PROPRII GDC suma ramane
+    // o DONATIE. Badge-ul spune "Susținere promoțională" — NICIODATA
+    // "reducere"/"discount"/"-X% OFF". Limbajul de discount e permis exclusiv
+    // pe PartnerOffer (brand tert).
+    public bool IsPromoActive => Item.IsPromoActive && !Item.IsFree;
+
+    /// Suma dinainte de promotie, afisata taiata langa cea curenta.
+    public string OriginalPriceLabel => Item.PriceDisplay;
+
+    public string PromoBadgeText => "Susținere promoțională";
 
     /// Badge GRATUIT (verde) / PROBĂ (albastru) / LICENȚĂ (portocaliu) —
     /// cerut explicit 2026-08-24, ca sa nu creeze impresia de "reclama
@@ -71,12 +85,22 @@ public sealed partial class ProductViewModel : ObservableObject
     public bool ShowPrice => !Item.IsFree;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Item.YoutubeURL);
 
+    // ---- Linkuri suplimentare (Etapa 2, 2026-08-29) ----------------------
+    // Port 1:1 al `PluginCard.extraLinksRow` de pe Mac: fiecare iconita apare
+    // DOAR daca linkul ei e completat — niciodata dezactivata sau goala.
+    public bool HasPurchase => !string.IsNullOrWhiteSpace(Item.PurchaseURL);
+    public bool HasDemo => !string.IsNullOrWhiteSpace(Item.DemoURL);
+    public bool HasFacebook => !string.IsNullOrWhiteSpace(Item.SocialLinks?.FacebookURL);
+    public bool HasSocialYoutube => !string.IsNullOrWhiteSpace(Item.SocialLinks?.YoutubeURL);
+    public bool HasInstagram => !string.IsNullOrWhiteSpace(Item.SocialLinks?.InstagramURL);
+    public bool HasTiktok => !string.IsNullOrWhiteSpace(Item.SocialLinks?.TiktokURL);
+
     /// Vezi cerinta "Selector Compatibilitate OS": badge emoji pe card,
     /// vizibil pentru toate cele 3 stari, inclusiv CrossPlatform (2026-08-25:
     /// "Ambele" trebuie sa se vada explicit pe card, nu doar sa fie absenta
     /// unui badge - decizia initiala de a-l ascunde a fost o presupunere
     /// gresita despre asteptarile UX, corectata la cererea explicita).
-    public string OSBadgeEmoji => Item.SupportedOS.BadgeEmoji();
+    public string OSBadgeSymbol => Item.SupportedOS.BadgeSymbol();
     public bool IsCompatible => Item.SupportedOS.Allows(SupportedOSExtensions.Current);
 
     public bool IsInstalled => InstallManager.Shared.IsInstalled(Item);
@@ -98,7 +122,10 @@ public sealed partial class ProductViewModel : ObservableObject
     {
         // Acelasi format ca buyURL din PluginCard (ContentView.swift) —
         // mesaj specific produsului, nu generic ca cel din panoul Licenta.
-        var text = $"Salut! Vreau sa deblochez {Item.Name} cu o donatie de {Item.PriceDisplay}. ID calculator: {MachineID.Display}";
+        // Etapa 4: foloseste EffectivePriceDisplay, deci suma promotionala
+        // activa ajunge automat in mesaj (ca pe Mac) — altfel userul ar cere
+        // deblocarea la suma veche, mai mare, in plina promotie.
+        var text = $"Salut! Vreau sa deblochez {Item.Name} cu o donatie de {Item.EffectivePriceDisplay}. ID calculator: {MachineID.Display}";
         var url = $"https://wa.me/34643109970?text={Uri.EscapeDataString(text)}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
@@ -112,12 +139,32 @@ public sealed partial class ProductViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenTutorial()
+    private void OpenTutorial() => OpenIfPresent(Item.YoutubeURL);
+
+    // Comenzile linkurilor suplimentare (Etapa 2) — vezi proprietatile Has*
+    // de mai sus, care decid daca iconita apare pe card.
+    [RelayCommand]
+    private void OpenPurchase() => OpenIfPresent(Item.PurchaseURL);
+
+    [RelayCommand]
+    private void OpenDemo() => OpenIfPresent(Item.DemoURL);
+
+    [RelayCommand]
+    private void OpenFacebook() => OpenIfPresent(Item.SocialLinks?.FacebookURL);
+
+    [RelayCommand]
+    private void OpenSocialYoutube() => OpenIfPresent(Item.SocialLinks?.YoutubeURL);
+
+    [RelayCommand]
+    private void OpenInstagram() => OpenIfPresent(Item.SocialLinks?.InstagramURL);
+
+    [RelayCommand]
+    private void OpenTiktok() => OpenIfPresent(Item.SocialLinks?.TiktokURL);
+
+    private static void OpenIfPresent(string? url)
     {
-        if (!string.IsNullOrWhiteSpace(Item.YoutubeURL))
-        {
-            Process.Start(new ProcessStartInfo(Item.YoutubeURL) { UseShellExecute = true });
-        }
+        if (string.IsNullOrWhiteSpace(url)) return;
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     [RelayCommand]

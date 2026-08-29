@@ -159,21 +159,11 @@ public sealed class UpdateChecker : INotifyPropertyChanged
         catch { /* nescriere nu trebuie sa blocheze UI-ul */ }
     }
 
-    /// Comparatie simpla pe segmente numerice punctate (1.2.0 > 1.10.0 se
+    /// Comparatie simpla pe segmente numerice punctate (1.10.0 > 1.2.0 se
     /// compara numeric per segment, nu lexicografic) — identic cu Swift.
-    private static bool IsNewer(string a, string b)
-    {
-        var partsA = a.Split('.').Select(s => int.TryParse(s, out var n) ? n : 0).ToArray();
-        var partsB = b.Split('.').Select(s => int.TryParse(s, out var n) ? n : 0).ToArray();
-        var len = Math.Max(partsA.Length, partsB.Length);
-        for (var i = 0; i < len; i++)
-        {
-            var x = i < partsA.Length ? partsA[i] : 0;
-            var y = i < partsB.Length ? partsB[i] : 0;
-            if (x != y) return x > y;
-        }
-        return false;
-    }
+    /// Logica traieste acum in VersionCompare (Core), refolosita si de
+    /// "Aplicatiile Mele" (Etapa 3); comportamentul e neschimbat.
+    private static bool IsNewer(string a, string b) => VersionCompare.IsNewer(a, b);
 
     private void Raise([CallerMemberName] string? name = null) =>
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));

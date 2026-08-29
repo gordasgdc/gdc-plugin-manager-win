@@ -17,7 +17,7 @@
     <!-- Acelasi numar ca versiunea Mac (docs/update.json foloseste un singur
          camp "version" comun ambelor platforme) — UpdateChecker.CurrentVersion
          citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
-    <Version>1.4.0</Version>
+    <Version>1.13.2</Version>
     <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
          AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
@@ -26,6 +26,7 @@
   <ItemGroup>
     <!-- ObservableObject / RelayCommand / [ObservableProperty] source generators -->
     <PackageReference Include="CommunityToolkit.Mvvm" Version="8.2.2" />
+    <PackageReference Include="SharpVectors.Reloaded" Version="1.8.5" />
     <!-- Iconite vectoriale Fluent (Segoe Fluent Icons look, nativ pe Windows 11) + FluentWindow. -->
     <PackageReference Include="WPF-UI" Version="3.0.5" />
     <!-- Cod QR pentru pagina Android (link direct catre .apk) — pana acum

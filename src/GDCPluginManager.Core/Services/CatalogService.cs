@@ -29,6 +29,15 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<Event> Events { get; private set; } = [];
     public IReadOnlyList<PartnerStore> PartnerStores { get; private set; } = [];
     public IReadOnlyList<ServiceCenter> ServiceCenters { get; private set; } = [];
+    /// Resurse de download direct (LUT/SFX/VFX/Plugin) — Etapa 2 (2026-08-29).
+    public IReadOnlyList<DownloadableResource> DownloadableResources { get; private set; } = [];
+    /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
+    public IReadOnlyList<PartnerOffer> PartnerOffers { get; private set; } = [];
+    /// Pachete/Bundle-uri — Etapa 9 (2026-08-29).
+    public IReadOnlyList<ProductBundle> ProductBundles { get; private set; } = [];
+    /// Filigran sezonier — Etapa 6 (2026-08-29). null = fara filigran.
+    public string? SeasonalBackground { get; private set; }
+    public Uri? SeasonalBackgroundUrl => CatalogAssets.ImageUrl(SeasonalBackground);
     public bool IsLoading { get; private set; }
     public string? LoadError { get; private set; }
 
@@ -82,6 +91,10 @@ public sealed class CatalogService : INotifyPropertyChanged
             Events = catalog.Events;
             PartnerStores = catalog.PartnerStores;
             ServiceCenters = catalog.ServiceCenters;
+            DownloadableResources = catalog.DownloadableResources;
+            PartnerOffers = catalog.PartnerOffers;
+            SeasonalBackground = catalog.SeasonalBackground;
+            ProductBundles = catalog.ProductBundles;
             Raise(nameof(Items));
             Raise(nameof(Courses));
             Raise(nameof(Apps));
@@ -90,6 +103,10 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(Events));
             Raise(nameof(PartnerStores));
             Raise(nameof(ServiceCenters));
+            Raise(nameof(DownloadableResources));
+            Raise(nameof(PartnerOffers));
+            Raise(nameof(SeasonalBackground));
+            Raise(nameof(ProductBundles));
             SaveToCache(data);
         }
         catch (CatalogFetchException ex)
@@ -143,6 +160,10 @@ public sealed class CatalogService : INotifyPropertyChanged
             Events = catalog.Events;
             PartnerStores = catalog.PartnerStores;
             ServiceCenters = catalog.ServiceCenters;
+            DownloadableResources = catalog.DownloadableResources;
+            PartnerOffers = catalog.PartnerOffers;
+            SeasonalBackground = catalog.SeasonalBackground;
+            ProductBundles = catalog.ProductBundles;
         }
         catch
         {
