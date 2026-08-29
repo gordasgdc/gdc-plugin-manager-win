@@ -968,3 +968,29 @@ simplu, fără text/gradienți/filtre/CSS); codul compilează contra API-ului
 `FileSvgReader`/`WpfDrawingSettings` folosit. **NEVERIFICABIL de pe Mac**:
 randarea efectivă — SharpVectors e o librărie WPF, deci decodarea nu poate
 rula decât pe Windows. Rămâne de confirmat vizual, o dată, pe mașina de test.
+
+### Etapa 7 — N/A pe Windows (SKIP explicit, nu omisiune)
+Etapa 7 de pe Mac (filtrare avansată + export email pe loturi pentru BCC din
+`SalesHistoryView`) e **exclusiv Furnizor**. `GDCPluginManagerWin` nu are
+aplicație Furnizor — publicarea și CRM-ul rămân doar pe Mac. Jurnalul de pe Mac
+o spune direct: "TODO paritate: `GDCPluginManagerWin` nu are Furnizor — nu se
+aplică." Nimic de portat.
+
+### Etapa 8 — Cache offline
+**Constatare (verificată, nu presupusă)**: `CatalogService.cs` avea DEJA cache
+offline complet funcțional — `catalog-cache.json` în `%AppData%`, scris la
+fiecare fetch reușit, citit în constructor, cu fallback automat la eșec de
+rețea (`if (Items.Count > 0) return;` păstrează ce era deja încărcat). Nimic de
+adăugat acolo.
+
+**Gap real, același ca pe Mac**: filigranul sezonier (Etapa 6) se descărca de
+la zero la fiecare pornire, fără persistare — deci **offline dispărea complet**,
+deși restul aplicației funcționa din cache. Adăugat cache pe disc
+(`%AppData%\GDCPluginManager\seasonal-background-cache`), după exact același
+model ca `catalog-cache.json`: la succes salvează bytes, la eșec de rețea
+încearcă ultima variantă salvată.
+
+**Detaliu deliberat**: se salvează în cache DOAR bytes care s-au și DECODAT cu
+succes. Altfel un răspuns corupt (sau o pagină HTML de eroare servită cu 200)
+ar fi fost cache-uită și reîncercată la infinit, fără ca filigranul să apară
+vreodată.

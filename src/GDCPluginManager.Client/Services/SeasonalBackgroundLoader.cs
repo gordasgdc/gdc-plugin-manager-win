@@ -36,9 +36,21 @@ public static class SeasonalBackgroundLoader
 {
     private static readonly HttpClient Http = HttpClientFactory.Create();
 
+    /// Cache pe disc (Etapa 8, 2026-08-29) — același model ca
+    /// `catalog-cache.json` din `CatalogService`. Fără el, filigranul se
+    /// descărca de la zero la fiecare pornire și **dispărea complet offline**,
+    /// deși restul aplicației funcționa din cache-ul de catalog. Gap identic
+    /// cu cel găsit și reparat pe Mac la Etapa 8.
+    private static string CacheFilePath => Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "GDCPluginManager", "seasonal-background-cache");
+
     /// Descarcă și decodează filigranul. Întoarce null la ORICE eșec (rețea,
     /// format necunoscut, SVG invalid) — filigranul e pur decorativ, deci
     /// absența lui nu trebuie să producă nicio eroare vizibilă utilizatorului.
+    ///
+    /// Etapa 8: la succes salvează bytes pe disc; la eșec de rețea încearcă
+    /// ultima variantă salvată, ca filigranul să rămână vizibil offline.
     public static async Task<ImageSource?> LoadAsync(Uri? url)
     {
         if (url is null) return null;
@@ -46,11 +58,41 @@ public static class SeasonalBackgroundLoader
         try
         {
             var bytes = await Http.GetByteArrayAsync(url);
-            return Decode(bytes, url);
+            var image = Decode(bytes, url);
+            // Salvam DOAR ce s-a si decodat cu succes — altfel am cache-ui un
+            // raspuns corupt/HTML de eroare si l-am reincerca la infinit.
+            if (image is not null) SaveToCache(bytes);
+            return image;
+        }
+        catch
+        {
+            return LoadFromCache(url);
+        }
+    }
+
+    private static ImageSource? LoadFromCache(Uri? url)
+    {
+        try
+        {
+            if (!File.Exists(CacheFilePath)) return null;
+            return Decode(File.ReadAllBytes(CacheFilePath), url);
         }
         catch
         {
             return null;
+        }
+    }
+
+    private static void SaveToCache(byte[] bytes)
+    {
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(CacheFilePath)!);
+            File.WriteAllBytes(CacheFilePath, bytes);
+        }
+        catch
+        {
+            // Nescrierea pe disc nu trebuie sa blocheze afisarea din memorie.
         }
     }
 
