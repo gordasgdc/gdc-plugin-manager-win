@@ -46,14 +46,25 @@ namespace GDCPluginManager.Client.Services;
 /// redenumit corect, integru pe disc".
 public static class SelfUpdater
 {
+    // [BUG REAL 2026-08-29, gasit din raportul lui Cristi: "de ce trebuie
+    // tot timpul sa descarc de pe pagina web"] Aici era `new HttpClient()`
+    // simplu, NU `HttpClientFactory.Create()` — deci fara User-Agent (bug
+    // deja documentat chiar in acest fisier, `HttpClientFactory.cs`: GitHub
+    // respinge cu 403 orice cerere fara el) si fara niciuna din fix-urile
+    // recente (reciclare conexiune, validare TLS diagnosticabila). Orice
+    // esec cadea tacut pe fallback-ul "Deschide pagina" din PresentFailure,
+    // fara sa apara NICIODATA in log (Regula 25 - lipsea complet aici) -
+    // userul vedea doar ca update-ul "nu merge niciodata din program",
+    // exact ca la GDC Vault/DataMover ÎNAINTE sa aiba self-updater corect.
     // Arhiva Windows are ~60+ MB (installer self-contained .NET) — mult mai
-    // mare decat orice am descarcat pana acum pe Mac. HttpClient implicit
-    // (HttpClientFactory.Create()) mosteneste orice timeout global; aici
-    // punem unul dedicat, generos, ca sa nu esueze fals pe conexiuni lente.
-    private static readonly HttpClient Http = new()
+    // mare decat orice am descarcat pana acum pe Mac, de-asta Timeout-ul
+    // implicit (mostenit din HttpClientFactory) e suprascris aici, generos.
+    private static readonly HttpClient Http = HttpClientFactory.Create();
+
+    static SelfUpdater()
     {
-        Timeout = TimeSpan.FromMinutes(5),
-    };
+        Http.Timeout = TimeSpan.FromMinutes(5);
+    }
 
     public static async Task DownloadAndInstallAsync(UpdateInfo info)
     {
@@ -108,6 +119,7 @@ public static class SelfUpdater
         catch (Exception ex)
         {
             progress.Close();
+            DiagnosticLog.Write("SelfUpdater", $"Actualizare la v{info.Version} esuata: {DiagnosticLog.Describe(ex)}");
             PresentFailure(ex.Message);
             // NOTE: nu stergem `tempDir` aici — daca eroarea a picat DUPA ce
             // Setup.exe a fost deja lansat (putin probabil, dar posibil intre

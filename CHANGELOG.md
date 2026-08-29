@@ -5,6 +5,18 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.12 (2026-08-29) — Fix real: self-update din program eșua tăcut, cădea pe "Deschide pagina"
+
+- Cauza reală (raportată de Cristi: "de ce trebuie tot timpul să descarc
+  de pe pagina web" — pe GDC Vault/DataMover funcționează direct din
+  program): `SelfUpdater.cs` folosea `new HttpClient()` propriu, fără
+  User-Agent (GitHub poate respinge cu 403 fără el — bug deja documentat
+  în `HttpClientFactory.cs`, dar neaplicat aici) și fără logare la eșec
+  (Regula 25). Orice descărcare eșuată cădea direct pe fallback-ul
+  "Deschide pagina", fără nicio urmă în log. Fix: `SelfUpdater` folosește
+  acum `HttpClientFactory.Create()` (User-Agent + reciclare conexiune +
+  validare TLS diagnosticabilă) + logare reală a erorii la eșec.
+
 ## v1.19.11 (2026-08-29) — Forțat HTTP/1.1 explicit (elimină variabila ALPN/HTTP2)
 
 - v1.19.9/10 nu au rezolvat eroarea SSL — certificatul fals apărea DOAR pe
