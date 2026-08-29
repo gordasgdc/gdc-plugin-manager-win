@@ -1,3 +1,5 @@
+using System.IO;
+using System.Net.Http;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Media.Imaging;
@@ -49,42 +51,41 @@ public partial class LightboxWindow : Window
         window.ShowDialog();
     }
 
+    private static readonly HttpClient Http = HttpClientFactory.Create();
+
     /// Incarca imaginea de la URL.
     ///
-    /// WARNING: `BitmapImage` semnaleaza esecul prin evenimentul
-    /// `DownloadFailed`, NU printr-o exceptie din constructor — descarcarea
-    /// e asincrona. Fara handlerul de mai jos, un URL extern disparut ar
-    /// lasa o fereastra goala, fara nicio explicatie pentru user.
-    private void LoadImage(Uri url)
+    /// [2026-08-29] Acelasi fix ca in CoverViewModel.cs: `bitmap.UriSource =
+    /// url` trece prin WinINet pe Windows, un stack de retea separat de
+    /// `HttpClient` — daca WinINet e blocat/restrictionat la nivel de sistem,
+    /// TOATE imaginile esueaza (inclusiv previewul marit), in timp ce
+    /// catalogul (HttpClient) merge normal. Descarcam bytes-ii cu acelasi
+    /// HttpClient dovedit functional, apoi construim BitmapImage dintr-un
+    /// MemoryStream — WinINet nu mai e implicat deloc.
+    private async void LoadImage(Uri url)
     {
-        try
+        for (var attempt = 1; attempt <= 2; attempt++)
         {
-            var bitmap = new BitmapImage();
-            bitmap.BeginInit();
-            bitmap.UriSource = url;
-            bitmap.CacheOption = BitmapCacheOption.OnLoad;
-            bitmap.EndInit();
-
-            if (!bitmap.IsDownloading)
+            try
             {
+                var bytes = await Http.GetByteArrayAsync(url);
+                var bitmap = new BitmapImage();
+                bitmap.BeginInit();
+                bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                bitmap.StreamSource = new MemoryStream(bytes);
+                bitmap.EndInit();
+                if (bitmap.CanFreeze) bitmap.Freeze();
                 PreviewImage.Source = bitmap;
+                DiagnosticLog.Write("LightboxWindow", $"OK, {bytes.Length} bytes (incercarea {attempt}): {url}");
                 return;
             }
-
-            bitmap.DownloadCompleted += (_, _) => PreviewImage.Source = bitmap;
-            bitmap.DownloadFailed += (_, e) =>
+            catch (Exception ex)
             {
-                DiagnosticLog.Write("LightboxWindow", $"DownloadFailed pentru {url}: {e.ErrorException}");
-                ShowFailure();
-            };
-            PreviewImage.Source = bitmap;
+                DiagnosticLog.Write("LightboxWindow", $"Esuat la incercarea {attempt} pentru {url}: {ex.GetType().Name}: {ex.Message}");
+                if (attempt == 1) await Task.Delay(800);
+            }
         }
-        catch (Exception ex)
-        {
-            // URI invalid sau format nesuportat — acelasi tratament vizual.
-            DiagnosticLog.Write("LightboxWindow", $"Eroare la initializarea descarcarii pentru {url}: {ex}");
-            ShowFailure();
-        }
+        ShowFailure();
     }
 
     private void ShowFailure()

@@ -1,3 +1,5 @@
+using System.IO;
+using System.Net.Http;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -63,12 +65,13 @@ public sealed partial class CoverViewModel : ObservableObject
     private bool _loadFailed;
 
     private int _attempt;
+    private static readonly HttpClient Http = HttpClientFactory.Create();
 
     public CoverViewModel(Uri? url, string title)
     {
         Url = url;
         Title = title;
-        if (url is not null) BeginLoad(url);
+        if (url is not null) _ = LoadAsync(url);
     }
 
     /// True cand chiar avem o imagine gata de aratat. XAML-ul foloseste asta
@@ -76,81 +79,49 @@ public sealed partial class CoverViewModel : ObservableObject
     /// REAL incarcat, nu doar pe existenta unui URL (fix 2026-08-25).
     public bool HasImage => Bitmap is not null;
 
-    /// Porneste descarcarea explicit asincrona (comportamentul standard WPF
-    /// pentru un BitmapImage cu UriSource http/https + CacheOption.OnLoad:
-    /// EndInit() returneaza imediat, descarcarea continua pe fundal, iar
-    /// evenimentele DownloadCompleted/DownloadFailed anunta rezultatul).
-    /// Impachetat in try/catch: un URL invalid (nume de fisier neasteptat,
-    /// caracter nesustinut) nu trebuie sa crape toata aplicatia la pornire —
-    /// cade pur si simplu pe iconita de rezerva, ca orice alt esec.
-    /// [2026-08-29] Un singur retry, la 0.8s — acelasi fix ca la filigranul
-    /// sezonier (SeasonalBackgroundLoader.cs), pentru aceeasi clasa de cauza
-    /// probabila: blip-uri tranzitorii de CDN pe gordas.dev (Cloudflare +
-    /// Fastly/GitHub Pages). Nu costa nimic la succes (primul DownloadCompleted
-    /// castiga oricum), dar salveaza un card gol la un hiccup de-o clipa.
-    private void BeginLoad(Uri url)
+    /// [2026-08-29, BUG MAJOR gasit si reparat] Vechea implementare lasa
+    /// `BitmapImage.UriSource` sa descarce direct de la URL — pe Windows,
+    /// asta trece prin **WinINet** (API-ul vechi de Internet al Windows-ului),
+    /// un stack de retea COMPLET SEPARAT de `HttpClient` (folosit pt.
+    /// catalog.json/update.json, care mergeau mereu perfect). Raportat live
+    /// de Cristi: absolut NICIO imagine nu se mai incarca (Magazine, Cursuri,
+    /// Materiale, Evenimente, Aplicatii) — chiar si cele care mersesera
+    /// inainte — in timp ce catalogul (text) se incarca normal. Exact
+    /// tiparul unui WinINet blocat/restrictionat la nivel de sistem (proxy,
+    /// firewall, politica de retea) — HttpClient nu e afectat de el deloc.
+    /// Fix: descarcam bytes-ii NOI cu ACELASI `HttpClient` deja dovedit
+    /// functional (folosit si de `SeasonalBackgroundLoader`/`UpdateChecker`),
+    /// apoi construim `BitmapImage` dintr-un `MemoryStream` local —
+    /// WinINet nu mai e implicat deloc in randarea copertelor.
+    private async Task LoadAsync(Uri url)
     {
-        _attempt++;
-        try
+        for (_attempt = 1; _attempt <= 2; _attempt++)
         {
-            var bmp = new BitmapImage();
-            bmp.BeginInit();
-            bmp.CacheOption = BitmapCacheOption.OnLoad;
-            bmp.UriSource = url;
-            bmp.DownloadFailed += (_, e) =>
+            try
+            {
+                var bytes = await Http.GetByteArrayAsync(url);
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.StreamSource = new MemoryStream(bytes);
+                bmp.EndInit();
+                if (bmp.CanFreeze) bmp.Freeze();
+                Bitmap = bmp;
+                DiagnosticLog.Write("CoverViewModel", $"OK, {bytes.Length} bytes (incercarea {_attempt}): {url}");
+                return;
+            }
+            catch (Exception ex)
             {
                 // [2026-08-29] `Debug.WriteLine` e INVIZIBIL cand aplicatia
                 // ruleaza normal (fara debugger atasat) — exact cazul lui
-                // Cristi. Raportase coperte lipsa la Magazine/Cursuri/
-                // Materiale pe Windows, dar n-aveam NICIO urma reala a
-                // erorii. `DiagnosticLog` (Core, acum public — vezi
+                // Cristi. `DiagnosticLog` (Core, acum public — vezi
                 // SeasonalBackgroundLoader.cs) scrie in %TEMP%\gdcpm-crash.log,
                 // citibil chiar si dintr-un build normal.
-                DiagnosticLog.Write("CoverViewModel", $"DownloadFailed (incercarea {_attempt}) pentru {url}: {e.ErrorException}");
-                if (_attempt < 2)
-                {
-                    _ = RetryAfterDelay(url);
-                }
-                else
-                {
-                    LoadFailed = true;
-                }
-            };
-            bmp.DownloadCompleted += (_, __) =>
-            {
-                if (bmp.CanFreeze) bmp.Freeze();
-                Bitmap = bmp;
-                DiagnosticLog.Write("CoverViewModel", $"OK: {url}");
-            };
-            bmp.EndInit();
-            // Daca imaginea era deja in cache-ul HTTP local si s-a terminat
-            // sincron in EndInit() (nu mai apuca sa se declanseze evenimentul
-            // DownloadCompleted), afisam bitmap-ul oricum.
-            if (!bmp.IsDownloading)
-            {
-                if (bmp.CanFreeze) bmp.Freeze();
-                Bitmap = bmp;
-                DiagnosticLog.Write("CoverViewModel", $"OK (sincron, deja in cache): {url}");
+                DiagnosticLog.Write("CoverViewModel", $"Esuat la incercarea {_attempt} pentru {url}: {ex.GetType().Name}: {ex.Message}");
+                if (_attempt == 1) await Task.Delay(800);
             }
         }
-        catch (Exception ex)
-        {
-            DiagnosticLog.Write("CoverViewModel", $"Eroare la initializarea descarcarii (incercarea {_attempt}) pentru {url}: {ex}");
-            if (_attempt < 2)
-            {
-                _ = RetryAfterDelay(url);
-            }
-            else
-            {
-                LoadFailed = true;
-            }
-        }
-    }
-
-    private async Task RetryAfterDelay(Uri url)
-    {
-        await Task.Delay(800);
-        BeginLoad(url);
+        LoadFailed = true;
     }
 
     /// Deschide previewul marit. Nu face nimic daca nu exista imagine —

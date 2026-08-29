@@ -1285,3 +1285,37 @@ date reale, nu presupuneri.
 
 Versiune: `1.19.5`→`1.19.6` (PATCH).
 **Verificat**: `dotnet build` — 0 erori.
+
+## [FIX CRITIC 2026-08-29, val 3] Regresie totala imagini — cauza reala: WinINet, nu blip CDN
+
+**Raportat live de Cristi, dupa v1.19.6**: problema s-a AGRAVAT — absolut
+NICIO imagine nu se mai incarca (Evenimente, Magazine, Cursuri, Materiale,
+Aplicatii, filigran), inclusiv cele care mersesera inainte. Catalogul
+(text) se incarca normal. Verificat direct cu `curl`: server 100% sanatos,
+toate imaginile HTTP 200 in ~0.2s — deci NU server/CDN.
+
+**Cauza reala, gasita prin analiza arhitecturii, nu presupunere**:
+`CoverViewModel`/`LightboxWindow` foloseau `BitmapImage.UriSource = url`
+— pe Windows, asta trece prin **WinINet**, un stack de retea LEGACY,
+COMPLET SEPARAT de `HttpClient`/`SocketsHttpHandler` (folosit de
+catalog.json, update.json, SeasonalBackgroundLoader — toate functionale).
+Daca WinINet e blocat/restrictionat la nivel de sistem/retea pe masina lui
+Cristi (proxy, firewall, politica), simptomul e EXACT cel raportat: JSON
+merge, imagini nu, universal si simultan.
+
+**Fix**: `CoverViewModel.LoadAsync`/`LightboxWindow.LoadImage` rescrise
+identic — descarca bytes cu ACELASI `HttpClient` deja dovedit functional
+(`Http.GetByteArrayAsync`), construiesc `BitmapImage` dintr-un
+`MemoryStream` local. WinINet nu mai e implicat DELOC in randarea
+imaginilor, nicaieri in Client. Retry 2 incercari + `DiagnosticLog.Write`
+cu eroarea reala pastrate pe ambele.
+
+**Verificat**: `grep -rn "UriSource" src/` → zero cod activ, doar
+comentarii istorice. `dotnet build --no-incremental` — 0 erori.
+**NEVERIFICAT** (necesita testul real): daca fix-ul chiar rezolva
+simptomul pe masina lui Cristi. Daca DA, confirma ipoteza WinINet. Daca
+NU (HttpClient esueaza si el), `%TEMP%\gdcpm-crash.log` va avea de data
+asta EROAREA REALA (nu doar simptomul), ceea ce restrange diagnosticul
+urmator la ceva concret — proxy/firewall/certificat, nu presupuneri noi.
+
+Versiune: `1.19.6`→`1.19.7` (PATCH).

@@ -5,6 +5,13 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.7 (2026-08-29) — Fix critic: imagini invizibile peste tot
+
+- Cauza reală: `BitmapImage.UriSource` trecea prin WinINet (stack de rețea
+  legacy, separat de HttpClient). Coperți/lightbox rescrise să descarce
+  prin HttpClient + MemoryStream — la fel ca restul aplicației.
+- Retry automat + logare reală a erorii, dacă problema persistă.
+
 ## v1.19.2 (2026-08-29) — Paritate finală cu Mac
 
 - Social links + LinkedIn pe toate 6 rubricile (Course/App/Materiale/
