@@ -1049,3 +1049,28 @@ compilat, nu doar a trecut de C#.
 mecanismului `releases/latest/download/`. E o abatere PREEXISTENTĂ, care ține
 de plumbing-ul de release, nu de portul funcțional din etapele astea — n-am
 atins-o ca să nu schimb unilateral cum se numesc artefactele de release.
+
+## Bump versiune 1.13.2 → 1.16.0 (2026-08-29) — sincronizare cu update.json comun
+
+Bump DOAR de versiune (fără cod nou încă) — necesar ca `update.json` comun
+(un singur câmp `version` pt Mac+Windows) să poată indica un release real
+existent pe ambele platforme. Mac a primit între timp 3 funcționalități noi
+(commit-uri `0e045b7`/`13ac854`/`ce7d720` pe `gdc-plugin-manager-catalog-vendor`):
+social links + LinkedIn pe toate rubricile, selector temă System/Light/Dark,
+bibliotecă de filigrane sezoniere cu scheduling+poziție.
+
+**TODO paritate explicit, NU implementat încă pe Windows** (gap cunoscut,
+documentat, nu ascuns):
+1. `SocialLinks.LinkedinUrl` + `SocialLinks` pe Course/EducationalResource/
+   Event/PartnerStore/ServiceCenter/AppLink (Windows are azi `SocialLinks`
+   doar pe `PluginItem`/`DownloadableResource`, fără LinkedIn).
+2. Selector explicit temă System/Light/Dark (Regula 18) — Windows n-are
+   încă.
+3. Filigran sezonier cu bibliotecă/scheduling/poziție — Windows are azi
+   doar `Catalog.SeasonalBackground` (slot unic, fără scheduling/poziție,
+   din Etapa 6 v2.0).
+
+Acest release (v1.16.0) e funcțional identic pe Windows cu v1.13.2 (cele 9
+etape) — doar numărul de versiune s-a aliniat la Mac ca update.json să poată
+funcționa pe ambele platforme. Cele 3 funcționalități de mai sus rămân de
+portat într-un release următor.
