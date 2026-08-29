@@ -5,6 +5,12 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.14 (2026-08-29) — Bump doar de versiune (sincronizare cu Mac, fără cod nou)
+
+Mac a primit ghidurile PDF (RO/EN/ES) redesenate cu capturi reale ale
+aplicației + ghidul din aplicație completat (Panoul de Dependențe,
+Aplicația mobilă) — conținut, nu cod. Windows neschimbat.
+
 ## v1.19.13 (2026-08-29) — Bump doar de versiune, ca să validăm end-to-end fix-ul de self-update din v1.19.12
 
 Fără schimbare de cod. Cauza reală a "imaginilor invizibile" (blocaj La Liga
