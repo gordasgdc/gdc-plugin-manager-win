@@ -1028,3 +1028,24 @@ rezolvă elementele direct din `CatalogService`.
 `BundleItemKind` se decodează, plus **pachetul REAL din catalogul live** (9
 elemente, combinând `app` + `course` + `product`) și `seasonalBackground`-ul
 live cu query-ul de cache-busting păstrat corect în URL-ul absolut.
+
+### Bump de versiune final — 1.5.0 → 1.13.2
+Sincronizat în ambele puncte (Regula 6 + Regula 14): `<Version>` din
+`GDCPluginManager.Client.csproj` și `MyAppVersion` din `installer.iss`.
+1.13.2 e exact versiunea Clientului Mac — `docs/update.json` are un singur câmp
+`version`, comun ambelor platforme, deci Windows trebuie să ajungă la aceeași
+valoare ca 404-ul de la `download_url.windows` (documentat ca RISC CUNOSCUT în
+jurnalul de pe Mac) să poată dispărea după un build+upload real.
+
+**Verificare finală**: `dotnet build` pe toată soluția, de la zero
+(`obj/`+`bin/` șterse) — **0 erori, 0 avertismente**. `MainWindow.baml` a
+crescut de la 37.967 la 67.135 bytes, dovadă că tot XAML-ul nou chiar a
+compilat, nu doar a trecut de C#.
+
+**Notă pentru un release viitor, NU rezolvată aici (în afara scopului)**:
+`installer.iss` are `OutputBaseFilename=GDCPluginManagerSetup`, fără versiune
+în nume — Regula 17 cere ca fișierul livrat să poarte versiunea
+(`GDCPluginManagerSetup-1.13.2.exe`), ALĂTURI de copia cu nume stabil necesară
+mecanismului `releases/latest/download/`. E o abatere PREEXISTENTĂ, care ține
+de plumbing-ul de release, nu de portul funcțional din etapele astea — n-am
+atins-o ca să nu schimb unilateral cum se numesc artefactele de release.
