@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Security;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Linq;
 
@@ -31,6 +32,16 @@ namespace GDCPluginManager.Core.Services;
 /// motivul exact de refuz (`SslPolicyErrors`) la orice esec de validare.
 /// NU schimba comportamentul de securitate — tot respinge orice certificat
 /// invalid (return false la eroare), doar il face vizibil in log inainte.
+///
+/// [2026-08-29, v3] Certificat fals gasit (`core1.netops.test`/"Packetland"),
+/// IDENTIC pe curl (mereu OK) si HttpClient (mereu esuat) catre EXACT acelasi
+/// host `gordas.dev`, in aceeasi sesiune, in acelasi moment — deci nu mai e
+/// retea/VPN/AV generic (verificat, eliminate pe rand). Singura diferenta
+/// reala ramasa intre curl si .NET: curl pe aceasta masina NU suporta deloc
+/// HTTP/2 (confirmat: `curl --http2` esueaza cu "libcurl version does not
+/// support this"), in timp ce `SocketsHttpHandler` poate oferi ALPN h2.
+/// Fortam explicit HTTP/1.1, fara ALPN h2 deloc — elimina complet aceasta
+/// variabila, indiferent daca era cauza reala sau nu.
 public static class HttpClientFactory
 {
     public static HttpClient Create()
@@ -41,9 +52,15 @@ public static class HttpClientFactory
             SslOptions =
             {
                 RemoteCertificateValidationCallback = ValidateAndLog,
+                ApplicationProtocols = [System.Net.Security.SslApplicationProtocol.Http11],
+                EnabledSslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
             },
         };
-        var client = new HttpClient(handler);
+        var client = new HttpClient(handler)
+        {
+            DefaultRequestVersion = new Version(1, 1),
+            DefaultVersionPolicy = HttpVersionPolicy.RequestVersionExact,
+        };
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("GDCPluginManager", "1.0"));
         return client;
     }

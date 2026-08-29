@@ -5,6 +5,16 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.11 (2026-08-29) — Forțat HTTP/1.1 explicit (elimină variabila ALPN/HTTP2)
+
+- v1.19.9/10 nu au rezolvat eroarea SSL — certificatul fals apărea DOAR pe
+  `gordas.dev`, DOAR din HttpClient (.NET), niciodată din `curl` (verificat
+  identic, în aceeași sesiune, pe același host). Singura diferență reală
+  rămasă: `curl` pe această mașină nu suportă deloc HTTP/2, `HttpClient`
+  putea oferi ALPN h2. Forțat explicit HTTP/1.1 (`ApplicationProtocols`,
+  `DefaultRequestVersion`/`DefaultVersionPolicy`) — elimină complet
+  această variabilă, indiferent dacă era cauza.
+
 ## v1.19.10 (2026-08-29) — Diagnostic: certificatul REAL respins, logat explicit
 
 - v1.19.9 (reciclare conexiune) NU a rezolvat eroarea SSL la filigran —
