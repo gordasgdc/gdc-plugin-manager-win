@@ -858,7 +858,11 @@
         </DataTemplate>
     </Window.Resources>
 
-    <Grid>
+    <!-- x:Name RootGrid (2026-08-29, Regula 24) - tinta lui ApplyTextScale()
+         din code-behind: LayoutTransform aplicat aici scaleaza UNIFORM tot
+         continutul ferestrei, un singur punct de schimbare pentru "Marime
+         text", fara sa umblam prin fiecare FontSize hardcodat din XAML. -->
+    <Grid x:Name="RootGrid">
         <Grid.ColumnDefinitions>
             <!-- Redimensionabila (GridSplitter dedesubt) - lipsea complet,
                  latimea 200 era fixa "in cod", nu doar valoarea implicita.
@@ -1101,10 +1105,16 @@
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Column="0" Text="{Binding AppVersionDisplay}" FontSize="11"
                                VerticalAlignment="Center" Style="{StaticResource MutedTextStyle}" />
-                    <Button Grid.Column="1" Content="Caută actualizări" FontSize="11" Padding="8,3"
+                    <Button Grid.Column="1" Content="Caută actualizări" FontSize="11" Padding="8,3" Margin="0,0,6,0"
                             Background="Transparent" BorderThickness="1" BorderBrush="{StaticResource InkBorderBrush}"
                             Click="CheckForUpdates_Click" />
                 </Grid>
+                <!-- Setari (2026-08-29, Regula 24) - deocamdata doar Marime
+                     text; vezi SettingsWindow.xaml. -->
+                <Button Content="Setări" FontSize="11" Padding="8,3" Margin="16,0,16,10"
+                        HorizontalAlignment="Stretch"
+                        Background="Transparent" BorderThickness="1" BorderBrush="{StaticResource InkBorderBrush}"
+                        Click="Settings_Click" />
             </StackPanel>
             </Grid>
         </Border>

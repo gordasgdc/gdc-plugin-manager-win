@@ -1110,3 +1110,46 @@ Acest release (v1.16.0) e funcțional identic pe Windows cu v1.13.2 (cele 9
 etape) — doar numărul de versiune s-a aliniat la Mac ca update.json să poată
 funcționa pe ambele platforme. Cele 3 funcționalități de mai sus rămân de
 portat într-un release următor.
+
+## [PARITATE 2026-08-29] Setare "Mărime Text" (Regula 24) — port pe Windows
+
+Port al `TextScalePreference`/`TextScaleManager` de pe Mac
+(`gdc-plugin-manager-catalog-vendor/Sources/GDCPluginManagerCore/AppTheme.swift`).
+
+**Diferență de platformă, deliberată**: SwiftUI are `dynamicTypeSize()`
+(infrastructură nativă de accesibilitate care reflowează orice text
+semantic). WPF n-are echivalent direct. Fix ales: `LayoutTransform`
+(`ScaleTransform`) aplicat pe `RootGrid` (Grid rădăcină din
+`MainWindow.xaml`, acum numit explicit) — scalează UNIFORM tot arborele
+vizual dintr-un singur punct, fără să umble prin fiecare `FontSize`
+hardcodat din XAML (sute de apariții, risc mare de rupere dacă le-am fi
+atins pe toate). `LayoutTransform` (spre deosebire de `RenderTransform`)
+participă la calculul de layout — deci fereastra chiar are nevoie de mai
+mult spațiu la scară >1.0; `MainWindow.ApplyTextScale()` redimensionează
+și fereastra proporțional (`BaseWindowWidth/Height` × scară), clampat la
+`SystemParameters.WorkArea` curentă, ca nimic să nu iasă tăiat vizual în
+afara ecranului.
+
+`TextScaleStore.cs` (Core, nou) — persistare simplă (`%AppData%\
+GDCPluginManager\text-scale.txt`, un singur enum ca text, nu JSON — nu are
+nevoie de mai mult). `SettingsWindow.xaml(.cs)` (Client, nou) — prima
+fereastră de Setări din tot repo-ul Windows (nu exista deloc înainte);
+urmează exact tiparul `ProfileEditorWindow` (fereastră modală mică,
+`ShowFor` static). Buton "Setări" nou în footer-ul sidebar-ului, lângă
+"Caută actualizări".
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente. `SettingsWindow.baml`
+generat (confirmă că XAML-ul chiar a compilat pe acest SDK, nu doar C#-ul
+— vezi corecția pitfall-ului din 2026-08-23, valabilă pe acest Mac).
+**NEVERIFICABIL de aici**: comportamentul VIZUAL real al `LayoutTransform`
+la scară >1.0 (dacă fereastra se redimensionează corect, fără artefacte de
+randare) — necesită un test real pe Windows, o dată, înainte de a considera
+feature-ul complet dovedit (aceeași categorie de risc ca Registry
+detection/randare SVG din etapele anterioare).
+
+**TODO paritate rămas, neatins în acest pas** (din batch-ul de 3 cerințe
+de pe Mac — social links+LinkedIn și filigran sezonier cu bibliotecă
+rămân neportate): vezi bump-ul de versiune anterior (1.13.2→1.16.0) pentru
+detalii complete.
+
+Versiune: `1.16.0`→`1.16.1` (PATCH — fix/feature mic, nu o etapă întreagă).

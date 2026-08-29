@@ -2,6 +2,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Media;
 using GDCPluginManager.Client.ViewModels;
 using GDCPluginManager.Core.Services;
 
@@ -10,6 +11,11 @@ namespace GDCPluginManager.Client;
 public partial class MainWindow : Window
 {
     private static readonly string LogPath = Path.Combine(Path.GetTempPath(), "gdcpm-crash.log");
+
+    // Dimensiunea "de referinta" a ferestrei (scara 1.0) - vezi ApplyTextScale.
+    // Trebuie sa ramana in sincron cu Height/Width din MainWindow.xaml.
+    private const double BaseWindowWidth = 1180;
+    private const double BaseWindowHeight = 780;
 
     private readonly MainViewModel _viewModel;
 
@@ -31,9 +37,31 @@ public partial class MainWindow : Window
         Log("DataContext setat. MainWindow() constructor complet.");
     }
 
+    /// Mărime text (2026-08-29, CLAUDE.md Partea 1, Regula 24) — port al
+    /// selectorului de pe Mac (`dynamicTypeSize`). WPF n-are un echivalent
+    /// nativ de "dynamic type" per-text, deci scalăm tot arborele vizual
+    /// printr-un `LayoutTransform` pe `RootGrid` — spre deosebire de un
+    /// `RenderTransform`, `LayoutTransform` participă la calculul de
+    /// layout, deci fereastra chiar are nevoie de mai mult spațiu la
+    /// scară >1.0. De-asta redimensionăm și fereastra proporțional
+    /// (`BaseWindowWidth/Height` × scară), clampat la aria de lucru a
+    /// ecranului curent, ca nimic să nu iasă tăiat în afara vizibilului.
+    public void ApplyTextScale(TextScalePreference preference)
+    {
+        var scale = preference.ScaleFactor();
+        RootGrid.LayoutTransform = scale == 1.0 ? Transform.Identity : new ScaleTransform(scale, scale);
+
+        var workArea = SystemParameters.WorkArea;
+        var targetWidth = Math.Min(BaseWindowWidth * scale, workArea.Width);
+        var targetHeight = Math.Min(BaseWindowHeight * scale, workArea.Height);
+        if (targetWidth >= MinWidth) Width = targetWidth;
+        if (targetHeight >= MinHeight) Height = targetHeight;
+    }
+
     private async void OnLoaded(object sender, RoutedEventArgs e)
     {
         Log("Window.Loaded declansat.");
+        ApplyTextScale(TextScaleStore.Load());
         try
         {
             await _viewModel.InitializeCommand.ExecuteAsync(null);
@@ -93,6 +121,11 @@ public partial class MainWindow : Window
     /// anterior (altfel butonul manual ar minti "esti la zi" pe o versiune
     /// reala doar respinsa candva). Port 1:1 al comportamentului cerut in
     /// gdc-vault-win/CLAUDE.md pentru acelasi buton.
+    private void Settings_Click(object sender, RoutedEventArgs e)
+    {
+        Views.SettingsWindow.ShowFor(this);
+    }
+
     private async void CheckForUpdates_Click(object sender, RoutedEventArgs e)
     {
         await UpdateChecker.Shared.CheckAsync();
