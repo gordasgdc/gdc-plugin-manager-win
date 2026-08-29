@@ -320,6 +320,41 @@ public static class SchedulingExtensions
     public static bool IsVisibleNow(this Scheduling? scheduling) => scheduling?.IsActiveNow ?? true;
 }
 
+/// Port 1:1 al MapsLink.swift (Etapa 5, 2026-08-29) — link direct catre Google
+/// Maps, dintr-un text de adresa liber (nu coordonate). Foloseste endpoint-ul
+/// public de cautare (`api=1`), care NU necesita cheie API.
+public static class MapsLink
+{
+    /// Termeni fara sens ca adresa fizica — un curs/eveniment/service "Online"
+    /// n-are unde deschide o harta. Semnalat explicit pe Mac: mai bine ascundem
+    /// butonul decat sa trimitem la o cautare Google Maps absurda pentru
+    /// cuvantul "online".
+    ///
+    /// Lista e comparata pe textul NORMALIZAT (fara diacritice, lowercase) —
+    /// de-asta apar aici si "la distanta"/"distanta" fara diacritice: intrarea
+    /// "la distanță" din catalog se normalizeaza exact la "la distanta".
+    private static readonly HashSet<string> NonPhysicalTerms = new(StringComparer.Ordinal)
+    {
+        "online", "webinar", "virtual", "remote", "la distanta", "distanta",
+        "zoom", "internet", "n/a", "-",
+    };
+
+    /// null daca adresa e goala sau e un termen non-fizic — cardul nu randeaza
+    /// deloc butonul de harta in acest caz (nu il dezactiveaza).
+    public static Uri? Url(string? address)
+    {
+        var trimmed = address?.Trim();
+        if (string.IsNullOrEmpty(trimmed)) return null;
+
+        // Aceeasi normalizare ca la cautare (fara diacritice + lowercase),
+        // ca "Online"/"ONLINE"/"la distanță" sa fie toate prinse.
+        var normalized = Services.FuzzySearch.Normalize(trimmed);
+        if (NonPhysicalTerms.Contains(normalized)) return null;
+
+        return new Uri($"https://www.google.com/maps/search/?api=1&query={Uri.EscapeDataString(trimmed)}");
+    }
+}
+
 /// Port 1:1 al SocialLinks.swift (Etapa 2, 2026-08-29) — set optional de
 /// linkuri catre retelele sociale ale unui produs/resurse. Toate 100%
 /// optionale: daca un camp e null, iconita corespunzatoare NU apare deloc pe
@@ -695,6 +730,13 @@ public sealed record Event
     /// null = mereu vizibil (retrocompatibil).
     public Scheduling? Scheduling { get; init; }
 
+
+    /// Link Maps generat din `Location`-ul deja existent — Etapa 5. Event NU
+    /// primeste un camp `Address` nou (spre deosebire de PartnerStore/
+    /// ServiceCenter): locatia lui e deja acolo, exact ca pe Mac.
+    [JsonIgnore]
+    public Uri? MapsUrl => MapsLink.Url(Location);
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -716,6 +758,16 @@ public sealed record PartnerStore
     /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
     /// null = mereu vizibil (retrocompatibil).
     public Scheduling? Scheduling { get; init; }
+
+
+    /// Adresa fizica optionala (text liber) — Etapa 5 (2026-08-29). Daca e
+    /// completata, cardul afiseaza un buton care deschide Google Maps cu acest
+    /// text cautat. Distincta de site/URL (acela e site-ul, nu locatia).
+    public string? Address { get; init; }
+
+    /// Link Maps generat din Address — null daca lipseste sau e "Online" etc.
+    [JsonIgnore]
+    public Uri? MapsUrl => MapsLink.Url(Address);
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -751,6 +803,16 @@ public sealed record ServiceCenter
     /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
     /// null = mereu vizibil (retrocompatibil).
     public Scheduling? Scheduling { get; init; }
+
+
+    /// Adresa fizica optionala (text liber) — Etapa 5 (2026-08-29). Daca e
+    /// completata, cardul afiseaza un buton care deschide Google Maps cu acest
+    /// text cautat. Distincta de site/URL (acela e site-ul, nu locatia).
+    public string? Address { get; init; }
+
+    /// Link Maps generat din Address — null daca lipseste sau e "Online" etc.
+    [JsonIgnore]
+    public Uri? MapsUrl => MapsLink.Url(Address);
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);

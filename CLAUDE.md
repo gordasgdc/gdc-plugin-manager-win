@@ -885,3 +885,45 @@ parteneră și pachetul publicate acum au ferestre de scheduling DEJA EXPIRATE
 (s-au încheiat la 23:57 și 01:10, ora curentă 03:43), iar oferta e o intrare de
 test (`brandName: "test"`, `discountText` gol). Cu filtrarea corectă, ele NU
 apar în client — comportament corect, de așteptat, nu o regresie.
+
+### Etapa 5 — Google Maps din adresă + memorare folder de descărcare
+`MapsLink` (Core, nou) — deep-link către endpoint-ul public de căutare Google
+Maps (`api=1&query=<text>`), fără cheie API. `PartnerStore` și `ServiceCenter`
+capătă câmpul nou `Address` (opțional, distinct de `WebsiteURL`/`Url`); `Event`
+folosește `Location`-ul deja existent (fără câmp nou), exact ca pe Mac.
+`MapsUrl` computed pe toate trei; butonul nu se randează DELOC când e null (nu
+apare dezactivat).
+
+**Stoplist de termeni non-fizici** (`online`, `webinar`, `virtual`, `remote`,
+`la distanta`, `distanta`, `zoom`, `internet`, `n/a`, `-`), comparat pe textul
+NORMALIZAT prin exact aceeași `FuzzySearch.Normalize` din Etapa 1 — deci
+"Online", "ONLINE", "  online  " și "la distanță" (cu diacritice) sunt toate
+prinse. Verificat cu 13 cazuri, inclusiv contra-exemplul "Online Studio
+Bucuresti", care NU trebuie prins de stoplist (e o adresă reală care se
+întâmplă să înceapă cu acel cuvânt — stoplist-ul compară textul ÎNTREG, nu un
+prefix).
+
+**BUG REAL GĂSIT ȘI REPARAT în timpul verificării** (nu ar fi apărut la
+compilare): comanda de deschidere folosea `url.ToString()`, iar
+`Uri.ToString()` întoarce forma **DEZESCAPATĂ** — `?query=Strada Victoriei 10,
+București`, cu spații brute și diacritice ne-encodate, exact așa cum ar fi
+ajuns la `ShellExecute`. Fix: `url.AbsoluteUri`, care păstrează
+percent-encoding-ul corect
+(`query=Strada%20Victoriei%2010%2C%20Bucure%C8%99ti`). Regulă practică nouă:
+**pentru orice `Uri` trimis către `Process.Start`, folosește `AbsoluteUri`,
+niciodată `ToString()`.**
+
+`DownloadLocationStore` (Core, nou) — memorează per resursă folderul unde
+userul și-a salvat descărcarea. Stare 100% locală
+(`%AppData%\GDCPluginManager\download-locations.json`), NU parte din
+catalog.json. `Get` verifică `Directory.Exists` înainte să întoarcă calea, ca
+să nu afișeze o cale moartă și un buton "Deschide" care eșuează. Pe card:
+"Unde l-ai salvat?" → alegere folder → apoi calea + "Deschide"/"Schimbă"/
+"Uită". Rândul apare doar pe resurse DEBLOCATE, ca pe Mac.
+
+**Simplificare față de plan**: s-a folosit `Microsoft.Win32.OpenFolderDialog`
+(nativ în WPF din .NET 8) în loc de `FolderBrowserDialog` — acela ar fi cerut o
+referință la Windows Forms doar pentru un selector de folder.
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente; 38 de verificări în
+harness, toate trecute.

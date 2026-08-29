@@ -71,6 +71,62 @@ public sealed partial class DownloadResourceViewModel : ObservableObject
     /// MainViewModel dupa orice activare/dezactivare din panoul Licenta.
     public void Refresh() => OnPropertyChanged(nameof(IsUnlocked));
 
+    // ---- Unde l-ai salvat? (Etapa 5, 2026-08-29) --------------------------
+    // Stare pur LOCALA, per resursa (vezi DownloadLocationStore) — nu are
+    // nicio legatura cu catalogul. Randul apare doar pe resurse DEBLOCATE, ca
+    // pe Mac.
+
+    /// Folderul retinut, sau null daca userul n-a ales inca unul (sau daca
+    /// folderul a fost sters intre timp — store-ul verifica existenta).
+    public string? SavedFolder => DownloadLocationStore.Get(Resource.Id);
+    public bool HasSavedFolder => SavedFolder is not null;
+
+    /// Alege (sau schimba) folderul in care userul si-a salvat resursa.
+    /// OpenFolderDialog e disponibil nativ din .NET 8 (WPF) — nu mai e nevoie
+    /// de FolderBrowserDialog din WinForms, deci nu adaugam o referinta la
+    /// Windows Forms doar pentru asta.
+    [RelayCommand]
+    private void ChooseFolder()
+    {
+        var dialog = new Microsoft.Win32.OpenFolderDialog
+        {
+            Title = $"Unde ai salvat „{Resource.Name}”?",
+            Multiselect = false,
+        };
+        if (dialog.ShowDialog() != true) return;
+
+        DownloadLocationStore.Set(Resource.Id, dialog.FolderName);
+        RefreshFolder();
+    }
+
+    /// Deschide folderul in Explorer.
+    [RelayCommand]
+    private void OpenFolder()
+    {
+        if (SavedFolder is not { } folder) return;
+        try
+        {
+            Process.Start(new ProcessStartInfo(folder) { UseShellExecute = true });
+        }
+        catch
+        {
+            // Folderul poate fi sters intre afisare si click — nu e fatal.
+        }
+    }
+
+    [RelayCommand]
+    private void ForgetFolder()
+    {
+        DownloadLocationStore.Clear(Resource.Id);
+        RefreshFolder();
+    }
+
+    private void RefreshFolder()
+    {
+        OnPropertyChanged(nameof(SavedFolder));
+        OnPropertyChanged(nameof(HasSavedFolder));
+    }
+
     [RelayCommand]
     private void Download()
     {
