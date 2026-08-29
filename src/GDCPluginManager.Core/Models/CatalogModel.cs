@@ -233,6 +233,39 @@ public static class CatalogAssets
     }
 }
 
+/// Port 1:1 al SocialLinks.swift (Etapa 2, 2026-08-29) — set optional de
+/// linkuri catre retelele sociale ale unui produs/resurse. Toate 100%
+/// optionale: daca un camp e null, iconita corespunzatoare NU apare deloc pe
+/// card (niciodata dezactivata/goala). Struct separat (nu 4 campuri direct pe
+/// PluginItem) ca sa fie reutilizat 1:1 pe DownloadableResource si pe
+/// celelalte tipuri, fara sa dubleze cele 4 chei peste tot.
+public sealed record SocialLinks
+{
+    // Numele cheilor sunt fixate EXPLICIT (nu lasate pe seama lui
+    // PropertyNameCaseInsensitive) — acela ajuta doar la CITIRE; la scriere,
+    // fara politica de denumire, System.Text.Json ar emite "FacebookURL"
+    // (PascalCase) in loc de "facebookURL", divergent de ce scrie Furnizorul
+    // Mac. Windows nu publica azi, dar modelul trebuie sa ramana simetric.
+    [JsonPropertyName("facebookURL")]
+    public string? FacebookURL { get; init; }
+
+    [JsonPropertyName("youtubeURL")]
+    public string? YoutubeURL { get; init; }
+
+    [JsonPropertyName("instagramURL")]
+    public string? InstagramURL { get; init; }
+
+    [JsonPropertyName("tiktokURL")]
+    public string? TiktokURL { get; init; }
+
+    /// True daca niciunul dintre cele 4 linkuri nu e completat — folosit ca sa
+    /// nu afisam un rand gol de iconite pe card.
+    [JsonIgnore]
+    public bool IsEmpty =>
+        string.IsNullOrWhiteSpace(FacebookURL) && string.IsNullOrWhiteSpace(YoutubeURL)
+        && string.IsNullOrWhiteSpace(InstagramURL) && string.IsNullOrWhiteSpace(TiktokURL);
+}
+
 /// Port 1:1 al PluginItem.swift — o intrare din catalog. `Id` e intrarea in
 /// hash-ul SHA-512 al licentei (vezi LicenseCore.productHash pe Mac) — NU se
 /// schimba niciodata dupa prima vanzare.
@@ -273,6 +306,21 @@ public sealed class PluginItem
     /// Compatibilitate OS — vezi SupportedOS. Implicit CrossPlatform
     /// (toate produsele existente pana acum ruleaza pe ambele platforme).
     public SupportedOS SupportedOS { get; init; } = SupportedOS.CrossPlatform;
+
+    /// Link optional catre magazinul/achizitia externa a produsului (Etapa 2)
+    /// — afisat ca buton separat pe card doar daca nu e null. Complet
+    /// independent de PriceEUR/IsFree (un produs poate fi si vandut direct
+    /// prin GDC, si listat extern).
+    public string? PurchaseURL { get; init; }
+
+    /// Link optional catre un demo/preview (Etapa 2). Distinct de YoutubeURL:
+    /// acela e tutorial de UTILIZARE, acesta e o PREZENTARE dinainte de achizitie.
+    public string? DemoURL { get; init; }
+
+    /// Linkuri optionale catre retelele sociale ale produsului (Etapa 2).
+    /// null (nu doar toate campurile interne null) pentru orice produs
+    /// publicat inainte de Etapa 2.
+    public SocialLinks? SocialLinks { get; init; }
 
     /// URL-ul absolut al copertii, gata de incarcat (null daca nu are).
     [JsonIgnore]
@@ -339,6 +387,13 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             SupportedOS = root.TryGetProperty("supportedOS", out var os)
                 ? JsonSerializer.Deserialize<SupportedOS>(os.GetRawText(), options)
                 : SupportedOS.CrossPlatform,
+            // Chei noi (Etapa 2, 2026-08-29) — orice produs publicat inainte
+            // nu le are deloc -> null, fara eroare.
+            PurchaseURL = root.TryGetProperty("purchaseURL", out var purchase) ? purchase.GetString() : null,
+            DemoURL = root.TryGetProperty("demoURL", out var demo) ? demo.GetString() : null,
+            SocialLinks = root.TryGetProperty("socialLinks", out var social) && social.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<SocialLinks>(social.GetRawText(), options)
+                : null,
         };
     }
 
@@ -362,6 +417,13 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
         if (value.CoverImage is not null) writer.WriteString("coverImage", value.CoverImage);
         writer.WritePropertyName("supportedOS");
         JsonSerializer.Serialize(writer, value.SupportedOS, options);
+        if (value.PurchaseURL is not null) writer.WriteString("purchaseURL", value.PurchaseURL);
+        if (value.DemoURL is not null) writer.WriteString("demoURL", value.DemoURL);
+        if (value.SocialLinks is not null)
+        {
+            writer.WritePropertyName("socialLinks");
+            JsonSerializer.Serialize(writer, value.SocialLinks, options);
+        }
         writer.WriteEndObject();
     }
 }
@@ -541,6 +603,175 @@ public sealed record ServiceCenter
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
+/// Port 1:1 al DownloadCategory.swift (Etapa 2, 2026-08-29) — categoria unei
+/// resurse de download direct. DISTINCTA de PluginType (acela e specific
+/// Resolve, cu auto-instalare): resursele astea sunt cross-host (Premiere/
+/// FCP/Resolve), userul le descarca si le importa manual, ca AudioTrack.
+public enum DownloadCategory
+{
+    Lut,
+    Sfx,
+    Vfx,
+    Plugin,
+}
+
+/// Mapeaza DownloadCategory <-> stringul exact din JSON ("lut"/"sfx"/"vfx"/
+/// "plugin" — rawValue-ul enum-ului Swift).
+public sealed class DownloadCategoryJsonConverter : JsonConverter<DownloadCategory>
+{
+    public override DownloadCategory Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var raw = reader.GetString();
+        return raw switch
+        {
+            "lut" => DownloadCategory.Lut,
+            "sfx" => DownloadCategory.Sfx,
+            "vfx" => DownloadCategory.Vfx,
+            "plugin" => DownloadCategory.Plugin,
+            _ => throw new JsonException($"Unknown DownloadCategory: {raw}"),
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, DownloadCategory value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value switch
+        {
+            DownloadCategory.Lut => "lut",
+            DownloadCategory.Sfx => "sfx",
+            DownloadCategory.Vfx => "vfx",
+            DownloadCategory.Plugin => "plugin",
+            _ => throw new JsonException($"Unknown DownloadCategory: {value}"),
+        });
+    }
+}
+
+public static class DownloadCategoryExtensions
+{
+    /// Eticheta afisata in sidebar/pe card (RO), pereche a `label`-ului
+    /// rezolvat in Client pe Mac.
+    public static string Label(this DownloadCategory category) => category switch
+    {
+        DownloadCategory.Lut => "LUT-uri",
+        DownloadCategory.Sfx => "Efecte Audio",
+        DownloadCategory.Vfx => "Efecte Video",
+        DownloadCategory.Plugin => "Plugin-uri",
+        _ => category.ToString(),
+    };
+
+    /// Simbol Fluent per categorie — echivalentul `defaultSymbol` (SF Symbols)
+    /// de pe Mac. Toate patru sunt nume deja folosite in acest client
+    /// (Eyedropper24/PuzzlePiece24) sau confirmate prezente in Wpf.Ui 3.0.5.
+    public static string Symbol(this DownloadCategory category) => category switch
+    {
+        DownloadCategory.Lut => "Eyedropper24",
+        DownloadCategory.Sfx => "MusicNote224",
+        DownloadCategory.Vfx => "Sparkle24",
+        DownloadCategory.Plugin => "PuzzlePiece24",
+        _ => "Circle24",
+    };
+}
+
+/// Port 1:1 al DownloadableResource.swift (Etapa 2, 2026-08-29) — o resursa de
+/// download direct (LUT/SFX/VFX/Plugin pentru Premiere Pro, Final Cut Pro sau
+/// DaVinci Resolve). NU auto-instaleaza nicaieri, spre deosebire de
+/// PluginItem: userul descarca fisierul de la Url si il importa manual.
+/// Model 1:1 pe AudioTrack + campurile de linkuri/social din Etapa 2 +
+/// SupportedOS + licentiere completa (vezi mai jos).
+public sealed class DownloadableResource
+{
+    public required string Id { get; init; }
+    public required string Name { get; init; }
+    public required string Description { get; init; }
+    public required DownloadCategory Category { get; init; }
+    public required string Url { get; init; }
+    public string? YoutubeURL { get; init; }
+    public string? CoverImage { get; init; }
+    public SupportedOS SupportedOS { get; init; } = SupportedOS.CrossPlatform;
+    public string? PurchaseURL { get; init; }
+    public string? DemoURL { get; init; }
+    public SocialLinks? SocialLinks { get; init; }
+
+    /// Licentiere — port 1:1 al modelului de pe PluginItem: acces prin Ed25519
+    /// (LicenseCore), aceeasi cheie publica din ecosistem, ACELASI flux
+    /// WhatsApp + ID masina.
+    ///
+    /// ATENTIE (capcana reala, verificata in Swift): IsFree decodeaza implicit
+    /// TRUE aici, spre deosebire de PluginItem.IsFree care decodeaza FALSE.
+    /// Orice resursa publicata INAINTE ca acest camp sa existe trebuie sa
+    /// ramana exact ce era — libera, descarcabila direct, fara cod — nu sa
+    /// devina silentios "produs platit fara licenta activabila". NU inversa.
+    public bool IsFree { get; init; } = true;
+    public bool IsTrial { get; init; }
+    public double PriceEUR { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
+
+    [JsonIgnore]
+    public string PriceDisplay => PriceEUR.ToString("C", new System.Globalization.CultureInfo("ro-RO") { NumberFormat = { CurrencySymbol = "EUR" } });
+}
+
+/// Converter custom pentru DownloadableResource — necesar (nu se poate lasa pe
+/// deserializarea implicita) tocmai pentru default-ul TRUE al lui `isFree`
+/// cand cheia lipseste complet din JSON.
+public sealed class DownloadableResourceJsonConverter : JsonConverter<DownloadableResource>
+{
+    public override DownloadableResource Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        using var doc = JsonDocument.ParseValue(ref reader);
+        var root = doc.RootElement;
+
+        return new DownloadableResource
+        {
+            Id = root.GetProperty("id").GetString()!,
+            Name = root.GetProperty("name").GetString()!,
+            Description = root.GetProperty("description").GetString()!,
+            Category = JsonSerializer.Deserialize<DownloadCategory>(root.GetProperty("category").GetRawText(), options),
+            Url = root.GetProperty("url").GetString()!,
+            YoutubeURL = root.TryGetProperty("youtubeURL", out var yt) ? yt.GetString() : null,
+            CoverImage = root.TryGetProperty("coverImage", out var cover) ? cover.GetString() : null,
+            SupportedOS = root.TryGetProperty("supportedOS", out var os)
+                ? JsonSerializer.Deserialize<SupportedOS>(os.GetRawText(), options)
+                : SupportedOS.CrossPlatform,
+            PurchaseURL = root.TryGetProperty("purchaseURL", out var purchase) ? purchase.GetString() : null,
+            DemoURL = root.TryGetProperty("demoURL", out var demo) ? demo.GetString() : null,
+            SocialLinks = root.TryGetProperty("socialLinks", out var social) && social.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<SocialLinks>(social.GetRawText(), options)
+                : null,
+            // Vezi comentariul de pe proprietate: default TRUE, deliberat.
+            IsFree = !root.TryGetProperty("isFree", out var free) || free.GetBoolean(),
+            IsTrial = root.TryGetProperty("isTrial", out var trial) && trial.GetBoolean(),
+            PriceEUR = root.TryGetProperty("priceEUR", out var price) ? price.GetDouble() : 0,
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, DownloadableResource value, JsonSerializerOptions options)
+    {
+        writer.WriteStartObject();
+        writer.WriteString("id", value.Id);
+        writer.WriteString("name", value.Name);
+        writer.WriteString("description", value.Description);
+        writer.WritePropertyName("category");
+        JsonSerializer.Serialize(writer, value.Category, options);
+        writer.WriteString("url", value.Url);
+        if (value.YoutubeURL is not null) writer.WriteString("youtubeURL", value.YoutubeURL);
+        if (value.CoverImage is not null) writer.WriteString("coverImage", value.CoverImage);
+        writer.WritePropertyName("supportedOS");
+        JsonSerializer.Serialize(writer, value.SupportedOS, options);
+        if (value.PurchaseURL is not null) writer.WriteString("purchaseURL", value.PurchaseURL);
+        if (value.DemoURL is not null) writer.WriteString("demoURL", value.DemoURL);
+        if (value.SocialLinks is not null)
+        {
+            writer.WritePropertyName("socialLinks");
+            JsonSerializer.Serialize(writer, value.SocialLinks, options);
+        }
+        writer.WriteBoolean("isFree", value.IsFree);
+        writer.WriteBoolean("isTrial", value.IsTrial);
+        writer.WriteNumber("priceEUR", value.PriceEUR);
+        writer.WriteEndObject();
+    }
+}
+
 /// Port 1:1 al Catalog.swift. Fiecare colectie default la lista goala daca
 /// lipseste din JSON (catalog mai vechi, fara acea cheie inca) — System.Text.Json
 /// lasa proprietatea la valoarea implicita din initializator cand cheia
@@ -556,4 +787,8 @@ public sealed class Catalog
     public IReadOnlyList<Event> Events { get; init; } = [];
     public IReadOnlyList<PartnerStore> PartnerStores { get; init; } = [];
     public IReadOnlyList<ServiceCenter> ServiceCenters { get; init; } = [];
+
+    /// Resurse de download direct (LUT/SFX/VFX/Plugin) — Etapa 2 (2026-08-29).
+    /// Default `[]`: orice catalog publicat inainte decodeaza curat.
+    public IReadOnlyList<DownloadableResource> DownloadableResources { get; init; } = [];
 }

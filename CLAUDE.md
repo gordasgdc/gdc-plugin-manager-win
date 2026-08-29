@@ -718,3 +718,53 @@ Enter salvează termenul în istoric, Escape golește câmpul; filtrarea în
 sine e live la fiecare tastă (altfel istoricul s-ar umple cu prefixe).
 
 **Verificat**: `dotnet build` — 0 erori, 0 avertismente, XAML compilat real.
+
+### Etapa 2 — Linkuri multiple/Social pe produse + Resurse Download (LUT/SFX/VFX/Plugin)
+`SocialLinks` (Core, nou) — Facebook/YouTube/Instagram/TikTok, toate
+opționale. Cheile JSON sunt fixate EXPLICIT cu `[JsonPropertyName]`
+(`facebookURL` etc.), nu lăsate pe seama lui `PropertyNameCaseInsensitive`:
+acela ajută doar la CITIRE, iar la scriere System.Text.Json ar emite
+`FacebookURL` (PascalCase), divergent de ce scrie Furnizorul Mac. Windows nu
+publică azi, dar modelul rămâne simetric.
+`PluginItem` capătă `PurchaseURL`/`DemoURL`/`SocialLinks` (Etapa 2) —
+retrocompatibil (`TryGetProperty` → null). Client: rând de iconițe pe card,
+fiecare afișată DOAR dacă linkul ei e completat (`ExtraLinkButtonStyle`, nou
+în `Theme.xaml`).
+
+`DownloadCategory` (lut/sfx/vfx/plugin) + `DownloadableResource` (Core, noi)
+— model 1:1 pe `AudioTrack` + linkuri/social + `SupportedOS` + licențiere
+completă. 4 rubrici noi în sidebar (grup "RESURSE DOWNLOAD", lângă Audio,
+ca pe Mac) + 4 pagini + `DownloadResourceViewModel`/`DataTemplate` (mirror
+cardul Audio + badge/licențiere ca la Produse). A 9-a colecție în căutarea
+globală.
+
+**CAPCANA CRITICĂ, respectată și verificată**: `DownloadableResource.IsFree`
+decodează implicit **TRUE** când cheia lipsește, spre deosebire de
+`PluginItem.IsFree` care decodează **FALSE**. De-asta `DownloadableResource`
+are converter custom (nu deserializare implicită). Inversarea ar transforma
+orice resursă publicată înainte de acest câmp într-un "produs plătit fără
+licență activabilă". Ambele comportamente sunt verificate direct (vezi mai
+jos), nu doar presupuse din citirea Swift-ului.
+
+Licențiere: `LicenseManager.IsUnlocked(DownloadableResource)` (overload nou)
+refolosește ACELAȘI `_licensedProducts` (cheiat generic după ID de produs) și
+același `RevocationCheck` — zero infrastructură nouă, port 1:1 al deciziei de
+pe Mac. `MainViewModel` adaugă ID-urile resurselor la `allProductIds`
+(candidații la activare) și la `productName` — **fără asta o resursă plătită
+ar fi fost imposibil de deblocat**, deși cardul ar fi arătat corect.
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente (XAML compilat real).
+Plus un harness aruncabil (în scratchpad, NU în repo — nu există
+infrastructură de testare aici și nu s-a adăugat una) care rulează 25 de
+verificări pe `GDCPluginManager.Core` real: ambele default-uri opuse de
+`isFree`, `supportedOS` implicit, chei camelCase pe `socialLinks`,
+retrocompatibilitatea `Catalog` (colecție absentă → listă goală), și
+semantica `FuzzySearch` (diacritice în ambele sensuri, toleranță la typo,
+prag mai strict pe cuvinte scurte). Toate 25 au trecut.
+
+**Notă de metodă**: numele de simboluri Fluent (`Eyedropper24`, `Sparkle24`,
+`PuzzlePiece24`, `MusicNote224`, `Cart24`, `Play24`, `Share24`, `Video24`,
+`Camera24`, `Info24`) au fost confirmate punând COMPILATORUL să le valideze —
+un `ui:SymbolIcon Symbol="..."` literal e un membru de enum, deci un nume
+inexistent oprește build-ul. Metodă mult mai sigură decât `strings Wpf.Ui.dll`
+(care are false negative, vezi pitfall 2026-08-24).

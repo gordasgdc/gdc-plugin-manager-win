@@ -40,6 +40,13 @@ public enum SidebarPage
     Apps,
     Android,
     License,
+    /// Cele 4 rubrici noi de Resurse Download (Etapa 2, 2026-08-29) — una per
+    /// DownloadCategory, exact ca `SidebarSection.download(DownloadCategory)`
+    /// de pe Mac.
+    DownloadLut,
+    DownloadSfx,
+    DownloadVfx,
+    DownloadPlugin,
     /// Pseudo-pagina (Etapa 1): nu e o rubrica din sidebar, ci starea
     /// "cautare globala activa". Vezi MainViewModel.ContentPage — cand
     /// campul de cautare e nevid, ACEASTA e pagina randata, indiferent ce
@@ -65,6 +72,19 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<AppLinkViewModel> Apps { get; } = [];
     public ObservableCollection<AudioTrackViewModel> AudioTracks { get; } = [];
 
+    // ---- Resurse Download (Etapa 2) --------------------------------------
+    // Cate o colectie per categorie, ca fiecare rubrica din sidebar sa lege
+    // direct la lista ei (fara un CollectionView filtrat in plus). Populate
+    // toate din aceeasi sursa, in RebuildFromCatalog.
+    public ObservableCollection<DownloadResourceViewModel> DownloadLuts { get; } = [];
+    public ObservableCollection<DownloadResourceViewModel> DownloadSfx { get; } = [];
+    public ObservableCollection<DownloadResourceViewModel> DownloadVfx { get; } = [];
+    public ObservableCollection<DownloadResourceViewModel> DownloadPlugins { get; } = [];
+
+    /// Toate resursele, in ordinea din catalog — sursa pentru cautarea
+    /// globala si pentru lista de ID-uri candidate la activarea unei licente.
+    private readonly List<DownloadResourceViewModel> _allDownloadResources = [];
+
     // ---- Cautare GLOBALA (Etapa 1) ----------------------------------------
     // Port 1:1 al `GlobalSearchResults` din ContentView.swift (Mac): cand
     // campul de cautare e NEVID, continutul rubricii curente e inlocuit
@@ -83,6 +103,9 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ServiceCenterViewModel> GlobalServiceCenters { get; } = [];
     public ObservableCollection<AppLinkViewModel> GlobalApps { get; } = [];
     public ObservableCollection<AudioTrackViewModel> GlobalAudioTracks { get; } = [];
+    /// Etapa 2: a 9-a colectie din cautarea globala (ca pe Mac, unde
+    /// `GlobalSearchResults` a trecut de la 8 la 9 sectiuni).
+    public ObservableCollection<DownloadResourceViewModel> GlobalDownloadResources { get; } = [];
 
     /// Istoric de cautari recente, persistat local (max 8, fara duplicate) —
     /// vezi SearchHistoryStore.cs.
@@ -106,7 +129,8 @@ public sealed partial class MainViewModel : ObservableObject
         && GlobalProducts.Count == 0 && GlobalCourses.Count == 0
         && GlobalEducationalResources.Count == 0 && GlobalEvents.Count == 0
         && GlobalPartnerStores.Count == 0 && GlobalServiceCenters.Count == 0
-        && GlobalApps.Count == 0 && GlobalAudioTracks.Count == 0;
+        && GlobalApps.Count == 0 && GlobalAudioTracks.Count == 0
+        && GlobalDownloadResources.Count == 0;
 
     public LicensePaneViewModel LicensePane { get; }
 
@@ -209,9 +233,17 @@ public sealed partial class MainViewModel : ObservableObject
     public MainViewModel()
     {
         _selectedCategory = Categories[0];
+        // Etapa 2: un cod lipit in panoul Licenta trebuie sa valideze si
+        // pentru Resursele Download, nu doar pentru produse — acelasi store
+        // de licente, cheiat generic dupa ID (vezi LicenseManager.IsUnlocked).
+        // Fara asta, o resursa platita ar fi imposibil de deblocat.
         LicensePane = new LicensePaneViewModel(
-            allProductIds: () => Products.Select(p => p.Item.Id).ToList(),
-            productName: id => Products.FirstOrDefault(p => p.Item.Id == id)?.Name ?? id);
+            allProductIds: () => Products.Select(p => p.Item.Id)
+                .Concat(_allDownloadResources.Select(r => r.Resource.Id))
+                .ToList(),
+            productName: id => Products.FirstOrDefault(p => p.Item.Id == id)?.Name
+                ?? _allDownloadResources.FirstOrDefault(r => r.Resource.Id == id)?.Name
+                ?? id);
 
         ProductsView = CollectionViewSource.GetDefaultView(Products);
         ProductsView.Filter = FilterProduct;
@@ -224,6 +256,9 @@ public sealed partial class MainViewModel : ObservableObject
             if (e.PropertyName is nameof(LicensePaneViewModel.OwnedLicenses) or nameof(LicensePaneViewModel.IsLicensed))
             {
                 foreach (var p in Products) p.Refresh();
+                // Etapa 2: resursele download folosesc acelasi store de
+                // licente, deci si ele trebuie recalculate dupa o activare.
+                foreach (var r in _allDownloadResources) r.Refresh();
             }
         };
 
@@ -336,6 +371,7 @@ public sealed partial class MainViewModel : ObservableObject
         GlobalServiceCenters.Clear();
         GlobalApps.Clear();
         GlobalAudioTracks.Clear();
+        GlobalDownloadResources.Clear();
 
         var query = SearchText;
         if (!string.IsNullOrWhiteSpace(query))
@@ -387,6 +423,15 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 if (FuzzySearch.MatchesAny(query, t.Track.Name, t.Track.Description, t.Track.Id))
                     GlobalAudioTracks.Add(t);
+            }
+
+            // A 9-a colectie (Etapa 2) — respecta si filtrul OS, ca Produsele
+            // (DownloadableResource poarta `supportedOS` in model).
+            foreach (var r in _allDownloadResources)
+            {
+                if (!MatchesOS(r.Resource.SupportedOS)) continue;
+                if (FuzzySearch.MatchesAny(query, r.Name, r.Description, r.Resource.Id, r.CategoryLabel))
+                    GlobalDownloadResources.Add(r);
             }
         }
 
@@ -463,6 +508,12 @@ public sealed partial class MainViewModel : ObservableObject
     // AppLink (fara PluginType/install/licenta).
     [RelayCommand]
     private void ShowAudioTracks() => CurrentPage = SidebarPage.AudioTracks;
+
+    /// Cele 4 rubrici de Resurse Download (Etapa 2). O singura comanda cu
+    /// parametru, nu 4 comenzi separate — butoanele din sidebar trimit
+    /// direct pagina tinta.
+    [RelayCommand]
+    private void ShowDownloadCategory(SidebarPage page) => CurrentPage = page;
 
     [RelayCommand]
     private void ShowCourses() => CurrentPage = SidebarPage.Courses;
@@ -584,6 +635,27 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var track in CatalogService.Shared.AudioTracks)
         {
             AudioTracks.Add(new AudioTrackViewModel(track));
+        }
+
+        // Resurse Download (Etapa 2) — o singura trecere prin catalog,
+        // distribuita in cele 4 colectii per categorie plus lista completa
+        // (folosita de cautarea globala si de candidatii pentru licenta).
+        _allDownloadResources.Clear();
+        DownloadLuts.Clear();
+        DownloadSfx.Clear();
+        DownloadVfx.Clear();
+        DownloadPlugins.Clear();
+        foreach (var resource in CatalogService.Shared.DownloadableResources)
+        {
+            var vm = new DownloadResourceViewModel(resource);
+            _allDownloadResources.Add(vm);
+            switch (resource.Category)
+            {
+                case DownloadCategory.Lut: DownloadLuts.Add(vm); break;
+                case DownloadCategory.Sfx: DownloadSfx.Add(vm); break;
+                case DownloadCategory.Vfx: DownloadVfx.Add(vm); break;
+                case DownloadCategory.Plugin: DownloadPlugins.Add(vm); break;
+            }
         }
 
         LicensePane.RebuildOwnedLicenses();

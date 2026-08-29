@@ -77,8 +77,18 @@ public sealed class LicenseManager : INotifyPropertyChanged
     /// de a lor proprie. Fara proba globala de aplicatie: aplicatia e
     /// gratuita, doar produsele platite se deblocheaza, iar cele gratuite
     /// sunt pur si simplu... gratuite.
-    public bool IsUnlocked(PluginItem item) =>
-        item.IsFree || (_licensedProducts.ContainsKey(item.Id) && !RevocationCheck.IsRevoked(item.Id));
+    public bool IsUnlocked(PluginItem item) => IsUnlocked(item.Id, item.IsFree);
+
+    /// Overload pentru resursele de download direct (Etapa 2, 2026-08-29) —
+    /// port 1:1 al `LicenseManager.isUnlocked(for: DownloadableResource)` de pe
+    /// Mac. REFOLOSESTE exact acelasi `_licensedProducts` (cheiat generic dupa
+    /// ID de produs) si acelasi RevocationCheck — zero infrastructura noua.
+    public bool IsUnlocked(DownloadableResource resource) => IsUnlocked(resource.Id, resource.IsFree);
+
+    /// Nucleul comun al celor doua overload-uri de mai sus: un serial e legat
+    /// de un ID de produs, indiferent din ce colectie provine acel ID.
+    private bool IsUnlocked(string productId, bool isFree) =>
+        isFree || (_licensedProducts.ContainsKey(productId) && !RevocationCheck.IsRevoked(productId));
 
     /// Reverifica revocarea online (fail-open, vezi RevocationCheck.cs)
     /// pentru toate produsele licentiate curent. Apelata la pornire -

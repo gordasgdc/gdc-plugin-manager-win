@@ -71,6 +71,16 @@ public sealed partial class ProductViewModel : ObservableObject
     public bool ShowPrice => !Item.IsFree;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Item.YoutubeURL);
 
+    // ---- Linkuri suplimentare (Etapa 2, 2026-08-29) ----------------------
+    // Port 1:1 al `PluginCard.extraLinksRow` de pe Mac: fiecare iconita apare
+    // DOAR daca linkul ei e completat — niciodata dezactivata sau goala.
+    public bool HasPurchase => !string.IsNullOrWhiteSpace(Item.PurchaseURL);
+    public bool HasDemo => !string.IsNullOrWhiteSpace(Item.DemoURL);
+    public bool HasFacebook => !string.IsNullOrWhiteSpace(Item.SocialLinks?.FacebookURL);
+    public bool HasSocialYoutube => !string.IsNullOrWhiteSpace(Item.SocialLinks?.YoutubeURL);
+    public bool HasInstagram => !string.IsNullOrWhiteSpace(Item.SocialLinks?.InstagramURL);
+    public bool HasTiktok => !string.IsNullOrWhiteSpace(Item.SocialLinks?.TiktokURL);
+
     /// Vezi cerinta "Selector Compatibilitate OS": badge emoji pe card,
     /// vizibil pentru toate cele 3 stari, inclusiv CrossPlatform (2026-08-25:
     /// "Ambele" trebuie sa se vada explicit pe card, nu doar sa fie absenta
@@ -112,12 +122,32 @@ public sealed partial class ProductViewModel : ObservableObject
     }
 
     [RelayCommand]
-    private void OpenTutorial()
+    private void OpenTutorial() => OpenIfPresent(Item.YoutubeURL);
+
+    // Comenzile linkurilor suplimentare (Etapa 2) — vezi proprietatile Has*
+    // de mai sus, care decid daca iconita apare pe card.
+    [RelayCommand]
+    private void OpenPurchase() => OpenIfPresent(Item.PurchaseURL);
+
+    [RelayCommand]
+    private void OpenDemo() => OpenIfPresent(Item.DemoURL);
+
+    [RelayCommand]
+    private void OpenFacebook() => OpenIfPresent(Item.SocialLinks?.FacebookURL);
+
+    [RelayCommand]
+    private void OpenSocialYoutube() => OpenIfPresent(Item.SocialLinks?.YoutubeURL);
+
+    [RelayCommand]
+    private void OpenInstagram() => OpenIfPresent(Item.SocialLinks?.InstagramURL);
+
+    [RelayCommand]
+    private void OpenTiktok() => OpenIfPresent(Item.SocialLinks?.TiktokURL);
+
+    private static void OpenIfPresent(string? url)
     {
-        if (!string.IsNullOrWhiteSpace(Item.YoutubeURL))
-        {
-            Process.Start(new ProcessStartInfo(Item.YoutubeURL) { UseShellExecute = true });
-        }
+        if (string.IsNullOrWhiteSpace(url)) return;
+        Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }
 
     [RelayCommand]

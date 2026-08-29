@@ -155,6 +155,19 @@
         <Setter Property="Padding" Value="6,2" />
     </Style>
 
+    <!-- Buton-iconita din randul de linkuri suplimentare al unui card
+         (Etapa 2, 2026-08-29): cumpara extern / demo / Facebook / YouTube /
+         Instagram / TikTok. Discret pe fundalul cardului — fara chenar, fara
+         fundal — ca sa nu concureze vizual cu butonul principal de actiune
+         (Instaleaza/Descarca/Deblocheaza). -->
+    <Style x:Key="ExtraLinkButtonStyle" TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="6,3" />
+        <Setter Property="Margin" Value="0,0,4,0" />
+        <Setter Property="Foreground" Value="{StaticResource InkTextMutedBrush}" />
+    </Style>
+
     <Style TargetType="ScrollBar">
         <Setter Property="Background" Value="Transparent" />
         <Setter Property="Width" Value="10" />
