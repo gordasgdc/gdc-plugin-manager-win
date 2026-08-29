@@ -19,3 +19,10 @@ Căutare fuzzy globală + filtru OS, resurse download cu licențiere,
 Aplicațiile Mele, scheduling + Susținere promoțională, hărți + folder de
 descărcare reținut, filigran sezonier (versiunea inițială, slot unic),
 pachete/bundle-uri.
+
+## v1.19.3 (2026-08-29) — Sincronizare versiune (fix Furnizor Mac, fara schimbari de cod pe Windows)
+
+Bump doar de versiune, ca `update.json` comun (Mac+Windows) sa reflecte
+un release real existent pe ambele platforme. Fix-ul propriu-zis (draft
+orfan la filigrane) a fost exclusiv in Furnizor (Mac, unealta interna,
+Windows nu are Furnizor).
