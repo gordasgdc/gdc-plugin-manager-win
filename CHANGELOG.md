@@ -5,6 +5,16 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.10 (2026-08-29) — Diagnostic: certificatul REAL respins, logat explicit
+
+- v1.19.9 (reciclare conexiune) NU a rezolvat eroarea SSL la filigran —
+  confirmat din log, eroarea persistă identic pe conexiuni proaspete.
+- Adăugat `RemoteCertificateValidationCallback` de diagnostic — la orice
+  refuz de certificat, logul arată acum Subject/Issuer/Thumbprint-ul REAL
+  primit de la server + motivul exact (`SslPolicyErrors`/`ChainStatus`).
+  Nu schimbă comportamentul de securitate (tot respinge certificate
+  invalide) — doar face vizibil DE CE, ca să nu mai ghicim.
+
 ## v1.19.9 (2026-08-29) — Fix real: conexiune HTTPS reciclată la 5 min (nu mai infinit)
 
 - Cauza reală a eșecului SSL intermitent la filigran (diagnosticată din log

@@ -617,21 +617,25 @@ mutate în `CLAUDE_ARCHIVE.md` (NU se citește automat) — citește-l explicit
 când investighezi o zonă veche de cod. Rezumat "stare curentă" mai jos rămâne
 în acest fișier, fiindcă e activ relevant sesiune de sesiune.
 
-## Stare curentă (2026-08-29) — versiune `1.19.9`
+## Stare curentă (2026-08-29) — versiune `1.19.10`
 
 - **Bug critic imagini rezolvat**: `BitmapImage.UriSource` (WinINet) trecut
   peste tot pe `HttpClient`+`MemoryStream` — coperți/lightbox funcționale,
   confirmat de Cristi după reinstall v1.19.7.
-- **Filigran sezonier — cauza reală găsită și reparată (v1.19.9)**:
-  `DiagnosticLog.Describe(ex)` (v1.19.8) a arătat inner exception-ul real —
+- **Filigran sezonier — TOT NEREZOLVAT, în lucru activ**:
   `RemoteCertificateNameMismatch`/`RemoteCertificateChainErrors`, DOAR pe
-  `HttpClient` (static, o conexiune TLS ținută la infinit), NICIODATĂ pe
-  `curl` (10/10 OK, conexiune nouă de fiecare dată — verificat live pe
-  mașina lui Cristi). Ipoteza de ceas VM a fost INFIRMATĂ (ar fi dat eroare
-  de validitate pe TOT traficul, nu name-mismatch pe un singur asset).
-  **Fix**: `PooledConnectionLifetime = 5 min` în `HttpClientFactory.Create()`
-  — conexiunea se reface periodic, robust la anycast-ul Cloudflare din
-  spatele `gordas.dev`. **De confirmat**: retest real, cu filigranul vizibil
-  fără erori noi în log.
+  `HttpClient` (niciodată pe `curl`, 10/10 OK). Ipoteza de ceas VM:
+  INFIRMATĂ. **v1.19.9** (`PooledConnectionLifetime=5min`) NU a rezolvat —
+  confirmat din log, eroarea persistă identic pe conexiuni proaspete (o
+  conexiune TLS eșuată nu rămâne în pool, deci încercarea 2 e oricum nouă
+  și eșuează la fel — ipoteza inițială "conexiune veche" era greșită).
+  Windows Defender e singurul AV instalat (verificat) — nu face de regulă
+  interceptare HTTPS, deci ipoteza "AV MITM" e slăbită, dar nu exclusă.
+  **v1.19.10**: `RemoteCertificateValidationCallback` de diagnostic —
+  logează Subject/Issuer/Thumbprint REAL + `SslPolicyErrors`/`ChainStatus`
+  la orice refuz. **Pas următor concret**: aștept logul cu certificatul
+  real din `[TLS] Certificat respins...` — asta va spune definitiv dacă e
+  un certificat complet greșit (interceptare/proxy) sau un nod Cloudflare
+  cu SAN incomplet pentru `gordas.dev`.
 - Detalii complete: `CLAUDE_ARCHIVE.md` (val 3/4) sau `CHANGELOG.md`
-  v1.19.7/v1.19.8/v1.19.9.
+  v1.19.7→v1.19.10.

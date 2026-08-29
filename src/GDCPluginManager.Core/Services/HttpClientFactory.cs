@@ -1,4 +1,7 @@
 using System.Net.Http.Headers;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Linq;
 
 namespace GDCPluginManager.Core.Services;
 
@@ -13,16 +16,21 @@ namespace GDCPluginManager.Core.Services;
 /// User-Agent. Reutilizam acelasi factory in loc sa cream un HttpClient gol
 /// in Client si sa uitam antetul.
 ///
-/// [2026-08-29] `PooledConnectionLifetime` explicit — gasit real, din log:
-/// `RemoteCertificateNameMismatch` intermitent DOAR pe `HttpClient` (static,
-/// traieste cat aplicatia), niciodata pe `curl` (10/10 OK, conexiune noua de
-/// fiecare data, verificat live). `gordas.dev` e in spatele Cloudflare
-/// (anycast, IP-uri multiple) — implicit, `SocketsHttpHandler` tine o
-/// conexiune TLS deschisa LA INFINIT; daca acea conexiune ajunge sa fie
-/// servita de un nod/cert care nu se mai potriveste intre timp, TOATE
-/// cererile ulterioare pe ea esueaza, in timp ce orice unealta cu conexiune
-/// noua merge mereu. Reciclare la 5 minute = aceeasi robustete ca un
-/// handshake nou per cerere, fara costul unei conexiuni noi la fiecare fetch.
+/// [2026-08-29] `PooledConnectionLifetime` explicit — NU a rezolvat eroarea
+/// SSL de la filigran (verificat: log-ul tot arata RemoteCertificateNameMismatch
+/// dupa v1.19.9). Ipoteza initiala ("conexiune veche reutilizata") era gresita:
+/// o conexiune TLS esuata NU ramane in pool-ul .NET, deci incercarea 2 (la
+/// 800ms) e oricum o conexiune noua — si tot esueaza identic cu incercarea 1.
+/// Ramane totusi corect ca practica generala (recomandat de Microsoft pentru
+/// clienti care vorbesc cu servicii din spatele unui CDN/load balancer), doar
+/// NU era cauza reala aici.
+///
+/// [2026-08-29, v2] `RemoteCertificateValidationCallback` de DIAGNOSTIC — in
+/// loc sa mai ghicim (interceptare AV vs. nod Cloudflare prost configurat),
+/// logam explicit certificatul REAL primit (Subject/Issuer/Thumbprint) si
+/// motivul exact de refuz (`SslPolicyErrors`) la orice esec de validare.
+/// NU schimba comportamentul de securitate — tot respinge orice certificat
+/// invalid (return false la eroare), doar il face vizibil in log inainte.
 public static class HttpClientFactory
 {
     public static HttpClient Create()
@@ -30,9 +38,29 @@ public static class HttpClientFactory
         var handler = new SocketsHttpHandler
         {
             PooledConnectionLifetime = TimeSpan.FromMinutes(5),
+            SslOptions =
+            {
+                RemoteCertificateValidationCallback = ValidateAndLog,
+            },
         };
         var client = new HttpClient(handler);
         client.DefaultRequestHeaders.UserAgent.Add(new ProductInfoHeaderValue("GDCPluginManager", "1.0"));
         return client;
+    }
+
+    private static bool ValidateAndLog(object sender, X509Certificate? certificate, X509Chain? chain, SslPolicyErrors errors)
+    {
+        if (errors == SslPolicyErrors.None) return true;
+
+        var cert2 = certificate as X509Certificate2;
+        var chainStatus = chain is null
+            ? "(fara chain)"
+            : string.Join(", ", chain.ChainStatus.Select(s => $"{s.Status}: {s.StatusInformation.Trim()}"));
+
+        DiagnosticLog.Write("TLS", $"Certificat respins ({errors}). "
+            + $"Subject=\"{certificate?.Subject}\" Issuer=\"{certificate?.Issuer}\" "
+            + $"Thumbprint={cert2?.Thumbprint} ChainStatus=[{chainStatus}]");
+
+        return false; // pastram comportamentul de securitate implicit — respingem tot.
     }
 }
