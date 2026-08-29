@@ -1153,3 +1153,84 @@ rămân neportate): vezi bump-ul de versiune anterior (1.13.2→1.16.0) pentru
 detalii complete.
 
 Versiune: `1.16.0`→`1.16.1` (PATCH — fix/feature mic, nu o etapă întreagă).
+
+## [PARITATE FINALĂ 2026-08-29] Social links+LinkedIn, Temă, Bibliotecă filigrane — Windows la zi cu Mac
+
+Ultimele 3 lucruri rămase TODO din batch-ul anterior (1.13.2→1.16.0 pe Mac)
+sunt acum portate complet pe Windows:
+
+**1. Social links + LinkedIn pe toate 6 rubricile** (Course/AppLink/
+EducationalResource/Event/PartnerStore/ServiceCenter). `SocialLinks.LinkedinUrl`
+adăugat în Core. Iconițe COLORATE de brand (Facebook/YouTube/Instagram/
+TikTok/LinkedIn) — PNG bundle-uit (`Assets/Social/*.png`, generate din
+aceleași SVG-uri cu paleta oficială folosite pe Mac, rasterizate offline),
+NU SVG: precauție portată direct din bug-ul găsit pe Mac (ImageIO nu
+randează `<text>`) — chiar dacă SharpVectors (Windows) NU are aceeași
+limitare (`TextAsGeometry=true` convertește textul în geometrie), PNG
+rămâne alegerea implicit sigură pentru iconițe fixe, universal recunoscute,
+fără nicio dependință de randare la runtime. `SocialLinkCommands.Open`
+(Client, nou) — UN SINGUR `ICommand` static, partajat de toate cardurile
+(evită 30 de comenzi `[RelayCommand]` identice pe 6 ViewModel-uri).
+`SocialLinksPanel.xaml` (UserControl nou, `DependencyProperty SocialLinks`)
+— reutilizat de toate cele 6 `DataTemplate`-uri din `MainWindow.xaml`.
+
+**2. Selector temă System/Light/Dark.** Diferență reală față de Mac:
+SwiftUI are culori SEMANTICE care se adaptează singure la
+`NSApp.appearance` — WPF `Theme.xaml` avea culori HARDCODATE. Fix:
+paleta de culori extrasă din `Theme.xaml` în două dicționare noi,
+`Theme.Dark.xaml`/`Theme.Light.xaml` (aceleași 8 chei, valori diferite —
+paleta Light e nouă, autorată acum), iar TOATE referințele rămase în
+`Theme.xaml` (stilurile) și în toate ferestrele (`MainWindow.xaml` + 5
+ferestre modale) au fost convertite din `StaticResource` în
+`DynamicResource` (71 de apariții) — altfel schimbarea de temă n-ar fi avut
+niciun efect vizual fără repornirea aplicației (`StaticResource` se
+rezolvă o singură dată, la parse). `WindowsThemeManager.cs` (Client, nou)
+înlocuiește la runtime intrarea de la indexul fix 2 din
+`Application.Resources.MergedDictionaries` (vezi comentariul din
+`App.xaml` pentru ordinea exactă) + aplică și `Wpf.Ui.Appearance.
+ApplicationThemeManager` (pentru controalele native Wpf.Ui — SymbolIcon,
+MessageBox). `AppThemeStore.cs` (Core) persistă preferința
+(`%AppData%\GDCPluginManager\theme.txt`). "System" citește
+`HKCU\...\Personalize\AppsUseLightTheme` din Registry. Selector nou în
+`SettingsWindow` (alături de Mărime Text, adăugată în pasul anterior).
+
+**3. Bibliotecă filigrane sezoniere** (înlocuiește slotul unic din Etapa 6).
+`SeasonalPosition` (enum, 5 poziții) + `SeasonalBackgroundConfig` (Id/
+Label/ImagePath/Scheduling/Position/IsEnabled/Opacity) + `Catalog.
+SeasonalBackgrounds` (listă, nouă) — port 1:1 al modelului de pe Mac,
+verificat DIRECT (nu presupus) printr-un harness aruncabil care a decodat
+catalogul LIVE de pe `gordas.dev`: 4 filigrane reale găsite, inclusiv
+coliziunea de poziție rezolvată corect ("ultimul câștigă" — exact regula
+de pe Mac). `ActiveNowDeduplicated()` (extension method) — port 1:1.
+`SeasonalBackgroundLoader.cs` (existent din Etapa 6) — cache-ul pe disc
+trecut de la UN SINGUR fișier global la unul PER FILIGRAN (cheiat după
+id), altfel o bibliotecă cu mai multe filigrane active simultan ar fi
+însemnat că ultimul descărcat suprascrie cache-ul tuturor celorlalte
+offline — exact fix-ul aplicat deja pe Mac la același gap.
+`SeasonalBackgroundItemViewModel.cs` (Client, nou) — traduce
+`SeasonalPosition` în `HorizontalAlignment`/`VerticalAlignment`/`Thickness`
+WPF, cu marginea de **48px** (nu 24px — port al corecției de pe Mac,
+"24pt îl lipea prea aproape de margine"). `MainViewModel.SeasonalBackgrounds`
+a trecut de la un singur `ImageSource?` la o `ObservableCollection`
+de items gata de randat; `MainWindow.xaml` randează printr-un
+`ItemsControl` cu `ItemsPanel=Grid` (filigranele se SUPRAPUN pe pozițiile
+lor, nu se așază unul lângă altul).
+
+**Simplificare deliberată, documentată**: spre deosebire de Mac, NU s-a
+scris un `JsonConverter` custom pentru migrarea cheii vechi singulare
+`seasonalBackground` → `seasonalBackgrounds` — Windows n-are Furnizor,
+deci nu publică niciodată formatul vechi; catalogul live e deja migrat.
+Câmpul vechi `Catalog.SeasonalBackground` rămâne în model, neatins, dar
+efectiv neutilizat de-acum.
+
+**Verificat**: `dotnet build` (întreaga soluție, `--no-incremental`) —
+0 erori, 0 avertismente. Toate XAML noi (`SocialLinksPanel`, `Theme.Dark`,
+`Theme.Light`, `SettingsWindow` extins) confirmate compilate (`.baml`
+generat). Modelul de filigrane verificat cu un harness separat (nu parte
+din repo), decodând catalogul LIVE — 4 filigrane reale, coliziune corectă.
+**NEVERIFICAT de aici** (necesită test real pe Windows): randarea vizuală
+efectivă a temei Light (culori alese acum, nu confirmate vizual de Cristi)
+și a filigranelor multiple suprapuse.
+
+Versiune: `1.16.1`→`1.19.2` (aliniat cu versiunea Client Mac, pentru
+`docs/update.json` comun).

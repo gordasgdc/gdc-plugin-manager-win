@@ -38,6 +38,10 @@ public sealed class CatalogService : INotifyPropertyChanged
     /// Filigran sezonier — Etapa 6 (2026-08-29). null = fara filigran.
     public string? SeasonalBackground { get; private set; }
     public Uri? SeasonalBackgroundUrl => CatalogAssets.ImageUrl(SeasonalBackground);
+
+    /// Biblioteca de filigrane (2026-08-29) — vezi doc-comment-ul de la
+    /// `SeasonalBackgroundConfig`.
+    public IReadOnlyList<SeasonalBackgroundConfig> SeasonalBackgrounds { get; private set; } = [];
     public bool IsLoading { get; private set; }
     public string? LoadError { get; private set; }
 
@@ -94,6 +98,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             DownloadableResources = catalog.DownloadableResources;
             PartnerOffers = catalog.PartnerOffers;
             SeasonalBackground = catalog.SeasonalBackground;
+            SeasonalBackgrounds = catalog.SeasonalBackgrounds;
             ProductBundles = catalog.ProductBundles;
             Raise(nameof(Items));
             Raise(nameof(Courses));
@@ -106,6 +111,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(DownloadableResources));
             Raise(nameof(PartnerOffers));
             Raise(nameof(SeasonalBackground));
+            Raise(nameof(SeasonalBackgrounds));
             Raise(nameof(ProductBundles));
             SaveToCache(data);
         }
@@ -163,6 +169,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             DownloadableResources = catalog.DownloadableResources;
             PartnerOffers = catalog.PartnerOffers;
             SeasonalBackground = catalog.SeasonalBackground;
+            SeasonalBackgrounds = catalog.SeasonalBackgrounds;
             ProductBundles = catalog.ProductBundles;
         }
         catch

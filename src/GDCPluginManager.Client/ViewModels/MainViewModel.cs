@@ -153,11 +153,11 @@ public sealed partial class MainViewModel : ObservableObject
     /// "Aplicatiile Mele" (Etapa 3) — pagina proprie, cu propriul ViewModel.
     public MyAppsViewModel MyApps { get; } = new();
 
-    /// Filigranul sezonier (Etapa 6) — randat mare, la opacitate mica, IN
-    /// SPATELE continutului. null cat timp nu s-a incarcat (sau daca nu exista
-    /// niciunul publicat), caz in care stratul nu se randeaza deloc.
-    [ObservableProperty]
-    private System.Windows.Media.ImageSource? _seasonalBackground;
+    /// Filigranele sezoniere active ACUM (2026-08-29, port al bibliotecii
+    /// de pe Mac — înlocuiește slotul unic din Etapa 6), randate mari, la
+    /// opacitate mică, IN SPATELE conținutului. Colecție goală => niciun
+    /// strat randat.
+    public ObservableCollection<SeasonalBackgroundItemViewModel> SeasonalBackgrounds { get; } = [];
 
     public IReadOnlyList<CategoryFilter> Categories { get; } =
     [
@@ -645,11 +645,18 @@ public sealed partial class MainViewModel : ObservableObject
         UpdateBannerText = null;
     }
 
-    /// Incarca filigranul sezonier. Esecul e complet tacut si non-fatal —
-    /// filigranul e pur decorativ.
+    /// Incarca TOATE filigranele active acum (bibliotecă, 2026-08-29).
+    /// Esecul unuia individual e complet tacut si non-fatal — filigranul e
+    /// pur decorativ; un id care nu se decodeaza e omis silentios, restul
+    /// bibliotecii tot se randeaza.
     private async Task LoadSeasonalBackgroundAsync()
     {
-        SeasonalBackground = await SeasonalBackgroundLoader.LoadAsync(CatalogService.Shared.SeasonalBackgroundUrl);
+        SeasonalBackgrounds.Clear();
+        foreach (var config in CatalogService.Shared.SeasonalBackgrounds.ActiveNowDeduplicated())
+        {
+            var image = await SeasonalBackgroundLoader.LoadAsync(config.Id, config.ImageUrl);
+            if (image is not null) SeasonalBackgrounds.Add(SeasonalBackgroundItemViewModel.Create(config, image));
+        }
     }
 
     private void RebuildFromCatalog()

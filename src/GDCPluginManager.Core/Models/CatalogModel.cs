@@ -320,6 +320,71 @@ public static class SchedulingExtensions
     public static bool IsVisibleNow(this Scheduling? scheduling) => scheduling?.IsActiveNow ?? true;
 }
 
+/// Port 1:1 al SeasonalPosition (Mac, CatalogModel.swift, 2026-08-29) —
+/// unde pe ecran se randează un filigran din bibliotecă. `JsonStringEnumConverter`
+/// (fără naming policy explicit) e case-insensitive la CITIRE, deci
+/// "bottomTrailing" din catalog.json se potrivește direct cu `BottomTrailing`
+/// — același tipar ca `ServiceCategory` (vezi comentariul de-acolo).
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum SeasonalPosition
+{
+    BottomTrailing,
+    BottomLeading,
+    TopTrailing,
+    TopLeading,
+    Center,
+}
+
+/// Port 1:1 al `SeasonalBackgroundConfig` (Mac, 2026-08-29) — o intrare din
+/// BIBLIOTECA de filigrane sezoniere. Înlocuiește vechiul
+/// `Catalog.SeasonalBackground` (String, un singur slot, fără scheduling/
+/// poziție/intensitate — Etapa 6). Cheia veche NU mai e scrisă de Furnizor
+/// de la prima republicare, dar rămâne pe `Catalog` (mai jos) ca fallback
+/// pasiv — nu s-a scris un `JsonConverter` dedicat de migrare pe Windows
+/// (spre deosebire de Mac): Windows n-are Furnizor, deci nu publică
+/// niciodată formatul vechi, iar catalogul live e deja migrat la formatul
+/// plural. Simplificare deliberată, documentată — nu o omisiune.
+public sealed record SeasonalBackgroundConfig
+{
+    public required string Id { get; init; }
+    public string Label { get; init; } = "";
+    public required string ImagePath { get; init; }
+    public Scheduling? Scheduling { get; init; }
+    public SeasonalPosition Position { get; init; } = SeasonalPosition.BottomTrailing;
+    public bool IsEnabled { get; init; } = true;
+    /// Intensitate (opacitate) reglabilă per filigran — 0.07 = valoarea
+    /// implicită de dinainte (fostă constantă hardcodată). Retrocompatibil:
+    /// lipsă în JSON => System.Text.Json lasă valoarea din initializator.
+    public double Opacity { get; init; } = 0.07;
+
+    [JsonIgnore]
+    public Uri? ImageUrl => CatalogAssets.ImageUrl(ImagePath);
+
+    [JsonIgnore]
+    public bool IsActiveNow => IsEnabled && Scheduling.IsVisibleNow();
+}
+
+public static class SeasonalBackgroundConfigExtensions
+{
+    /// Filigranele active ACUM, deduplicate pe poziție — port 1:1 al
+    /// `activeNowDeduplicated` (Mac). La coliziune (mai multe active pe
+    /// aceeași poziție), câștigă ULTIMUL din listă — comportament stabil,
+    /// niciodată o eroare, identic cu Mac.
+    public static IReadOnlyList<SeasonalBackgroundConfig> ActiveNowDeduplicated(
+        this IReadOnlyList<SeasonalBackgroundConfig> configs)
+    {
+        var byPosition = new Dictionary<SeasonalPosition, SeasonalBackgroundConfig>();
+        foreach (var config in configs)
+        {
+            if (config.IsActiveNow) byPosition[config.Position] = config;
+        }
+        return Enum.GetValues<SeasonalPosition>()
+            .Where(byPosition.ContainsKey)
+            .Select(p => byPosition[p])
+            .ToList();
+    }
+}
+
 /// Port 1:1 al MapsLink.swift (Etapa 5, 2026-08-29) — link direct catre Google
 /// Maps, dintr-un text de adresa liber (nu coordonate). Foloseste endpoint-ul
 /// public de cautare (`api=1`), care NU necesita cheie API.
@@ -1197,4 +1262,10 @@ public sealed class Catalog
 
     [JsonIgnore]
     public Uri? SeasonalBackgroundUrl => CatalogAssets.ImageUrl(SeasonalBackground);
+
+    /// Biblioteca de filigrane sezoniere (2026-08-29) — înlocuiește slotul
+    /// unic de mai sus (vezi doc-comment-ul de la `SeasonalBackgroundConfig`).
+    /// Default `[]`: catalog vechi/fără chei încă => fără niciun filigran,
+    /// nu o eroare.
+    public IReadOnlyList<SeasonalBackgroundConfig> SeasonalBackgrounds { get; init; } = [];
 }

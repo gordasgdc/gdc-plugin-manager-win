@@ -41,17 +41,24 @@ public static class SeasonalBackgroundLoader
     /// descărca de la zero la fiecare pornire și **dispărea complet offline**,
     /// deși restul aplicației funcționa din cache-ul de catalog. Gap identic
     /// cu cel găsit și reparat pe Mac la Etapa 8.
-    private static string CacheFilePath => Path.Combine(
+    ///
+    /// [2026-08-29] CHEIAT PER FILIGRAN, nu mai un singur fișier global —
+    /// biblioteca poate avea acum mai multe filigrane simultan (portul
+    /// pluralului de pe Mac); un singur fișier ar fi însemnat că ultimul
+    /// descărcat suprascrie cache-ul tuturor celorlalte offline.
+    private static string CacheFilePath(string id) => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "GDCPluginManager", "seasonal-background-cache");
+        "GDCPluginManager", "seasonal-cache",
+        string.Join("_", id.Split(Path.GetInvalidFileNameChars())));
 
-    /// Descarcă și decodează filigranul. Întoarce null la ORICE eșec (rețea,
-    /// format necunoscut, SVG invalid) — filigranul e pur decorativ, deci
-    /// absența lui nu trebuie să producă nicio eroare vizibilă utilizatorului.
+    /// Descarcă și decodează filigranul cu id-ul dat. Întoarce null la ORICE
+    /// eșec (rețea, format necunoscut, SVG invalid) — filigranul e pur
+    /// decorativ, deci absența lui nu trebuie să producă nicio eroare
+    /// vizibilă utilizatorului.
     ///
     /// Etapa 8: la succes salvează bytes pe disc; la eșec de rețea încearcă
     /// ultima variantă salvată, ca filigranul să rămână vizibil offline.
-    public static async Task<ImageSource?> LoadAsync(Uri? url)
+    public static async Task<ImageSource?> LoadAsync(string id, Uri? url)
     {
         if (url is null) return null;
 
@@ -61,21 +68,22 @@ public static class SeasonalBackgroundLoader
             var image = Decode(bytes, url);
             // Salvam DOAR ce s-a si decodat cu succes — altfel am cache-ui un
             // raspuns corupt/HTML de eroare si l-am reincerca la infinit.
-            if (image is not null) SaveToCache(bytes);
+            if (image is not null) SaveToCache(id, bytes);
             return image;
         }
         catch
         {
-            return LoadFromCache(url);
+            return LoadFromCache(id, url);
         }
     }
 
-    private static ImageSource? LoadFromCache(Uri? url)
+    private static ImageSource? LoadFromCache(string id, Uri? url)
     {
         try
         {
-            if (!File.Exists(CacheFilePath)) return null;
-            return Decode(File.ReadAllBytes(CacheFilePath), url);
+            var path = CacheFilePath(id);
+            if (!File.Exists(path)) return null;
+            return Decode(File.ReadAllBytes(path), url);
         }
         catch
         {
@@ -83,12 +91,13 @@ public static class SeasonalBackgroundLoader
         }
     }
 
-    private static void SaveToCache(byte[] bytes)
+    private static void SaveToCache(string id, byte[] bytes)
     {
         try
         {
-            Directory.CreateDirectory(Path.GetDirectoryName(CacheFilePath)!);
-            File.WriteAllBytes(CacheFilePath, bytes);
+            var path = CacheFilePath(id);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            File.WriteAllBytes(path, bytes);
         }
         catch
         {
