@@ -617,17 +617,21 @@ mutate în `CLAUDE_ARCHIVE.md` (NU se citește automat) — citește-l explicit
 când investighezi o zonă veche de cod. Rezumat "stare curentă" mai jos rămâne
 în acest fișier, fiindcă e activ relevant sesiune de sesiune.
 
-## Stare curentă (2026-08-29) — versiune `1.19.8`
+## Stare curentă (2026-08-29) — versiune `1.19.9`
 
 - **Bug critic imagini rezolvat**: `BitmapImage.UriSource` (WinINet) trecut
   peste tot pe `HttpClient`+`MemoryStream` — coperți/lightbox funcționale,
   confirmat de Cristi după reinstall v1.19.7.
-- **NEREZOLVAT — filigran sezonier nu apare pe Windows**: log real arată
-  `HttpRequestException: SSL connection could not be established` la
-  `black-friday-seeklogo`. Ipoteză principală, neconfirmată: drift de ceas
-  de sistem în VM-ul Parallels al lui Cristi. `DiagnosticLog.Describe(ex)`
-  (v1.19.8) desface acum lanțul complet de `InnerException` — următorul log
-  ar trebui să arate cauza reală. **Pas următor**: aștept retest + log nou de
-  la Cristi (`Get-Content "$env:TEMP\gdcpm-crash.log" | Select-String seasonal`).
-- Detalii complete ale acestor două fixuri: vezi `CLAUDE_ARCHIVE.md`, ultimele
-  2 intrări ("val 3"/"val 4"), sau `CHANGELOG.md` v1.19.7/v1.19.8.
+- **Filigran sezonier — cauza reală găsită și reparată (v1.19.9)**:
+  `DiagnosticLog.Describe(ex)` (v1.19.8) a arătat inner exception-ul real —
+  `RemoteCertificateNameMismatch`/`RemoteCertificateChainErrors`, DOAR pe
+  `HttpClient` (static, o conexiune TLS ținută la infinit), NICIODATĂ pe
+  `curl` (10/10 OK, conexiune nouă de fiecare dată — verificat live pe
+  mașina lui Cristi). Ipoteza de ceas VM a fost INFIRMATĂ (ar fi dat eroare
+  de validitate pe TOT traficul, nu name-mismatch pe un singur asset).
+  **Fix**: `PooledConnectionLifetime = 5 min` în `HttpClientFactory.Create()`
+  — conexiunea se reface periodic, robust la anycast-ul Cloudflare din
+  spatele `gordas.dev`. **De confirmat**: retest real, cu filigranul vizibil
+  fără erori noi în log.
+- Detalii complete: `CLAUDE_ARCHIVE.md` (val 3/4) sau `CHANGELOG.md`
+  v1.19.7/v1.19.8/v1.19.9.

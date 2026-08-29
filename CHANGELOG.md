@@ -5,6 +5,17 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.9 (2026-08-29) — Fix real: conexiune HTTPS reciclată la 5 min (nu mai infinit)
+
+- Cauza reală a eșecului SSL intermitent la filigran (diagnosticată din log
+  `Describe(ex)` din v1.19.8): `RemoteCertificateNameMismatch`, DOAR pe
+  `HttpClient` static, niciodată pe `curl` (10/10 OK, conexiune nouă de
+  fiecare dată). `gordas.dev` e în spatele Cloudflare (anycast) —
+  `HttpClient`-urile aplicației țineau o conexiune TLS deschisă la infinit.
+- Fix: `PooledConnectionLifetime = 5 minute` pe toate `HttpClient`-urile
+  aplicației — conexiunea se reface periodic, la fel de robust ca un
+  handshake nou per cerere.
+
 ## v1.19.8 (2026-08-29) — Logare detaliată a erorii SSL reale
 
 - Eroarea de rețea din log arată acum lanțul COMPLET de InnerException
