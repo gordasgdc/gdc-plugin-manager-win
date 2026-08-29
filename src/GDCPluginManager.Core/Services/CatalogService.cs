@@ -33,6 +33,9 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<DownloadableResource> DownloadableResources { get; private set; } = [];
     /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; private set; } = [];
+    /// Filigran sezonier — Etapa 6 (2026-08-29). null = fara filigran.
+    public string? SeasonalBackground { get; private set; }
+    public Uri? SeasonalBackgroundUrl => CatalogAssets.ImageUrl(SeasonalBackground);
     public bool IsLoading { get; private set; }
     public string? LoadError { get; private set; }
 
@@ -88,6 +91,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             ServiceCenters = catalog.ServiceCenters;
             DownloadableResources = catalog.DownloadableResources;
             PartnerOffers = catalog.PartnerOffers;
+            SeasonalBackground = catalog.SeasonalBackground;
             Raise(nameof(Items));
             Raise(nameof(Courses));
             Raise(nameof(Apps));
@@ -98,6 +102,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(ServiceCenters));
             Raise(nameof(DownloadableResources));
             Raise(nameof(PartnerOffers));
+            Raise(nameof(SeasonalBackground));
             SaveToCache(data);
         }
         catch (CatalogFetchException ex)
@@ -153,6 +158,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             ServiceCenters = catalog.ServiceCenters;
             DownloadableResources = catalog.DownloadableResources;
             PartnerOffers = catalog.PartnerOffers;
+            SeasonalBackground = catalog.SeasonalBackground;
         }
         catch
         {

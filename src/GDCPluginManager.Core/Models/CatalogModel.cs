@@ -1069,4 +1069,14 @@ public sealed class Catalog
 
     /// Oferte/Promotii de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; init; } = [];
+
+    /// Filigran/fundal sezonier optional pentru Client — Etapa 6 (2026-08-29).
+    /// NU un banner mic, ci o imagine mare, discreta, "gravata" in fundalul
+    /// ferestrei. Cale relativa ("covers/seasonal/<nume>.svg") sau URL extern
+    /// — acelasi sistem hibrid ca CoverImage (vezi CatalogAssets). null = fara
+    /// filigran.
+    public string? SeasonalBackground { get; init; }
+
+    [JsonIgnore]
+    public Uri? SeasonalBackgroundUrl => CatalogAssets.ImageUrl(SeasonalBackground);
 }

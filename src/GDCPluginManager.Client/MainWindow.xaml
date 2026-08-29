@@ -1042,6 +1042,30 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
+            <!-- ================================================================
+                 FILIGRAN SEZONIER (Etapa 6, 2026-08-29)
+                 NU un banner mic in colt, ci o imagine MARE (~480x480),
+                 discreta, "gravata" in fundal: opacitate 7%, IN SPATELE
+                 intregului continut (declarat PRIMUL in Grid, deci desenat
+                 dedesubt) si cu IsHitTestVisible="False" ca sa nu inghita
+                 niciun click destinat cardurilor de deasupra.
+                 Stratul nu se randeaza deloc cat timp SeasonalBackground e
+                 null (fara filigran publicat, sau incarcare esuata).
+                 Randat prin SharpVectors ca DrawingImage — ramane VECTORIAL,
+                 deci nu se pixeleaza la dimensiunea asta. Vezi
+                 SeasonalBackgroundLoader.cs pentru motivul alegerii librariei.
+                 ================================================================ -->
+            <Image Grid.Row="0" Grid.RowSpan="3"
+                   Source="{Binding SeasonalBackground}"
+                   Width="480" Height="480"
+                   Opacity="0.07"
+                   Stretch="Uniform"
+                   HorizontalAlignment="Right" VerticalAlignment="Bottom"
+                   Margin="0,0,24,24"
+                   IsHitTestVisible="False"
+                   Panel.ZIndex="-1"
+                   Visibility="{Binding SeasonalBackground, Converter={StaticResource NullToVisibility}}" />
+
             <!-- Bara de sus: cautare GLOBALA + refresh.
                  ETAPA 1 (2026-08-29): bara NU mai e legata de pagina de
                  catalog (`Visibility` pe CurrentPage a fost ELIMINATA) — e

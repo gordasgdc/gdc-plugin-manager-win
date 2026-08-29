@@ -927,3 +927,44 @@ referință la Windows Forms doar pentru un selector de folder.
 
 **Verificat**: `dotnet build` — 0 erori, 0 avertismente; 38 de verificări în
 harness, toate trecute.
+
+### Etapa 6 — Filigran sezonier (SVG randat real, nu fallback tăcut)
+`Catalog.SeasonalBackground` (Core, nou) + `SeasonalBackgroundUrl` (același
+sistem hibrid cale-relativă/URL-extern ca `CoverImage`).
+`SeasonalBackgroundLoader.cs` (Client, nou) + strat de fundal în
+`MainWindow.xaml`: imagine mare (480x480 bounding box), **opacitate 7%**, ÎN
+SPATELE conținutului (declarat primul în Grid + `Panel.ZIndex="-1"`), cu
+`IsHitTestVisible="False"` ca să nu înghită niciun click destinat cardurilor.
+
+**LIBRĂRIE NOUĂ: `SharpVectors.Reloaded` 1.8.5 — decizie documentată, nu
+preferință.** WPF **nu are decodor SVG nativ** (`BitmapImage` acceptă doar
+BMP/GIF/ICO/JPEG/PNG/TIFF/WMP), iar filigranul din producție **este SVG** —
+verificat live: `covers/seasonal/background.svg?v=27081ef5`, HTTP 200,
+`content-type: image/svg+xml`, 33 KB. Fără librărie ar fi eșuat TĂCUT și n-ar
+fi apărut niciodată — exact clasa de bug raportată pe Mac cu `AsyncImage`.
+
+**De ce SharpVectors și NU Svg.Skia**: `Svg.Skia` depinde de SkiaSharp, care
+livrează **binare NATIVE per arhitectură**. Regula 22 (Partea 1) documentează
+un bug REAL de pe DataMover: pe host-ul Windows al lui Cristi (Parallels pe Mac
+Apple Silicon) procesul rulează ca `win-arm64`, iar pachetele Skia native n-au
+build pentru acea arhitectură — cad tăcut cu `DllNotFoundException` doar la
+RUNTIME, niciodată la `dotnet build`. Ar fi fost exact aceeași clasă de eșec
+silențios pe care etapa asta o repară. `SharpVectors.Reloaded` e **100%
+managed** — verificat direct: toate assembly-urile din pachet sunt
+`Mono/.Net assembly`, iar pachetul **nu are folder `runtimes/`** cu binare
+native. Rulează identic pe x64 și pe ARM64 emulat, și randează în
+`DrawingImage` WPF, deci filigranul rămâne **vectorial**, nu rasterizat.
+
+Detectarea SVG se face **după conținut** (`<svg` în primii 512 bytes), nu doar
+după extensie — valoarea reală din producție are query (`?v=27081ef5`), iar un
+URL extern poate să n-aibă deloc extensie. Fallback automat pe decodor raster
+pentru PNG/JPG. Orice eșec (rețea, format, SVG invalid) → `null` → stratul pur
+și simplu nu se randează; filigranul e decorativ, nu produce nicio eroare
+vizibilă.
+
+**Ce e verificat și ce NU**: verificat — pachetul e pur managed; asset-ul live
+e SVG real, XML well-formed, compus DOAR din `<g>`/`<path>` (subsetul cel mai
+simplu, fără text/gradienți/filtre/CSS); codul compilează contra API-ului
+`FileSvgReader`/`WpfDrawingSettings` folosit. **NEVERIFICABIL de pe Mac**:
+randarea efectivă — SharpVectors e o librărie WPF, deci decodarea nu poate
+rula decât pe Windows. Rămâne de confirmat vizual, o dată, pe mașina de test.

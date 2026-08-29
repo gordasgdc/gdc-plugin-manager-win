@@ -146,6 +146,12 @@ public sealed partial class MainViewModel : ObservableObject
     /// "Aplicatiile Mele" (Etapa 3) — pagina proprie, cu propriul ViewModel.
     public MyAppsViewModel MyApps { get; } = new();
 
+    /// Filigranul sezonier (Etapa 6) — randat mare, la opacitate mica, IN
+    /// SPATELE continutului. null cat timp nu s-a incarcat (sau daca nu exista
+    /// niciunul publicat), caz in care stratul nu se randeaza deloc.
+    [ObservableProperty]
+    private System.Windows.Media.ImageSource? _seasonalBackground;
+
     public IReadOnlyList<CategoryFilter> Categories { get; } =
     [
         new("Toate", null, SymbolRegular.Apps24),
@@ -472,6 +478,7 @@ public sealed partial class MainViewModel : ObservableObject
         }
 
         RefreshDependencies();
+        await LoadSeasonalBackgroundAsync();
         await GDCPluginManager.Core.Services.LicenseManager.Shared.RefreshRevocationsAsync();
     }
 
@@ -618,6 +625,13 @@ public sealed partial class MainViewModel : ObservableObject
     {
         UpdateChecker.Shared.Dismiss();
         UpdateBannerText = null;
+    }
+
+    /// Incarca filigranul sezonier. Esecul e complet tacut si non-fatal —
+    /// filigranul e pur decorativ.
+    private async Task LoadSeasonalBackgroundAsync()
+    {
+        SeasonalBackground = await SeasonalBackgroundLoader.LoadAsync(CatalogService.Shared.SeasonalBackgroundUrl);
     }
 
     private void RebuildFromCatalog()
