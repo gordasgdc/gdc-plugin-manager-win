@@ -8,7 +8,7 @@ namespace GDCPluginManager.Core.Services;
 /// fi folosit si de InstallManager.cs — instalarea normala (LUT/DCTL/Fuse/
 /// OFX) nu avea NICIUN logging pana acum, deci un raport ca "arata Installed
 /// dar fisierele nu apar" nu putea fi diagnosticat de la distanta.
-internal static class DiagnosticLog
+public static class DiagnosticLog
 {
     private static readonly string Path_ = Path.Combine(Path.GetTempPath(), "gdcpm-crash.log");
 

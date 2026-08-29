@@ -26,3 +26,10 @@ Bump doar de versiune, ca `update.json` comun (Mac+Windows) sa reflecte
 un release real existent pe ambele platforme. Fix-ul propriu-zis (draft
 orfan la filigrane) a fost exclusiv in Furnizor (Mac, unealta interna,
 Windows nu are Furnizor).
+
+## v1.19.5 (2026-08-29) — Fix retry filigran + fix ferestre goale
+
+- Fetch filigran sezonier acum reîncearcă automat o dată (blip-uri
+  tranzitorii de CDN pe gordas.dev) + log de eroare reală, nu generică.
+- Fix: ferestrele Setări/Profil/Dependențe/Progres update se puteau
+  desena goale o clipă la deschidere (lipsea `MinHeight`) — reparat.

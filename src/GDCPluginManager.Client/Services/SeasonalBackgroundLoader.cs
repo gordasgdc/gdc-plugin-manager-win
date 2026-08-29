@@ -58,23 +58,52 @@ public static class SeasonalBackgroundLoader
     ///
     /// Etapa 8: la succes salvează bytes pe disc; la eșec de rețea încearcă
     /// ultima variantă salvată, ca filigranul să rămână vizibil offline.
+    /// [2026-08-29] RETRY + eroare reala in log — gasit live (raportat de
+    /// Cristi, reprodus pe Mac cu acelasi simptom): un filigran esua
+    /// consecvent la fetch in timp ce altul, publicat in acelasi minut,
+    /// mergea perfect — verificat direct ca fisierul era disponibil pe
+    /// server (HTTP 200, `curl`) exact cat timp aplicatia raporta esec.
+    /// Concluzie: nu era un bug de cod, ci un blip TRANZITORIU de retea/CDN
+    /// (gordas.dev trece prin Cloudflare SI Fastly/GitHub Pages — un nod de
+    /// edge poate rata o cerere fara ca alta, milisecunde mai tarziu, s-o
+    /// rateze). `catch` generic ascundea eroarea REALA — acum se
+    /// logheaza explicit. Un singur retry, cu pauza scurta, rezolva marea
+    /// majoritate a acestor blip-uri.
     public static async Task<ImageSource?> LoadAsync(string id, Uri? url)
     {
         if (url is null) return null;
 
-        try
+        Exception? lastError = null;
+        for (var attempt = 1; attempt <= 2; attempt++)
         {
-            var bytes = await Http.GetByteArrayAsync(url);
-            var image = Decode(bytes, url);
-            // Salvam DOAR ce s-a si decodat cu succes — altfel am cache-ui un
-            // raspuns corupt/HTML de eroare si l-am reincerca la infinit.
-            if (image is not null) SaveToCache(id, bytes);
-            return image;
+            try
+            {
+                var bytes = await Http.GetByteArrayAsync(url);
+                var image = Decode(bytes, url);
+                if (image is not null)
+                {
+                    DiagnosticLog.Write("SeasonalBackground", $"id={id}: OK, {bytes.Length} bytes (incercarea {attempt})");
+                    // Salvam DOAR ce s-a si decodat cu succes — altfel am cache-ui un
+                    // raspuns corupt/HTML de eroare si l-am reincerca la infinit.
+                    SaveToCache(id, bytes);
+                    return image;
+                }
+                DiagnosticLog.Write("SeasonalBackground", $"id={id}: fetch OK ({bytes.Length} bytes) dar Decode() a esuat (incercarea {attempt})");
+                break; // date corupte/format necunoscut - un retry nu ajuta.
+            }
+            catch (Exception ex)
+            {
+                lastError = ex;
+                DiagnosticLog.Write("SeasonalBackground", $"id={id}: fetch ESUAT la incercarea {attempt}: {ex.GetType().Name}: {ex.Message}");
+                if (attempt == 1) await Task.Delay(800);
+            }
         }
-        catch
-        {
-            return LoadFromCache(id, url);
-        }
+
+        var cached = LoadFromCache(id, url);
+        DiagnosticLog.Write("SeasonalBackground", cached is not null
+            ? $"id={id}: fetch esuat de 2 ori ({lastError?.GetType().Name}), fallback pe cache local reusit"
+            : $"id={id}: fetch esuat de 2 ori ({lastError?.GetType().Name}) SI niciun cache local disponibil");
+        return cached;
     }
 
     private static ImageSource? LoadFromCache(string id, Uri? url)

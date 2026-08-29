@@ -4,7 +4,7 @@
         xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
         xmlns:conv="clr-namespace:GDCPluginManager.Client.Converters"
         Title="Verificare &amp; Dependențe Sistem"
-        Width="480" SizeToContent="Height" MinWidth="420"
+        Width="480" SizeToContent="Height" MinWidth="420" MinHeight="260"
         WindowStartupLocation="CenterOwner"
         Background="{DynamicResource InkSurfaceBrush}"
         ShowInTaskbar="False">
