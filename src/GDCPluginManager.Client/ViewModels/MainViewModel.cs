@@ -47,6 +47,9 @@ public enum SidebarPage
     DownloadSfx,
     DownloadVfx,
     DownloadPlugin,
+    /// "Aplicatiile Mele" (Etapa 3, 2026-08-29) — aplicatiile GDC gasite
+    /// instalate pe masina asta + scurtaturi personalizate.
+    MyApps,
     /// Pseudo-pagina (Etapa 1): nu e o rubrica din sidebar, ci starea
     /// "cautare globala activa". Vezi MainViewModel.ContentPage — cand
     /// campul de cautare e nevid, ACEASTA e pagina randata, indiferent ce
@@ -133,6 +136,9 @@ public sealed partial class MainViewModel : ObservableObject
         && GlobalDownloadResources.Count == 0;
 
     public LicensePaneViewModel LicensePane { get; }
+
+    /// "Aplicatiile Mele" (Etapa 3) — pagina proprie, cu propriul ViewModel.
+    public MyAppsViewModel MyApps { get; } = new();
 
     public IReadOnlyList<CategoryFilter> Categories { get; } =
     [
@@ -532,6 +538,16 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowApps() => CurrentPage = SidebarPage.Apps;
+
+    /// Deschide "Aplicatiile Mele" si redetecteaza la fiecare intrare —
+    /// userul poate fi instalat/dezinstalat ceva intre doua vizite, iar
+    /// detectarea din Registry e ieftina (fara retea).
+    [RelayCommand]
+    private async Task ShowMyApps()
+    {
+        CurrentPage = SidebarPage.MyApps;
+        await MyApps.RefreshAsync();
+    }
 
     [RelayCommand]
     private void ShowAndroid() => CurrentPage = SidebarPage.Android;

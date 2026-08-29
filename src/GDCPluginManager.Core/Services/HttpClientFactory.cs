@@ -8,7 +8,11 @@ namespace GDCPluginManager.Core.Services;
 /// NU — bug real, confirmat direct (o cerere identica, doar fara User-Agent,
 /// primeste exact acelasi 403 pe care InstallManager il trateaza — corect,
 /// in general, dar gresit in cazul asta — ca "token invalid/expirat").
-internal static class HttpClientFactory
+/// PUBLIC din 2026-08-29 (Etapa 3): "Aplicatiile Mele" (in proiectul Client)
+/// interogheaza `api.github.com`, care REFUZA cu 403 orice cerere fara
+/// User-Agent. Reutilizam acelasi factory in loc sa cream un HttpClient gol
+/// in Client si sa uitam antetul.
+public static class HttpClientFactory
 {
     public static HttpClient Create()
     {

@@ -768,3 +768,61 @@ prag mai strict pe cuvinte scurte). Toate 25 au trecut.
 un `ui:SymbolIcon Symbol="..."` literal e un membru de enum, deci un nume
 inexistent oprește build-ul. Metodă mult mai sigură decât `strings Wpf.Ui.dll`
 (care are false negative, vezi pitfall 2026-08-24).
+
+### Etapa 3 — "Aplicațiile Mele" (detectare prin Registry)
+`MyAppsService.cs` + `MyAppsViewModel.cs` (Client, noi) — sidebar nou
+"Aplicatiile Mele", lângă Aplicații.
+
+**Diferență reală de platformă**: Mac folosește
+`NSWorkspace.urlForApplication(withBundleIdentifier:)`. Windows n-are
+echivalent — sursa de adevăr e cheia de dezinstalare scrisă de Inno Setup:
+`HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\<AppId>_is1`.
+Căutăm în TREI locuri (HKLM view 64, HKLM view 32 / `WOW6432Node`, HKCU),
+fiindcă depinde cum a fost instalată aplicația; fallback pe Program Files
+pentru o copie dezarhivată manual. Versiunea instalată e `DisplayVersion` din
+acea cheie (NU versiunea din fișierul .exe — ar putea diferi de ce a
+înregistrat installer-ul).
+
+**3 aplicații, nu 4 — verificat, nu presupus.** Mac listează DataMover,
+CursorPro GDC, GDC Vault, MediaFlow Monitor. Inspectat direct `~/Developer`:
+`CursorPro` are DOAR `Package.swift`/`.icns`/`build_app.sh` — niciun
+`.csproj`, `.iss` sau folder Windows. **Nu există build Windows de detectat,
+deci e EXCLUS deliberat.** Celelalte trei au `installer.iss` real, iar
+`AppId`/`AppName`/`ExeName`/`DefaultDirName` din cod sunt copiate VERBATIM de
+acolo, nu ghicite:
+- DataMover — `{A4E1C3F0-2F0F-4B0E-9C1A-DATAMOVERSETUP1}`, `DataMover.exe`
+- GDC Vault — `{E4A9C2D1-7B3F-4E5A-9F0C-GDCVAULT00001}`, `GDCVault.exe`
+- MediaFlow Monitor — `{A3F1D9E4-6B27-4C88-9A45-MEDIAFLOWMON01}`, `MediaFlowMonitor.exe`
+
+**Endpoint-uri de versiune verificate LIVE** (nu presupuse): DataMover
+`api.github.com/repos/gordasgdc/datamover/releases/latest` → HTTP 200,
+`v2.7.1`; GDC Vault `.../gdc-vault-win/...` → HTTP 200, `v0.5.4`; MediaFlow
+Monitor are `update.json` propriu (`gordas.dev/media-flow-monitor/update.json`)
+→ HTTP 200, `1.8.0`, cu `download_url.windows` prezent (confirmă build Windows).
+Cele două surse diferite sunt portate ca atare (`VersionSourceKind`), exact ca
+pe Mac.
+
+**Capcană evitată**: `tag_name` de pe GitHub poartă prefixul `v` în tot
+ecosistemul GDC, dar `update.json`/`AssemblyVersion` nu — fără
+`VersionCompare.NormalizeTag`, "v2.7.1" s-ar parsa ca `0.7.1` și fiecare
+aplicație ar fi părut MEREU la zi (badge-ul n-ar fi apărut niciodată).
+Badge-ul "ACTUALIZARE" apare doar când verificarea a REUȘIT și versiunea
+publicată e strict mai nouă — la eșec de rețea nu apare nimic, nu un badge
+fals pe o informație pur opțională.
+
+**Refactor conex, nu gold-plating**: comparația de versiuni era `private` în
+`UpdateChecker`; extrasă în `VersionCompare` (Core) și refolosită de ambele —
+o a doua copie ar fi putut diverge tăcut de cea folosită la self-update.
+`HttpClientFactory` a devenit `public` (era `internal`): `api.github.com`
+răspunde **403 fără User-Agent**, iar un `HttpClient` gol creat în Client ar
+fi ratat antetul.
+
+Scurtături personalizate (`CustomLauncherStore`) — `OpenFileDialog` pe `.exe`,
+persistate în `%AppData%\GDCPluginManager\custom-launchers.json` (pe Mac:
+`fileImporter` + `UserDefaults`).
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente (XAML compilat real).
+**Neverificabil de aici, rămâne pentru testul pe Windows**: citirea efectivă
+a cheilor de Registry — acest Mac n-are Registry. Logica e scrisă defensiv
+(orice vedere inaccesibilă e sărită, nu oprește căutarea), dar detectarea în
+sine TREBUIE confirmată o dată pe mașina de test.
