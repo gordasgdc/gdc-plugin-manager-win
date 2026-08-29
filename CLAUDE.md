@@ -655,3 +655,66 @@ recolorat albastru distinct (portocaliul vechi s-ar fi confundat cu
 accentul Primary, care e amber acum). Verificat prin CI real — success.
 - **2026-08-29 — Badge OS: `DesktopMac24`/`DesktopTower24`/`ArrowSync24` (Fluent `ui:SymbolIcon`), nu emoji 🍎/🪟/🔄.** Port 1:1 al fix-ului de pe Mac (Cristi: "simbolurile de măr... nu-mi place, prefer SVG... impecabil, profesionist"). `SupportedOSExtensions.BadgeSymbol()` (înlocuiește `BadgeEmoji()`) + `Converters/SymbolNameConverter.cs` (nou — `Enum.TryParse<SymbolRegular>`, fallback `Circle24`) + `MainWindow.xaml` (`ui:SymbolIcon Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}"` în loc de `TextBlock` cu emoji). Cele 3 nume de simbol confirmate PREZENTE prin `strings Wpf.Ui.dll` (vezi pitfall 2026-08-24 despre absență-nu-e-dovadă-dar-prezența-da). Versiune `1.4.0`→`1.5.0`. **Verificat**: `dotnet build` (C# only) — 0 erori; XML validat manual well-formed (XAML nu compilează pe Mac).
 - **2026-08-26 — Bug real: verificarea MANUALĂ de update ("Caută actualizări") minea "Ești la zi" pe o versiune deja respinsă.** Reprodus live, din log-ul real trimis de Cristi: `info.Version=1.3.0, IsNewer=True`, urmat de `dismissed=1.3.0`. Cauza: `AvailableUpdate` (populat de `CheckAsync()`) e filtrat de starea de dismissal — corect pentru bannerul/pop-up-ul PASIV, dar butonul manual citea tot `AvailableUpdate`, deci o respingere veche (chiar din greșeală, un "Mai târziu" apăsat în timp ce userul explora UI-ul) făcea verificarea manuală să mintă la infinit, indiferent câte versiuni noi apăreau după aceea. **Soluție**: `UpdateChecker.LatestInfo` — populat necenzurat de dismissal, la fiecare `CheckAsync()` reușit. `CheckForUpdates_Click` citește acum `LatestInfo`, nu `AvailableUpdate`; bannerul/pop-up-ul pasiv rămân neschimbate. **Notă**: prima mea ipoteză (cache CDN pe `gordas.dev/update.json`, `max-age=600`) a fost greșită — verificat direct că serverul răspundea mereu corect; log-ul real a dovedit altceva. Adăugat și un cache-buster (`?t=<timestamp>`) pe cerere, defensiv, dar NU era cauza acestui bug.
+
+## Paritate v2.0 cu Mac — cele 9 etape (2026-08-29, Windows display-only)
+Context: `gdc-plugin-manager-catalog-vendor` (Mac) a primit 9 etape de
+upgrade v2.0; Windows rămăsese la 1.5.0, fără niciuna. Windows NU are
+aplicație Furnizor — deci se portează DOAR modelele de date (deserializare
+identică, retrocompatibilă) + AFIȘAREA/filtrarea/licențierea din Client.
+Etapa 7 (filtrare avansată + export email pe loturi) e N/A: e exclusiv
+Furnizor, confirmat direct de jurnalul de pe Mac.
+
+- **[CORECȚIE IMPORTANTĂ a unui pitfall vechi] `dotnet build` pe macOS
+  COMPILEAZĂ acum XAML-ul.** Pitfall-ul din 2026-08-23 („`PresentationBuildTasks`
+  e Windows-only, build-ul verde pe Mac nu e o dovadă") NU mai e adevărat
+  cu SDK-ul .NET 10.0.400 instalat pe acest Mac. Verificat DIRECT, nu
+  presupus: `MainWindow.baml` + `MainWindow.g.cs` sunt regenerate la
+  fiecare build în `obj/Debug/net8.0-windows/`, iar o eroare XAML
+  introdusă deliberat (element rădăcină în plus) a fost prinsă la
+  compilare cu `error MC3000: 'There are multiple root elements.'`.
+  Deci XAML-ul din etapele de mai jos e validat de compilator, nu doar
+  "XML well-formed manual" ca la etapele vechi. **Nu șterge pitfall-ul
+  vechi din istoric** (regula append-only) — dar de-acum e ÎNVECHIT pe
+  această mașină; pe un SDK mai vechi s-ar putea reactiva, deci verifică
+  prezența `MainWindow.baml` înainte de a te baza pe el.
+
+### Etapa 1 — Căutare fuzzy globală + istoric + filtru OS
+`FuzzySearch.cs` (Core, nou) — port 1:1 al `FuzzySearch.swift`: substring
+pe text normalizat + Levenshtein mărginit per-cuvânt (prag 1 pentru
+interogări ≤4 caractere, altfel 2). `Normalize` folosește
+`NormalizationForm.FormD` + eliminarea `NonSpacingMark` + `ToLowerInvariant`
+(echivalentul `folding(.diacriticInsensitive, .caseInsensitive)` din Swift).
+**`ToLowerInvariant`, NU `ToLower()`** — pe o mașină cu locale turcească
+`ToLower()` mapează "I"→"ı" și căutarea s-ar rupe silențios.
+
+`SearchHistoryStore.cs` (Core, nou) — max 8, fără duplicate
+(case-insensitive), cea mai recentă prima. Mac folosește `UserDefaults`;
+aici e un JSON în `%AppData%\GDCPluginManager\search-history-global.json`,
+același tipar ca `licenses.json`/`catalog-cache.json`. Stare 100% locală.
+
+Client: bara de căutare NU mai e legată de pagina de catalog — e globală,
+vizibilă pe orice rubrică. `MainViewModel.ContentPage` (nou) e ce se randă
+efectiv: `CurrentPage` normal, `SidebarPage.GlobalSearch` cât timp câmpul e
+nevid. Toate cele 10 panouri de conținut din `MainWindow.xaml` s-au mutat de
+pe `CurrentPage` pe `ContentPage` — o singură condiție le ascunde pe toate
+în timpul căutării, fără s-o dubleze pe fiecare. `CurrentPage` rămâne
+neatinsă, deci sidebar-ul își păstrează selecția și revenirea la golirea
+câmpului e instantanee. Rezultatele globale acoperă toate cele 8 colecții
+existente, fiecare secțiune randată doar dacă are potriviri
+(`NonZeroToVisibilityConverter`, nou). Cardurile sunt `DataTemplate`-urile
+deja existente (rezolvate după `DataType`) — zero UI duplicat, ca pe Mac.
+
+Filtru OS (Toate/Mac/Windows) — `OSFilter` (enum nou) + `MatchesOS`.
+`CrossPlatform` apare la ORICE filtru (chiar rulează pe ambele platforme).
+**Notă de scop, nu omisiune**: doar `PluginItem` poartă `supportedOS` în
+model (la fel ca pe Mac) — Cursuri/Materiale/Evenimente/Magazine/Service/
+Aplicații/Audio nu au câmpul deloc, deci sunt tratate implicit ca
+`CrossPlatform` și apar la orice filtru.
+
+**Simplificare deliberată față de Mac**: istoricul e un rând de "chip"-uri
+sub bară (vizibil doar când câmpul e GOL), nu un dropdown de sugestii
+ancorat — același conținut, fără complexitatea de focus/popup din WPF.
+Enter salvează termenul în istoric, Escape golește câmpul; filtrarea în
+sine e live la fiecare tastă (altfel istoricul s-ar umple cu prefixe).
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente, XAML compilat real.

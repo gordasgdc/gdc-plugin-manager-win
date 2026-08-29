@@ -22,6 +22,8 @@
         <conv:EnumEqualsBoolConverter x:Key="PageEquals" />
         <conv:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisibility" />
         <conv:ZeroToVisibilityConverter x:Key="ZeroToVisibility" />
+        <conv:NonZeroToVisibilityConverter x:Key="NonZeroToVisibility" />
+        <conv:RecentSearchesVisibleConverter x:Key="RecentSearchesVisible" />
         <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
         <!-- UriToImageSourceConverter A FOST ELIMINAT (2026-08-25): descarcarea
              se face acum direct in CoverViewModel (Bitmap, cu DownloadFailed
@@ -650,10 +652,18 @@
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <!-- Bara de sus: cautare + refresh — doar pe pagina de catalog. -->
-            <Grid Grid.Row="0" Margin="20,20,20,0"
-                  Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+            <!-- Bara de sus: cautare GLOBALA + refresh.
+                 ETAPA 1 (2026-08-29): bara NU mai e legata de pagina de
+                 catalog (`Visibility` pe CurrentPage a fost ELIMINATA) — e
+                 vizibila pe ORICE rubrica, exact ca pe Mac dupa completarea
+                 "cautarea a devenit GLOBALA". Cand campul e nevid,
+                 `ContentPage` devine `GlobalSearch` si intreg panoul de mai
+                 jos se schimba in rezultate combinate din toate colectiile.
+                 Filtrul de PRET ramane specific paginii de catalog (randul 1
+                 de mai jos); filtrul OS se aplica peste tot. -->
+            <Grid Grid.Row="0" Margin="20,20,20,0">
                 <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                     <RowDefinition Height="Auto" />
                 </Grid.RowDefinitions>
@@ -666,11 +676,26 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto" />
                             <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
                         </Grid.ColumnDefinitions>
                         <ui:SymbolIcon Grid.Column="0" Symbol="Search24" FontSize="15" Margin="10,0,4,0"
                                        Foreground="{StaticResource InkTextMutedBrush}" VerticalAlignment="Center" />
+                        <!-- Enter salveaza termenul in istoric (CommitSearchCommand);
+                             filtrarea in sine e live, la fiecare tasta
+                             (UpdateSourceTrigger=PropertyChanged) — istoricul se
+                             scrie doar la confirmare, altfel s-ar umple cu
+                             prefixe ("l", "lu", "lut"). -->
                         <TextBox Grid.Column="1" Style="{StaticResource SearchTextBoxStyle}"
-                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" />
+                                 Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}">
+                            <TextBox.InputBindings>
+                                <KeyBinding Key="Return" Command="{Binding CommitSearchCommand}" />
+                                <KeyBinding Key="Escape" Command="{Binding ClearSearchCommand}" />
+                            </TextBox.InputBindings>
+                        </TextBox>
+                        <Button Grid.Column="2" Content="✕" Command="{Binding ClearSearchCommand}"
+                                Background="Transparent" BorderThickness="0" Padding="8,0" FontSize="12"
+                                Foreground="{StaticResource InkTextMutedBrush}"
+                                Visibility="{Binding IsSearching, Converter={StaticResource BoolToVisibility}}" />
                     </Grid>
                 </Border>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -740,12 +765,68 @@
                      nou in grid-ul parinte, ca sa nu deranjez numerotarea
                      Grid.Row existenta mai jos, folosita si de RowSpan). -->
                 <StackPanel Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
-                    <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.All}"
-                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
-                    <Button Content="Gratuite" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Free}"
-                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Free}" />
-                    <Button Content="Premium" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Paid}"
-                            FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Paid}" />
+                    <!-- Filtrul de PRET ramane specific paginii de catalog
+                         (produsele sunt singurele cu pret/licenta) — ascuns pe
+                         orice alta rubrica si in timpul cautarii globale. -->
+                    <StackPanel Orientation="Horizontal"
+                                Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+                        <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.All}"
+                                FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
+                        <Button Content="Gratuite" Margin="0,0,8,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Free}"
+                                FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Free}" />
+                        <Button Content="Premium" Margin="0,0,20,0" Command="{Binding SetPriceFilterCommand}" CommandParameter="{x:Static vm:PriceFilter.Paid}"
+                                FontWeight="{Binding PriceFilter, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Paid}" />
+                    </StackPanel>
+
+                    <!-- Filtru OS (Etapa 1) — vizibil pe orice rubrica si in
+                         cautarea globala. `CrossPlatform` apare la ORICE
+                         optiune (vezi MainViewModel.MatchesOS). Reutilizeaza
+                         PriceFilterWeightConverter (compara generic prin
+                         ToString), nu un converter nou. -->
+                    <TextBlock Text="Sistem:" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Style="{StaticResource MutedTextStyle}" />
+                    <Button Content="Toate" Margin="0,0,8,0" Command="{Binding SetOSFilterCommand}" CommandParameter="{x:Static vm:OSFilter.All}"
+                            FontWeight="{Binding SelectedOS, Converter={StaticResource PriceFilterWeight}, ConverterParameter=All}" />
+                    <Button Content="Mac" Margin="0,0,8,0" Command="{Binding SetOSFilterCommand}" CommandParameter="{x:Static vm:OSFilter.Mac}"
+                            FontWeight="{Binding SelectedOS, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Mac}" />
+                    <Button Content="Windows" Command="{Binding SetOSFilterCommand}" CommandParameter="{x:Static vm:OSFilter.Windows}"
+                            FontWeight="{Binding SelectedOS, Converter={StaticResource PriceFilterWeight}, ConverterParameter=Windows}" />
+                </StackPanel>
+
+                <!-- Istoric de cautari recente (max 8, persistat local — vezi
+                     SearchHistoryStore.cs). SIMPLIFICARE DELIBERATA fata de
+                     Mac: acolo e un dropdown de sugestii ancorat sub camp;
+                     aici e un rand de "chip"-uri sub bara, vizibil doar cand
+                     campul e GOL (cand se tasteaza, rezultatele live sunt deja
+                     sub el si un popup ar concura cu ele). Acelasi continut,
+                     fara complexitatea de focus/popup din WPF. -->
+                <StackPanel Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" Orientation="Horizontal" Margin="0,10,0,0">
+                    <StackPanel.Visibility>
+                        <MultiBinding Converter="{StaticResource RecentSearchesVisible}">
+                            <Binding Path="RecentSearches.Count" />
+                            <Binding Path="IsSearching" />
+                        </MultiBinding>
+                    </StackPanel.Visibility>
+                    <TextBlock Text="Recente:" VerticalAlignment="Center" Margin="0,0,8,0"
+                               Style="{StaticResource MutedTextStyle}" />
+                    <ItemsControl ItemsSource="{Binding RecentSearches}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Button Content="{Binding}" Margin="0,0,6,0" Padding="8,3" FontSize="11"
+                                        Command="{Binding DataContext.ApplyRecentSearchCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                        CommandParameter="{Binding}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="Sterge istoricul" Margin="6,0,0,0" Padding="8,3" FontSize="11"
+                            Background="Transparent" BorderThickness="0"
+                            Foreground="{StaticResource InkTextMutedBrush}"
+                            Command="{Binding ClearSearchHistoryCommand}" />
                 </StackPanel>
             </Grid>
 
@@ -808,7 +889,7 @@
 
             <!-- Pagina Catalog -->
             <ScrollViewer Grid.Row="2" Margin="20,10,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Catalog}">
                 <ItemsControl ItemsSource="{Binding ProductsView}">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate>
@@ -820,7 +901,7 @@
 
             <!-- Pagina Cursuri -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Courses}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Courses}">
                 <StackPanel>
                     <TextBlock Text="Cursuri" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun curs disponibil momentan." Style="{StaticResource MutedTextStyle}"
@@ -837,7 +918,7 @@
 
             <!-- Pagina Materiale -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=EducationalResources}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=EducationalResources}">
                 <StackPanel>
                     <TextBlock Text="Materiale" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun material disponibil momentan." Style="{StaticResource MutedTextStyle}"
@@ -854,7 +935,7 @@
 
             <!-- Pagina Evenimente -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Events}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Events}">
                 <StackPanel>
                     <TextBlock Text="Evenimente" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun eveniment momentan." Style="{StaticResource MutedTextStyle}"
@@ -871,7 +952,7 @@
 
             <!-- Pagina Magazine partenere -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=PartnerStores}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=PartnerStores}">
                 <StackPanel>
                     <TextBlock Text="Magazine partenere" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun magazin partener momentan." Style="{StaticResource MutedTextStyle}"
@@ -888,7 +969,7 @@
 
             <!-- Pagina Service & Reparatii -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=ServiceCenters}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=ServiceCenters}">
                 <StackPanel>
                     <TextBlock Text="Service &amp; Reparații Echipament" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun service partener momentan." Style="{StaticResource MutedTextStyle}"
@@ -905,7 +986,7 @@
 
             <!-- Pagina Audio -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=AudioTracks}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=AudioTracks}">
                 <StackPanel>
                     <TextBlock Text="Audio" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Niciun element audio listat momentan." Style="{StaticResource MutedTextStyle}"
@@ -922,7 +1003,7 @@
 
             <!-- Pagina Aplicatii -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Apps}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Apps}">
                 <StackPanel>
                     <TextBlock Text="Aplicatii" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
                     <TextBlock Text="Nicio aplicatie listata momentan." Style="{StaticResource MutedTextStyle}"
@@ -946,7 +1027,7 @@
                  (vezi QrCodeImageGenerator.cs). Fundal alb obligatoriu: QR-ul
                  are nevoie de contrast ca sa fie citit, la fel ca pe Mac. -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Android}">
                 <StackPanel MaxWidth="620" HorizontalAlignment="Left">
                     <TextBlock Text="Aplicatia mobila" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"
@@ -983,7 +1064,7 @@
 
             <!-- Pagina Licenta -->
             <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
-                          Visibility="{Binding CurrentPage, Converter={StaticResource PageVisible}, ConverterParameter=License}">
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=License}">
                 <StackPanel MaxWidth="520" HorizontalAlignment="Left" DataContext="{Binding LicensePane}">
                     <TextBlock Text="Licenta" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,4" />
 
@@ -1086,6 +1167,108 @@
                             </Button>
                         </StackPanel>
                     </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
+                 REZULTATE CAUTARE GLOBALA (Etapa 1, 2026-08-29)
+                 Port 1:1 al `GlobalSearchResults` din ContentView.swift (Mac).
+                 Inlocuieste continutul rubricii curente cand campul de cautare
+                 e nevid (vezi MainViewModel.ContentPage). Fiecare sectiune se
+                 randa DOAR daca are cel putin o potrivire — un titlu fara
+                 rezultate nu apare deloc (NonZeroToVisibility).
+                 Reutilizeaza DataTemplate-urile de card deja definite in
+                 Window.Resources (rezolvate automat dupa DataType) — zero cod
+                 de UI duplicat, exact ca pe Mac.
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=GlobalSearch}">
+                <StackPanel>
+                    <TextBlock Text="Rezultatele cautarii" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+
+                    <TextBlock Text="Niciun rezultat. Incearca alt termen sau schimba filtrul de sistem."
+                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               Visibility="{Binding HasNoSearchResults, Converter={StaticResource BoolToVisibility}}" />
+
+                    <!-- Produse -->
+                    <StackPanel Visibility="{Binding GlobalProducts.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Produse" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,6,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalProducts}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Audio -->
+                    <StackPanel Visibility="{Binding GlobalAudioTracks.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Audio" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalAudioTracks}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Cursuri -->
+                    <StackPanel Visibility="{Binding GlobalCourses.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Cursuri" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalCourses}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Materiale -->
+                    <StackPanel Visibility="{Binding GlobalEducationalResources.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Materiale" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalEducationalResources}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Evenimente -->
+                    <StackPanel Visibility="{Binding GlobalEvents.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Evenimente" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalEvents}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Magazine partenere -->
+                    <StackPanel Visibility="{Binding GlobalPartnerStores.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Magazine partenere" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalPartnerStores}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Service & Reparatii -->
+                    <StackPanel Visibility="{Binding GlobalServiceCenters.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Service &amp; Reparatii" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalServiceCenters}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Aplicatii -->
+                    <StackPanel Visibility="{Binding GlobalApps.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Aplicatii" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalApps}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
                 </StackPanel>
             </ScrollViewer>
         </Grid>

@@ -48,3 +48,16 @@ public sealed class ZeroToVisibilityConverter : IValueConverter
     public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
         throw new NotSupportedException();
 }
+
+/// Inversul lui ZeroToVisibilityConverter: Visible doar cand int-ul e > 0.
+/// Folosit de sectiunile din rezultatele cautarii globale (Etapa 1) — o
+/// sectiune fara nicio potrivire nu se randa DELOC (nici titlu, nici mesaj
+/// "gol"), exact ca `GlobalSearchResults` de pe Mac.
+public sealed class NonZeroToVisibilityConverter : IValueConverter
+{
+    public object Convert(object value, Type targetType, object parameter, CultureInfo culture) =>
+        value is int i && i > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+    public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) =>
+        throw new NotSupportedException();
+}
