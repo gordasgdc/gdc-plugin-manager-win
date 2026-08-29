@@ -51,7 +51,21 @@ public sealed partial class ProductViewModel : ObservableObject
     public string Description => Item.Description;
     public string TypeLabel => Item.Type.Label();
     public string VersionLabel => $"v{Item.Version}";
-    public string PriceLabel => Item.IsFree ? (Item.IsTrial ? "Proba" : "Gratuit") : Item.PriceDisplay;
+    /// Suma AFISATA acum — cea promotionala cat timp promotia e activa
+    /// (Etapa 4), altfel cea normala.
+    public string PriceLabel => Item.IsFree ? (Item.IsTrial ? "Proba" : "Gratuit") : Item.EffectivePriceDisplay;
+
+    // ---- Sustinere promotionala (Etapa 4, 2026-08-29) --------------------
+    // CONFORMITATE (Regula 3, Partea 1): pe produsele PROPRII GDC suma ramane
+    // o DONATIE. Badge-ul spune "Susținere promoțională" — NICIODATA
+    // "reducere"/"discount"/"-X% OFF". Limbajul de discount e permis exclusiv
+    // pe PartnerOffer (brand tert).
+    public bool IsPromoActive => Item.IsPromoActive && !Item.IsFree;
+
+    /// Suma dinainte de promotie, afisata taiata langa cea curenta.
+    public string OriginalPriceLabel => Item.PriceDisplay;
+
+    public string PromoBadgeText => "Susținere promoțională";
 
     /// Badge GRATUIT (verde) / PROBĂ (albastru) / LICENȚĂ (portocaliu) —
     /// cerut explicit 2026-08-24, ca sa nu creeze impresia de "reclama
@@ -108,7 +122,10 @@ public sealed partial class ProductViewModel : ObservableObject
     {
         // Acelasi format ca buyURL din PluginCard (ContentView.swift) —
         // mesaj specific produsului, nu generic ca cel din panoul Licenta.
-        var text = $"Salut! Vreau sa deblochez {Item.Name} cu o donatie de {Item.PriceDisplay}. ID calculator: {MachineID.Display}";
+        // Etapa 4: foloseste EffectivePriceDisplay, deci suma promotionala
+        // activa ajunge automat in mesaj (ca pe Mac) — altfel userul ar cere
+        // deblocarea la suma veche, mai mare, in plina promotie.
+        var text = $"Salut! Vreau sa deblochez {Item.Name} cu o donatie de {Item.EffectivePriceDisplay}. ID calculator: {MachineID.Display}";
         var url = $"https://wa.me/34643109970?text={Uri.EscapeDataString(text)}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }

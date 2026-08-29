@@ -114,6 +114,12 @@
                                     ToolTip="{Binding BadgeTooltip}">
                                 <TextBlock Text="{Binding BadgeText}" FontSize="9" FontWeight="Bold" Foreground="White" />
                             </Border>
+                            <!-- Suma veche, TAIATA — apare doar cat timp promotia
+                                 e activa (Etapa 4), inaintea sumei curente. -->
+                            <TextBlock Text="{Binding OriginalPriceLabel}" Margin="8,0,0,0" FontSize="12"
+                                       VerticalAlignment="Center" Style="{StaticResource MutedTextStyle}"
+                                       TextDecorations="Strikethrough"
+                                       Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}" />
                             <TextBlock Text="{Binding PriceLabel}" FontWeight="SemiBold" Margin="8,0,0,0"
                                        VerticalAlignment="Center"
                                        Visibility="{Binding ShowPrice, Converter={StaticResource BoolToVisibility}}" />
@@ -121,6 +127,16 @@
                         <TextBlock Grid.Column="1" Text="{Binding VersionLabel}" Style="{StaticResource MutedTextStyle}"
                                     VerticalAlignment="Center" />
                     </Grid>
+
+                    <!-- Badge "Susținere promoțională" — NICIODATA
+                         "reducere"/"discount"/"-X% OFF" pe produse proprii GDC
+                         (Regula 3, Partea 1). Limbajul de discount exista
+                         exclusiv pe cardul PartnerOffer (brand tert). -->
+                    <Border Style="{StaticResource BadgeBorderStyle}" Background="#FFB05B00"
+                            HorizontalAlignment="Left" Margin="0,6,0,0"
+                            Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                    </Border>
 
                     <TextBlock Text="Actualizare disponibila" Foreground="{StaticResource BrandBrush}" FontSize="11"
                                Margin="0,6,0,0" Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}" />
@@ -309,6 +325,22 @@
                         </Border>
                     </StackPanel>
 
+
+                    <!-- Susținere promoțională (Etapa 4). Suma veche apare
+                         TAIATA langa cea curenta, cu un badge care spune
+                         explicit "Susținere promoțională" — niciodata
+                         "reducere"/"discount"/"-X%" pe continut propriu GDC
+                         (Regula 3, Partea 1). Randul intreg apare doar cat
+                         timp promotia e activa. -->
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8"
+                                Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="{Binding OriginalPriceLabel}" FontSize="12" VerticalAlignment="Center"
+                                   Style="{StaticResource MutedTextStyle}"
+                                   TextDecorations="Strikethrough" Margin="0,0,8,0" />
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FFB05B00">
+                            <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                    </StackPanel>
                     <!-- Deblocata: buton de descarcare. Blocata: WhatsApp cu ID masina. -->
                     <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding DownloadCommand}"
                             Visibility="{Binding IsUnlocked, Converter={StaticResource BoolToVisibility}}">
@@ -340,6 +372,92 @@
                                 ToolTip="Demo / previzualizare"
                                 Visibility="{Binding HasDemo, Converter={StaticResource BoolToVisibility}}">
                             <ui:SymbolIcon Symbol="Play24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenFacebookCommand}"
+                                ToolTip="Facebook"
+                                Visibility="{Binding HasFacebook, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Share24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenSocialYoutubeCommand}"
+                                ToolTip="YouTube"
+                                Visibility="{Binding HasSocialYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Video24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenInstagramCommand}"
+                                ToolTip="Instagram"
+                                Visibility="{Binding HasInstagram, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Camera24" FontSize="14" />
+                        </Button>
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTiktokCommand}"
+                                ToolTip="TikTok"
+                                Visibility="{Binding HasTiktok, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="14" />
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+        </DataTemplate>
+
+        <!-- ================================================================
+             Un card de Oferta Partenera (Etapa 4, 2026-08-29).
+             SINGURUL card unde limbajul de "discount"/procent e permis — e o
+             relatie comerciala cu un brand TERT. Produsele/resursele proprii
+             GDC folosesc badge-ul "Sustinere promotionala", niciodata acesta.
+             ================================================================ -->
+        <DataTemplate DataType="{x:Type vm:PartnerOfferViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
+                <StackPanel>
+                    <Button Style="{StaticResource CoverButtonStyle}"
+                            Command="{Binding Cover.ShowCommand}"
+                            Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
+                        <Border CornerRadius="6" ClipToBounds="True" Height="140">
+                            <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill" />
+                        </Border>
+                    </Button>
+
+                    <Grid Margin="0,0,0,6">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="{Binding BrandName}" Style="{StaticResource HeadingTextStyle}"
+                                   FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
+                        <!-- Badge ROSU de discount — doar aici, doar daca e completat. -->
+                        <Border Grid.Column="1" Style="{StaticResource BadgeBorderStyle}" Background="#FFE2584A"
+                                Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding DiscountText}" FontSize="11" FontWeight="Bold" Foreground="White" />
+                        </Border>
+                    </Grid>
+
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
+                               TextWrapping="Wrap" Margin="0,0,0,8" />
+
+                    <!-- Cod de cupon + copiere rapida, daca exista. -->
+                    <Grid Margin="0,0,0,8" Visibility="{Binding HasCoupon, Converter={StaticResource BoolToVisibility}}">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <Border Grid.Column="0" Background="{StaticResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="8,5">
+                            <TextBlock Text="{Binding CouponCode}" FontFamily="Consolas" FontSize="13" />
+                        </Border>
+                        <Button Grid.Column="1" Margin="8,0,0,0" Command="{Binding CopyCouponCommand}" ToolTip="Copiaza codul">
+                            <ui:SymbolIcon Symbol="Copy24" FontSize="15" />
+                        </Button>
+                    </Grid>
+
+                    <Button Style="{StaticResource PrimaryButtonStyle}" Command="{Binding OpenCommand}">
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                            <ui:SymbolIcon Symbol="Open24" FontSize="14" Margin="0,0,7,0" />
+                            <TextBlock Text="Vezi oferta" />
+                        </StackPanel>
+                    </Button>
+
+                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                        <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenTutorialCommand}"
+                                ToolTip="Video"
+                                Visibility="{Binding HasYoutube, Converter={StaticResource BoolToVisibility}}">
+                            <ui:SymbolIcon Symbol="Info24" FontSize="14" />
                         </Button>
                         <Button Style="{StaticResource ExtraLinkButtonStyle}" Command="{Binding OpenFacebookCommand}"
                                 ToolTip="Facebook"
@@ -739,6 +857,15 @@
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Wrench24" FontSize="16" Margin="0,0,10,0" />
                         <TextBlock Text="Service &amp; Reparații" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <!-- Oferte Parteneri (Etapa 4, 2026-08-29) — grup COMUNITATE. -->
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowPartnerOffersCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerOffers, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,10,0" Foreground="#E2584A" />
+                        <TextBlock Text="Oferte Parteneri" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
@@ -1364,6 +1491,25 @@
             </ScrollViewer>
 
             <!-- ================================================================
+                 OFERTE PARTENERI (Etapa 4, 2026-08-29)
+                 Filtrate deja de scheduling in MainViewModel — o oferta
+                 expirata nu ajunge niciodata in colectie.
+                 ================================================================ -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=PartnerOffers}">
+                <StackPanel>
+                    <TextBlock Text="Oferte Parteneri" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio oferta activa momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding PartnerOffers.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding PartnerOffers}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ================================================================
                  APLICATIILE MELE (Etapa 3, 2026-08-29)
                  Aplicatiile GDC gasite instalate pe masina asta (Registry,
                  cheile de dezinstalare Inno Setup) + scurtaturi personalizate
@@ -1644,6 +1790,16 @@
                     <StackPanel Visibility="{Binding GlobalServiceCenters.Count, Converter={StaticResource NonZeroToVisibility}}">
                         <TextBlock Text="Service &amp; Reparatii" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
                         <ItemsControl ItemsSource="{Binding GlobalServiceCenters}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Oferte Parteneri (a 10-a colectie, Etapa 4) -->
+                    <StackPanel Visibility="{Binding GlobalPartnerOffers.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Oferte Parteneri" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalPartnerOffers}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>

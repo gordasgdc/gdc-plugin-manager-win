@@ -233,6 +233,93 @@ public static class CatalogAssets
     }
 }
 
+/// Converter pentru datele scrise de Furnizorul Mac (Etapa 4, 2026-08-29).
+///
+/// ATENTIE — CAPCANA DE ENCODING, VERIFICATA PE CATALOGUL LIVE, nu presupusa:
+/// Furnizorul serializeaza cu `JSONEncoder()` FARA `dateEncodingStrategy`.
+/// Strategia implicita a lui Foundation e `.deferredToDate`, care scrie un
+/// `Date` ca NUMAR — secunde (cu fractiuni) de la **2001-01-01 00:00:00 UTC**,
+/// referinta `NSDate`/Core Data. NU e ISO-8601 si NU e epoch Unix.
+///
+/// Dovada directa (catalog.json live, 2026-08-29): `startDate: 809661338.59`.
+///   - citit ca epoch Unix  -> 1995-08-29  (absurd)
+///   - citit ca referinta 2001 -> 2026-08-29  (exact ziua curenta)
+///
+/// O legare naiva la `DateTimeOffset`/ISO ar fi plasat TACUT toate datele in
+/// 1970/1995, iar `IsActiveNow` ar fi returnat false peste tot -> fiecare
+/// element programat (evenimente, oferte, pachete) ar fi devenit INVIZIBIL in
+/// client, fara nicio eroare. De-asta conversia e explicita si testata.
+public sealed class SwiftDateJsonConverter : JsonConverter<DateTime>
+{
+    /// 2001-01-01 00:00:00 UTC — referinta `Date`-urilor codate de Swift.
+    private static readonly DateTime SwiftEpoch = new(2001, 1, 1, 0, 0, 0, DateTimeKind.Utc);
+
+    public override DateTime Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        // Valorile au fractiuni de secunda (ex. 809661338.592533), deci Double,
+        // nu Int64.
+        if (reader.TokenType == JsonTokenType.Number)
+        {
+            return SwiftEpoch.AddSeconds(reader.GetDouble());
+        }
+
+        // Tolerant, defensiv: daca vreodata Furnizorul trece pe ISO-8601,
+        // citirea nu trebuie sa crape brusc pe clientii deja instalati.
+        if (reader.TokenType == JsonTokenType.String
+            && DateTime.TryParse(reader.GetString(), System.Globalization.CultureInfo.InvariantCulture,
+                System.Globalization.DateTimeStyles.AdjustToUniversal | System.Globalization.DateTimeStyles.AssumeUniversal,
+                out var parsed))
+        {
+            return parsed;
+        }
+
+        throw new JsonException("Data nu a putut fi interpretata (nici numar, nici ISO-8601).");
+    }
+
+    public override void Write(Utf8JsonWriter writer, DateTime value, JsonSerializerOptions options) =>
+        writer.WriteNumberValue((value.ToUniversalTime() - SwiftEpoch).TotalSeconds);
+}
+
+/// Port 1:1 al Scheduling.swift (Etapa 4, 2026-08-29) — valabilitate temporala
+/// optionala (From - To), aplicata pe TOATE modelele. `null` (struct absent) =
+/// mereu vizibil, comportament identic cu inainte de Etapa 4.
+public sealed record Scheduling
+{
+    [JsonConverter(typeof(SwiftDateJsonConverter))]
+    public DateTime? StartDate { get; init; }
+
+    [JsonConverter(typeof(SwiftDateJsonConverter))]
+    public DateTime? EndDate { get; init; }
+
+    /// True daca acest continut ar trebui sa fie vizibil ACUM. Fara StartDate
+    /// = deja pornit; fara EndDate = nu expira niciodata.
+    ///
+    /// Comparat cu ora DISPOZITIVULUI (UTC), nu cu a serverului — exact ca pe
+    /// Mac; suficient pentru acest caz, fara sincronizare de timp.
+    [JsonIgnore]
+    public bool IsActiveNow
+    {
+        get
+        {
+            var now = DateTime.UtcNow;
+            if (StartDate is { } start && now < start) return false;
+            if (EndDate is { } end && now > end) return false;
+            return true;
+        }
+    }
+
+    [JsonIgnore]
+    public bool IsEmpty => StartDate is null && EndDate is null;
+}
+
+/// Helper pentru filtrarea oricarei colectii dupa `Scheduling` — un singur loc
+/// care stie regula "fara scheduling = mereu vizibil", ca sa nu fie rescrisa
+/// la fiecare punct de randare.
+public static class SchedulingExtensions
+{
+    public static bool IsVisibleNow(this Scheduling? scheduling) => scheduling?.IsActiveNow ?? true;
+}
+
 /// Port 1:1 al SocialLinks.swift (Etapa 2, 2026-08-29) — set optional de
 /// linkuri catre retelele sociale ale unui produs/resurse. Toate 100%
 /// optionale: daca un camp e null, iconita corespunzatoare NU apare deloc pe
@@ -322,9 +409,34 @@ public sealed class PluginItem
     /// publicat inainte de Etapa 2.
     public SocialLinks? SocialLinks { get; init; }
 
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29).
+    public Scheduling? Scheduling { get; init; }
+
+    /// Suma de sustinere PROMOTIONALA, temporara — activa DOAR cat timp
+    /// `Scheduling` e activ (vezi EffectivePriceEUR).
+    ///
+    /// CONFORMITATE (Regula 3, Partea 1): ramane 100% DONATIE. Se afiseaza cu
+    /// suma veche taiata + badge "Sustinere promotionala" — NICIODATA
+    /// "reducere"/"discount"/"-X% OFF". Limbajul de discount e rezervat
+    /// EXCLUSIV lui PartnerOffer (relatie comerciala cu un brand tert).
+    public double? PromoPriceEUR { get; init; }
+
     /// URL-ul absolut al copertii, gata de incarcat (null daca nu are).
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
+
+    /// Suma de afisat ACUM — cea promotionala daca e setata SI scheduling-ul e
+    /// activ; altfel cea normala.
+    [JsonIgnore]
+    public double EffectivePriceEUR =>
+        PromoPriceEUR is { } promo && (Scheduling?.IsActiveNow ?? false) ? promo : PriceEUR;
+
+    [JsonIgnore]
+    public bool IsPromoActive => PromoPriceEUR is not null && (Scheduling?.IsActiveNow ?? false);
+
+    [JsonIgnore]
+    public string EffectivePriceDisplay =>
+        EffectivePriceEUR.ToString("C", new System.Globalization.CultureInfo("ro-RO") { NumberFormat = { CurrencySymbol = "EUR" } });
 
     /// True pentru un pack cu mai multe fisiere — se instaleaza intr-un
     /// subfolder propriu, nu liber la radacina folderului Resolve.
@@ -394,6 +506,13 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             SocialLinks = root.TryGetProperty("socialLinks", out var social) && social.ValueKind == JsonValueKind.Object
                 ? JsonSerializer.Deserialize<SocialLinks>(social.GetRawText(), options)
                 : null,
+            // Chei noi (Etapa 4, 2026-08-29) — retrocompatibile.
+            Scheduling = root.TryGetProperty("scheduling", out var sched) && sched.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<Scheduling>(sched.GetRawText(), options)
+                : null,
+            PromoPriceEUR = root.TryGetProperty("promoPriceEUR", out var promo) && promo.ValueKind == JsonValueKind.Number
+                ? promo.GetDouble()
+                : null,
         };
     }
 
@@ -424,6 +543,12 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             writer.WritePropertyName("socialLinks");
             JsonSerializer.Serialize(writer, value.SocialLinks, options);
         }
+        if (value.Scheduling is not null)
+        {
+            writer.WritePropertyName("scheduling");
+            JsonSerializer.Serialize(writer, value.Scheduling, options);
+        }
+        if (value.PromoPriceEUR is { } promoOut) writer.WriteNumber("promoPriceEUR", promoOut);
         writer.WriteEndObject();
     }
 }
@@ -451,6 +576,10 @@ public sealed record Course
     /// `.cover` (max 1600px), ca sa se vada detaliul intr-un preview marit.
     public string? CoverImage { get; init; }
 
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -467,6 +596,10 @@ public sealed record AppLink
     /// Coperta aplicatiei — preset `.icon`, adaugat 2026-08-24. Catalogul
     /// vechi (fara aceasta cheie) decodeaza cu null automat.
     public string? CoverImage { get; init; }
+
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -485,6 +618,10 @@ public sealed record AudioTrack
 
     /// Coperta — preset `.icon`, la fel ca AppLink.
     public string? CoverImage { get; init; }
+
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -528,6 +665,10 @@ public sealed record EducationalResource
     /// Coperta materialului (coperta cartii/cursului) — preset `.cover`.
     public string? CoverImage { get; init; }
 
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -550,6 +691,10 @@ public sealed record Event
     /// marit conteaza cel mai mult.
     public string? CoverImage { get; init; }
 
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -567,6 +712,10 @@ public sealed record PartnerStore
     /// PNG cu fundal transparent, ImageProcessor (Mac) il pastreaza PNG in
     /// loc sa-l aplatizeze pe alb.
     public string? CoverImage { get; init; }
+
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -598,6 +747,10 @@ public sealed record ServiceCenter
     /// Site sau locatie (Google Maps) — optional.
     public string? WebsiteURL { get; init; }
     public string? CoverImage { get; init; }
+
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
+    /// null = mereu vizibil (retrocompatibil).
+    public Scheduling? Scheduling { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -704,11 +857,29 @@ public sealed class DownloadableResource
     public bool IsTrial { get; init; }
     public double PriceEUR { get; init; }
 
+    /// Valabilitate temporala optionala — Etapa 4 (2026-08-29).
+    public Scheduling? Scheduling { get; init; }
+
+    /// Suma de sustinere promotionala — aceleasi reguli de conformitate ca la
+    /// PluginItem.PromoPriceEUR (ramane donatie, niciodata "reducere").
+    public double? PromoPriceEUR { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 
     [JsonIgnore]
     public string PriceDisplay => PriceEUR.ToString("C", new System.Globalization.CultureInfo("ro-RO") { NumberFormat = { CurrencySymbol = "EUR" } });
+
+    [JsonIgnore]
+    public double EffectivePriceEUR =>
+        PromoPriceEUR is { } promo && (Scheduling?.IsActiveNow ?? false) ? promo : PriceEUR;
+
+    [JsonIgnore]
+    public bool IsPromoActive => PromoPriceEUR is not null && (Scheduling?.IsActiveNow ?? false);
+
+    [JsonIgnore]
+    public string EffectivePriceDisplay =>
+        EffectivePriceEUR.ToString("C", new System.Globalization.CultureInfo("ro-RO") { NumberFormat = { CurrencySymbol = "EUR" } });
 }
 
 /// Converter custom pentru DownloadableResource — necesar (nu se poate lasa pe
@@ -742,6 +913,13 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             IsFree = !root.TryGetProperty("isFree", out var free) || free.GetBoolean(),
             IsTrial = root.TryGetProperty("isTrial", out var trial) && trial.GetBoolean(),
             PriceEUR = root.TryGetProperty("priceEUR", out var price) ? price.GetDouble() : 0,
+            // Chei noi (Etapa 4, 2026-08-29) — retrocompatibile.
+            Scheduling = root.TryGetProperty("scheduling", out var sched) && sched.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<Scheduling>(sched.GetRawText(), options)
+                : null,
+            PromoPriceEUR = root.TryGetProperty("promoPriceEUR", out var promo) && promo.ValueKind == JsonValueKind.Number
+                ? promo.GetDouble()
+                : null,
         };
     }
 
@@ -765,11 +943,46 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             writer.WritePropertyName("socialLinks");
             JsonSerializer.Serialize(writer, value.SocialLinks, options);
         }
+        if (value.Scheduling is not null)
+        {
+            writer.WritePropertyName("scheduling");
+            JsonSerializer.Serialize(writer, value.Scheduling, options);
+        }
         writer.WriteBoolean("isFree", value.IsFree);
         writer.WriteBoolean("isTrial", value.IsTrial);
         writer.WriteNumber("priceEUR", value.PriceEUR);
+        if (value.PromoPriceEUR is { } promoOut) writer.WriteNumber("promoPriceEUR", promoOut);
         writer.WriteEndObject();
     }
+}
+
+/// Port 1:1 al PartnerOffer.swift (Etapa 4, 2026-08-29) — o oferta/promotie de
+/// la un brand PARTENER (ex. discount la echipament foto/video).
+///
+/// DECIZIE DE SCOP EXPLICITA, portata de pe Mac: limbajul de "discount"/"%" e
+/// PERMIS aici, spre deosebire de produsele/resursele PROPRII GDC. Regula 3
+/// (Partea 1) acopera continutul propriu — acesta e o relatie comerciala cu un
+/// tert, unde un discount chiar e un discount. Badge-ul rosu de reducere
+/// exista DOAR pe acest model.
+public sealed record PartnerOffer
+{
+    public required string Id { get; init; }
+    /// Numele brandului/partenerului (ex. "Aputure", "Nanlite").
+    public required string BrandName { get; init; }
+    public required string Description { get; init; }
+    /// Text LIBER de discount, afisat ca badge (ex. "-20%", "2 la pret de 1")
+    /// — text, nu procent numeric, ca sa acopere si cazuri non-procentuale.
+    public string? DiscountText { get; init; }
+    public string? CouponCode { get; init; }
+    /// Link catre magazinul/produsul partenerului.
+    public required string Url { get; init; }
+    public string? YoutubeURL { get; init; }
+    public string? CoverImage { get; init; }
+    public SocialLinks? SocialLinks { get; init; }
+    public Scheduling? Scheduling { get; init; }
+
+    [JsonIgnore]
+    public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
 
 /// Port 1:1 al Catalog.swift. Fiecare colectie default la lista goala daca
@@ -791,4 +1004,7 @@ public sealed class Catalog
     /// Resurse de download direct (LUT/SFX/VFX/Plugin) — Etapa 2 (2026-08-29).
     /// Default `[]`: orice catalog publicat inainte decodeaza curat.
     public IReadOnlyList<DownloadableResource> DownloadableResources { get; init; } = [];
+
+    /// Oferte/Promotii de la branduri partenere — Etapa 4 (2026-08-29).
+    public IReadOnlyList<PartnerOffer> PartnerOffers { get; init; } = [];
 }

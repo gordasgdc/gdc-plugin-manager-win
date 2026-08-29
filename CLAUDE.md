@@ -826,3 +826,62 @@ persistate în `%AppData%\GDCPluginManager\custom-launchers.json` (pe Mac:
 a cheilor de Registry — acest Mac n-are Registry. Logica e scrisă defensiv
 (orice vedere inaccesibilă e sărită, nu oprește căutarea), dar detectarea în
 sine TREBUIE confirmată o dată pe mașina de test.
+
+### Etapa 4 — Scheduling pe toate modelele + Oferte Parteneri + sumă promoțională
+
+**CAPCANA DE ENCODING — verificată pe catalogul LIVE, nu presupusă.**
+Furnizorul Mac serializează cu `JSONEncoder()` fără `dateEncodingStrategy`.
+Strategia implicită a lui Foundation (`.deferredToDate`) scrie un `Date` ca
+**NUMĂR** — secunde (cu fracțiuni) de la **2001-01-01 00:00:00 UTC**
+(referința `NSDate`/Core Data). NU e ISO-8601 și NU e epoch Unix.
+
+Dovadă directă, luată cu `curl` din `gordas.dev/catalog.json` (2026-08-29):
+`"scheduling":{"startDate":809661338.592533,"endDate":815021738.592533}`
+- citit ca epoch Unix → **1995-08-29** (absurd)
+- citit cu referința 2001 → **2026-08-29** (exact ziua curentă)
+
+`SwiftDateJsonConverter` (Core, nou) face conversia explicit
+(`new DateTime(2001,1,1,0,0,0,DateTimeKind.Utc).AddSeconds(v)`), citind
+**Double** (valorile au fracțiuni de secundă, nu sunt întregi). O legare naivă
+la `DateTimeOffset`/ISO ar fi plasat TĂCUT toate datele în 1995, `IsActiveNow`
+ar fi fost false peste tot, și **fiecare element programat ar fi devenit
+invizibil în client, fără nicio eroare**. Converterul acceptă defensiv și un
+string ISO-8601, ca o eventuală schimbare viitoare de partea Furnizorului să
+nu spargă clienții deja instalați.
+
+`Scheduling` (Core, nou) + `SchedulingExtensions.IsVisibleNow()` (un singur
+loc care știe regula "fără scheduling = mereu vizibil"). Adăugat pe TOATE
+modelele: `PluginItem`, `AppLink`, `AudioTrack`, `Course`,
+`EducationalResource`, `Event`, `PartnerStore`, `ServiceCenter`,
+`DownloadableResource`, `PartnerOffer`. Filtrarea se aplică la popularea
+fiecărei colecții în `RebuildFromCatalog` — deci acoperă automat și căutarea
+globală (care derivă din aceleași colecții), fără o a doua listă de condiții.
+
+`PartnerOffer` (Core, nou) + sidebar + grid + a 10-a colecție în căutarea
+globală. **Decizie de scop explicită, portată de pe Mac**: badge-ul ROȘU cu
+limbaj de discount/procent există DOAR pe acest card — e o relație comercială
+cu un brand terț. `discountText` e text liber (acoperă și "2 la preț de 1").
+Cod de cupon cu buton de copiere.
+
+`PromoPriceEUR`/`EffectivePriceEUR`/`IsPromoActive` pe `PluginItem` și
+`DownloadableResource`. **CONFORMITATE (Regula 3, Partea 1)**: pe conținut
+PROPRIU GDC suma rămâne DONAȚIE — se afișează suma veche TĂIATĂ + badge
+**"Susținere promoțională"**, NICIODATĂ "reducere"/"discount"/"-X% OFF".
+Promoția e activă doar cât timp `scheduling` e activ (o promo fără scheduling
+NU se aplică — verificat, identic cu Mac). Mesajul WhatsApp de deblocare
+folosește `EffectivePriceDisplay`, deci suma promoțională activă ajunge automat
+în mesaj — altfel userul ar fi cerut deblocarea la suma veche, mai mare, în
+plină promoție.
+
+**Verificat**: `dotnet build` — 0 erori, 0 avertismente. Harness-ul din
+scratchpad extins la 24 de verificări, dintre care decodarea
+**catalogului LIVE real** descărcat de pe gordas.dev: 4 produse, 7 evenimente,
+1 ofertă parteneră, scheduling-ul evenimentului real citit corect ca
+`2026-08-29`, plus round-trip de dată, ferestre expirate/viitoare/deschise, și
+comportamentul prețului promoțional în toate cele 4 combinații. Toate au trecut.
+
+**Observație reală despre catalogul live** (nu un bug al portului): oferta
+parteneră și pachetul publicate acum au ferestre de scheduling DEJA EXPIRATE
+(s-au încheiat la 23:57 și 01:10, ora curentă 03:43), iar oferta e o intrare de
+test (`brandName: "test"`, `discountText` gol). Cu filtrarea corectă, ele NU
+apar în client — comportament corect, de așteptat, nu o regresie.

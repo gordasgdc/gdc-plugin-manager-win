@@ -37,6 +37,8 @@ public enum SidebarPage
     Events,
     PartnerStores,
     ServiceCenters,
+    /// Oferte de la branduri partenere (Etapa 4, 2026-08-29).
+    PartnerOffers,
     Apps,
     Android,
     License,
@@ -74,6 +76,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ServiceCenterViewModel> ServiceCenters { get; } = [];
     public ObservableCollection<AppLinkViewModel> Apps { get; } = [];
     public ObservableCollection<AudioTrackViewModel> AudioTracks { get; } = [];
+    /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
+    public ObservableCollection<PartnerOfferViewModel> PartnerOffers { get; } = [];
 
     // ---- Resurse Download (Etapa 2) --------------------------------------
     // Cate o colectie per categorie, ca fiecare rubrica din sidebar sa lege
@@ -109,6 +113,8 @@ public sealed partial class MainViewModel : ObservableObject
     /// Etapa 2: a 9-a colectie din cautarea globala (ca pe Mac, unde
     /// `GlobalSearchResults` a trecut de la 8 la 9 sectiuni).
     public ObservableCollection<DownloadResourceViewModel> GlobalDownloadResources { get; } = [];
+    /// A 10-a colectie din cautarea globala — Etapa 4.
+    public ObservableCollection<PartnerOfferViewModel> GlobalPartnerOffers { get; } = [];
 
     /// Istoric de cautari recente, persistat local (max 8, fara duplicate) —
     /// vezi SearchHistoryStore.cs.
@@ -133,7 +139,7 @@ public sealed partial class MainViewModel : ObservableObject
         && GlobalEducationalResources.Count == 0 && GlobalEvents.Count == 0
         && GlobalPartnerStores.Count == 0 && GlobalServiceCenters.Count == 0
         && GlobalApps.Count == 0 && GlobalAudioTracks.Count == 0
-        && GlobalDownloadResources.Count == 0;
+        && GlobalDownloadResources.Count == 0 && GlobalPartnerOffers.Count == 0;
 
     public LicensePaneViewModel LicensePane { get; }
 
@@ -378,6 +384,7 @@ public sealed partial class MainViewModel : ObservableObject
         GlobalApps.Clear();
         GlobalAudioTracks.Clear();
         GlobalDownloadResources.Clear();
+        GlobalPartnerOffers.Clear();
 
         var query = SearchText;
         if (!string.IsNullOrWhiteSpace(query))
@@ -438,6 +445,13 @@ public sealed partial class MainViewModel : ObservableObject
                 if (!MatchesOS(r.Resource.SupportedOS)) continue;
                 if (FuzzySearch.MatchesAny(query, r.Name, r.Description, r.Resource.Id, r.CategoryLabel))
                     GlobalDownloadResources.Add(r);
+            }
+
+            // A 10-a colectie (Etapa 4) — oferte de la branduri partenere.
+            foreach (var offer in PartnerOffers)
+            {
+                if (FuzzySearch.MatchesAny(query, offer.BrandName, offer.Description, offer.Offer.Id, offer.DiscountText))
+                    GlobalPartnerOffers.Add(offer);
             }
         }
 
@@ -537,6 +551,9 @@ public sealed partial class MainViewModel : ObservableObject
     private void ShowServiceCenters() => CurrentPage = SidebarPage.ServiceCenters;
 
     [RelayCommand]
+    private void ShowPartnerOffers() => CurrentPage = SidebarPage.PartnerOffers;
+
+    [RelayCommand]
     private void ShowApps() => CurrentPage = SidebarPage.Apps;
 
     /// Deschide "Aplicatiile Mele" si redetecteaza la fiecare intrare —
@@ -606,49 +623,55 @@ public sealed partial class MainViewModel : ObservableObject
     private void RebuildFromCatalog()
     {
         Products.Clear();
-        foreach (var item in CatalogService.Shared.Items)
+        foreach (var item in CatalogService.Shared.Items.Where(x => x.Scheduling.IsVisibleNow()))
         {
             Products.Add(new ProductViewModel(item));
         }
 
         Courses.Clear();
-        foreach (var course in CatalogService.Shared.Courses)
+        foreach (var course in CatalogService.Shared.Courses.Where(x => x.Scheduling.IsVisibleNow()))
         {
             Courses.Add(new CourseViewModel(course));
         }
 
         EducationalResources.Clear();
-        foreach (var resource in CatalogService.Shared.EducationalResources)
+        foreach (var resource in CatalogService.Shared.EducationalResources.Where(x => x.Scheduling.IsVisibleNow()))
         {
             EducationalResources.Add(new EducationalResourceViewModel(resource));
         }
 
         Events.Clear();
-        foreach (var ev in CatalogService.Shared.Events)
+        foreach (var ev in CatalogService.Shared.Events.Where(x => x.Scheduling.IsVisibleNow()))
         {
             Events.Add(new EventViewModel(ev));
         }
 
         PartnerStores.Clear();
-        foreach (var store in CatalogService.Shared.PartnerStores)
+        foreach (var store in CatalogService.Shared.PartnerStores.Where(x => x.Scheduling.IsVisibleNow()))
         {
             PartnerStores.Add(new PartnerStoreViewModel(store));
         }
 
         ServiceCenters.Clear();
-        foreach (var center in CatalogService.Shared.ServiceCenters)
+        foreach (var center in CatalogService.Shared.ServiceCenters.Where(x => x.Scheduling.IsVisibleNow()))
         {
             ServiceCenters.Add(new ServiceCenterViewModel(center));
         }
 
+        PartnerOffers.Clear();
+        foreach (var offer in CatalogService.Shared.PartnerOffers.Where(x => x.Scheduling.IsVisibleNow()))
+        {
+            PartnerOffers.Add(new PartnerOfferViewModel(offer));
+        }
+
         Apps.Clear();
-        foreach (var app in CatalogService.Shared.Apps)
+        foreach (var app in CatalogService.Shared.Apps.Where(x => x.Scheduling.IsVisibleNow()))
         {
             Apps.Add(new AppLinkViewModel(app));
         }
 
         AudioTracks.Clear();
-        foreach (var track in CatalogService.Shared.AudioTracks)
+        foreach (var track in CatalogService.Shared.AudioTracks.Where(x => x.Scheduling.IsVisibleNow()))
         {
             AudioTracks.Add(new AudioTrackViewModel(track));
         }
@@ -661,7 +684,7 @@ public sealed partial class MainViewModel : ObservableObject
         DownloadSfx.Clear();
         DownloadVfx.Clear();
         DownloadPlugins.Clear();
-        foreach (var resource in CatalogService.Shared.DownloadableResources)
+        foreach (var resource in CatalogService.Shared.DownloadableResources.Where(x => x.Scheduling.IsVisibleNow()))
         {
             var vm = new DownloadResourceViewModel(resource);
             _allDownloadResources.Add(vm);

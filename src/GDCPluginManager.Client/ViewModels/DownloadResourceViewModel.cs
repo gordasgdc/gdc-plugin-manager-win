@@ -42,7 +42,15 @@ public sealed partial class DownloadResourceViewModel : ObservableObject
         ? (Resource.IsTrial ? Brushes.DodgerBlue : Brushes.MediumSeaGreen)
         : Brushes.DarkOrange;
     public bool ShowPrice => !Resource.IsFree;
-    public string PriceLabel => Resource.PriceDisplay;
+    /// Suma AFISATA acum — cea promotionala cat timp promotia e activa
+    /// (Etapa 4), altfel cea normala.
+    public string PriceLabel => Resource.EffectivePriceDisplay;
+
+    /// Vezi ProductViewModel: pe continut PROPRIU GDC badge-ul spune
+    /// "Susținere promoțională", niciodata "reducere"/"discount".
+    public bool IsPromoActive => Resource.IsPromoActive && !Resource.IsFree;
+    public string OriginalPriceLabel => Resource.PriceDisplay;
+    public string PromoBadgeText => "Susținere promoțională";
 
     public string OSBadgeSymbol => Resource.SupportedOS.BadgeSymbol();
 
@@ -75,7 +83,7 @@ public sealed partial class DownloadResourceViewModel : ObservableObject
     [RelayCommand]
     private void Buy()
     {
-        var text = $"Salut! Vreau sa deblochez {Resource.Name} cu o donatie de {Resource.PriceDisplay}. ID calculator: {MachineID.Display}";
+        var text = $"Salut! Vreau sa deblochez {Resource.Name} cu o donatie de {Resource.EffectivePriceDisplay}. ID calculator: {MachineID.Display}";
         var url = $"https://wa.me/34643109970?text={Uri.EscapeDataString(text)}";
         Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
     }

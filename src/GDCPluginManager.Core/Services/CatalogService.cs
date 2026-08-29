@@ -31,6 +31,8 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<ServiceCenter> ServiceCenters { get; private set; } = [];
     /// Resurse de download direct (LUT/SFX/VFX/Plugin) — Etapa 2 (2026-08-29).
     public IReadOnlyList<DownloadableResource> DownloadableResources { get; private set; } = [];
+    /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
+    public IReadOnlyList<PartnerOffer> PartnerOffers { get; private set; } = [];
     public bool IsLoading { get; private set; }
     public string? LoadError { get; private set; }
 
@@ -85,6 +87,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             PartnerStores = catalog.PartnerStores;
             ServiceCenters = catalog.ServiceCenters;
             DownloadableResources = catalog.DownloadableResources;
+            PartnerOffers = catalog.PartnerOffers;
             Raise(nameof(Items));
             Raise(nameof(Courses));
             Raise(nameof(Apps));
@@ -94,6 +97,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(PartnerStores));
             Raise(nameof(ServiceCenters));
             Raise(nameof(DownloadableResources));
+            Raise(nameof(PartnerOffers));
             SaveToCache(data);
         }
         catch (CatalogFetchException ex)
@@ -148,6 +152,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             PartnerStores = catalog.PartnerStores;
             ServiceCenters = catalog.ServiceCenters;
             DownloadableResources = catalog.DownloadableResources;
+            PartnerOffers = catalog.PartnerOffers;
         }
         catch
         {
