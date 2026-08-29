@@ -5,6 +5,15 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.19.13 (2026-08-29) — Bump doar de versiune, ca să validăm end-to-end fix-ul de self-update din v1.19.12
+
+Fără schimbare de cod. Cauza reală a "imaginilor invizibile" (blocaj La Liga
+pe intervalul Cloudflare al `gordas.dev`, rezolvat prin DNS-only direct pe
+GitHub Pages) e reparată definitiv la nivel de infrastructură — acest bump
+există doar ca să existe o versiune "nouă" de descărcat, ca să confirmăm
+manual, o dată, că self-updater-ul reparat în v1.19.12 chiar funcționează
+din program (nu doar verificat automat "arhiva se descarcă integru").
+
 ## v1.19.12 (2026-08-29) — Fix real: self-update din program eșua tăcut, cădea pe "Deschide pagina"
 
 - Cauza reală (raportată de Cristi: "de ce trebuie tot timpul să descarc

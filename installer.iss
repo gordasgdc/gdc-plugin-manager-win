@@ -17,7 +17,7 @@
 ;   4. Rezultatul apare in Output\GDCPluginManagerSetup.exe
 
 #define MyAppName "GDC Plugin Manager"
-#define MyAppVersion "1.19.12"
+#define MyAppVersion "1.19.13"
 #define MyAppPublisher "Cristi Gordas"
 #define MyAppExeName "GDCPluginManager.exe"
 #define MyAppURL "https://gordas.dev"
