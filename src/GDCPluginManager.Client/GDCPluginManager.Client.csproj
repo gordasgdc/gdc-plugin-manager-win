@@ -46,6 +46,15 @@
          Window.Icon (title bar/taskbar la runtime) — ApplicationIcon de mai
          sus seteaza doar iconita exe-ului in Explorer. -->
     <Resource Include="Assets\app.ico" />
+    <!-- Iconite de brand colorate (2026-08-29, CLAUDE.md Regula social
+         links) — PNG, nu SVG: lectia de pe Mac (ImageIO nu randeaza <text>)
+         a fost portata ca precautie generala, plus WPF/BitmapImage decodeaza
+         PNG nativ, fara nicio dependinta suplimentara. -->
+    <Resource Include="Assets\Social\facebook.png" />
+    <Resource Include="Assets\Social\youtube.png" />
+    <Resource Include="Assets\Social\instagram.png" />
+    <Resource Include="Assets\Social\tiktok.png" />
+    <Resource Include="Assets\Social\linkedin.png" />
   </ItemGroup>
 
   <ItemGroup>

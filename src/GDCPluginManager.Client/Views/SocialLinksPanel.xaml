@@ -1,0 +1,49 @@
+<UserControl x:Class="GDCPluginManager.Client.Views.SocialLinksPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:svc="clr-namespace:GDCPluginManager.Client.Services"
+             xmlns:conv="clr-namespace:GDCPluginManager.Client.Converters"
+             x:Name="Root">
+    <!-- Port 1:1 al SocialLinksRow/ExtraLinksRow din ContentView.swift
+         (Mac) — iconițe de brand COLORATE (PNG bundle-uit, nu SVG: aceeași
+         precauție ca la filigranul sezonier, ImageIO pe Mac nu randează
+         <text>, deci PNG e alegerea implicit sigură peste tot în ecosistem),
+         afișate DOAR dacă linkul corespunzător e completat. Reutilizat de
+         toate cele 6 tipuri de card care au căpătat `SocialLinks` — Course,
+         AppLink, EducationalResource, Event, PartnerStore, ServiceCenter. -->
+    <UserControl.Resources>
+        <conv:NullToVisibilityConverter x:Key="NullToVis" />
+    </UserControl.Resources>
+    <StackPanel Orientation="Horizontal" DataContext="{Binding SocialLinks, ElementName=Root}">
+        <Button Visibility="{Binding FacebookURL, Converter={StaticResource NullToVis}}"
+                Command="{x:Static svc:SocialLinkCommands.Open}" CommandParameter="{Binding FacebookURL}"
+                ToolTip="Deschide pagina de Facebook" Background="Transparent" BorderThickness="0"
+                Padding="2" Margin="0,0,4,0">
+            <Image Source="/Assets/Social/facebook.png" Width="16" Height="16" />
+        </Button>
+        <Button Visibility="{Binding YoutubeURL, Converter={StaticResource NullToVis}}"
+                Command="{x:Static svc:SocialLinkCommands.Open}" CommandParameter="{Binding YoutubeURL}"
+                ToolTip="Vezi canalul de YouTube" Background="Transparent" BorderThickness="0"
+                Padding="2" Margin="0,0,4,0">
+            <Image Source="/Assets/Social/youtube.png" Width="16" Height="16" />
+        </Button>
+        <Button Visibility="{Binding InstagramURL, Converter={StaticResource NullToVis}}"
+                Command="{x:Static svc:SocialLinkCommands.Open}" CommandParameter="{Binding InstagramURL}"
+                ToolTip="Deschide pagina de Instagram" Background="Transparent" BorderThickness="0"
+                Padding="2" Margin="0,0,4,0">
+            <Image Source="/Assets/Social/instagram.png" Width="16" Height="16" />
+        </Button>
+        <Button Visibility="{Binding TiktokURL, Converter={StaticResource NullToVis}}"
+                Command="{x:Static svc:SocialLinkCommands.Open}" CommandParameter="{Binding TiktokURL}"
+                ToolTip="Deschide contul de TikTok" Background="Transparent" BorderThickness="0"
+                Padding="2" Margin="0,0,4,0">
+            <Image Source="/Assets/Social/tiktok.png" Width="16" Height="16" />
+        </Button>
+        <Button Visibility="{Binding LinkedinUrl, Converter={StaticResource NullToVis}}"
+                Command="{x:Static svc:SocialLinkCommands.Open}" CommandParameter="{Binding LinkedinUrl}"
+                ToolTip="Deschide pagina de LinkedIn" Background="Transparent" BorderThickness="0"
+                Padding="2">
+            <Image Source="/Assets/Social/linkedin.png" Width="16" Height="16" />
+        </Button>
+    </StackPanel>
+</UserControl>

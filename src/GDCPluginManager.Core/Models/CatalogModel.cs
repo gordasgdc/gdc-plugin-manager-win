@@ -380,12 +380,16 @@ public sealed record SocialLinks
     [JsonPropertyName("tiktokURL")]
     public string? TiktokURL { get; init; }
 
+    [JsonPropertyName("linkedinURL")]
+    public string? LinkedinUrl { get; init; }
+
     /// True daca niciunul dintre cele 4 linkuri nu e completat — folosit ca sa
     /// nu afisam un rand gol de iconite pe card.
     [JsonIgnore]
     public bool IsEmpty =>
         string.IsNullOrWhiteSpace(FacebookURL) && string.IsNullOrWhiteSpace(YoutubeURL)
-        && string.IsNullOrWhiteSpace(InstagramURL) && string.IsNullOrWhiteSpace(TiktokURL);
+        && string.IsNullOrWhiteSpace(InstagramURL) && string.IsNullOrWhiteSpace(TiktokURL)
+        && string.IsNullOrWhiteSpace(LinkedinUrl);
 }
 
 /// Port 1:1 al PluginItem.swift — o intrare din catalog. `Id` e intrarea in
@@ -615,6 +619,10 @@ public sealed record Course
     /// null = mereu vizibil (retrocompatibil).
     public Scheduling? Scheduling { get; init; }
 
+    /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac
+    /// ("rețelele sociale la toate rubricile"). Retrocompatibil (null).
+    public SocialLinks? SocialLinks { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -635,6 +643,9 @@ public sealed record AppLink
     /// Valabilitate temporala optionala — Etapa 4 (2026-08-29). Vezi Scheduling.
     /// null = mereu vizibil (retrocompatibil).
     public Scheduling? Scheduling { get; init; }
+
+    /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
+    public SocialLinks? SocialLinks { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -704,6 +715,9 @@ public sealed record EducationalResource
     /// null = mereu vizibil (retrocompatibil).
     public Scheduling? Scheduling { get; init; }
 
+    /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
+    public SocialLinks? SocialLinks { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -737,6 +751,9 @@ public sealed record Event
     [JsonIgnore]
     public Uri? MapsUrl => MapsLink.Url(Location);
 
+    /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
+    public SocialLinks? SocialLinks { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }
@@ -768,6 +785,9 @@ public sealed record PartnerStore
     /// Link Maps generat din Address — null daca lipseste sau e "Online" etc.
     [JsonIgnore]
     public Uri? MapsUrl => MapsLink.Url(Address);
+
+    /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
+    public SocialLinks? SocialLinks { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -813,6 +833,9 @@ public sealed record ServiceCenter
     /// Link Maps generat din Address — null daca lipseste sau e "Online" etc.
     [JsonIgnore]
     public Uri? MapsUrl => MapsLink.Url(Address);
+
+    /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
+    public SocialLinks? SocialLinks { get; init; }
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
