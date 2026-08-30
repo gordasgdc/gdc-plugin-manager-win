@@ -103,6 +103,15 @@ public static class MyAppsService
             VersionSource: VersionSourceKind.UpdateJson,
             VersionSourceValue: "https://gordas.dev/media-flow-monitor/update.json",
             SiteUrl: "https://gordas.dev/media-flow-monitor"),
+        new(
+            Id: "mac-master-control-pro",
+            Name: "Master Control Studio Pro",
+            InnoAppId: "{B7E1C4A2-3D9F-4A6B-8E2C-MMCPROWIN0001}",
+            ExeName: "MacMasterControlPro.exe",
+            FallbackRelativeDir: @"GDC\Master Control Studio Pro",
+            VersionSource: VersionSourceKind.GitHubRelease,
+            VersionSourceValue: "gordasgdc/mac-master-control-pro-win",
+            SiteUrl: "https://gordas.dev/mac-master-control-pro"),
     ];
 
     /// Cauta fiecare aplicatie cunoscuta in Registry; cade pe Program Files
