@@ -5,6 +5,23 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.20.0 (2026-08-30) — Iconițe reale în „Aplicațiile Mele" + Scurtături
+
+Port 1:1 din Mac v1.20.0: cardurile din „Aplicații GDC instalate" și
+„Scurtăturile mele" extrag acum iconița REALĂ direct din `.exe`-ul instalat
+(`System.Drawing.Icon.ExtractAssociatedIcon`), inclusiv pentru scurtături
+terțe (DaVinci Resolve, Photoshop, Lightroom etc.) — nu bundle-uim nicio
+siglă terță în cod (risc de marcă înregistrată), extragerea se face mereu
+din aplicația deja instalată pe mașina userului, exact ca Explorer.
+Fallback pe simbol generic doar dacă extragerea eșuează. Adăugarea de
+scurtături acceptă acum mai multe `.exe`-uri deodată (`Multiselect`).
+
+**Notă de arhitectură**: Windows nu are un echivalent simplu al
+`NSWorkspace.didLaunchApplicationNotification`/watcher de director de pe
+Mac — lista se reface la fiecare navigare în pagina „Aplicațiile Mele”
+(`ShowMyApps` apelează deja `RefreshAsync`), nu instant la instalare ca pe
+Mac. Rămâne un gap real, documentat aici, nu tratat ca rezolvat.
+
 ## v1.19.14 (2026-08-29) — Bump doar de versiune (sincronizare cu Mac, fără cod nou)
 
 Mac a primit ghidurile PDF (RO/EN/ES) redesenate cu capturi reale ale

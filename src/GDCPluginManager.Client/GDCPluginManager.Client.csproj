@@ -17,7 +17,7 @@
     <!-- Acelasi numar ca versiunea Mac (docs/update.json foloseste un singur
          camp "version" comun ambelor platforme) — UpdateChecker.CurrentVersion
          citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
-    <Version>1.19.14</Version>
+    <Version>1.20.0</Version>
     <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
          AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
@@ -35,6 +35,13 @@
          produce direct bytes PNG, pur managed) — nicio dependinta grea
          pentru un cod QR local, la fel ca CIFilter.qrCodeGenerator() pe Mac. -->
     <PackageReference Include="QRCoder" Version="1.6.0" />
+    <!-- Extragere iconita REALA din .exe (Aplicatiile Mele / Scurtaturi) —
+         echivalent NSWorkspace.icon(forFile:) de pe Mac. Folosit DOAR pentru
+         a citi iconita unei aplicatii deja instalate pe masina userului
+         (exact ce face Explorer) — nu bundle-uim nicio sigla tert-parte
+         (Adobe/Blackmagic etc.) in cod, evitand orice risc de marca
+         inregistrata. -->
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
   </ItemGroup>
 
   <ItemGroup>

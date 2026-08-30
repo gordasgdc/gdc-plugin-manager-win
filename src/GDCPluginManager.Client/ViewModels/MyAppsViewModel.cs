@@ -25,6 +25,9 @@ public sealed partial class InstalledAppViewModel : ObservableObject
     public string Name => Installed.App.Name;
     public string InstalledVersionDisplay => $"v{Installed.InstalledVersion}";
 
+    /// Iconita reala extrasa din executabilul instalat — vezi IconExtractor.
+    public System.Windows.Media.ImageSource? IconSource => IconExtractor.Extract(Installed.ExecutablePath);
+
     /// Badge "ACTUALIZARE" doar cand chiar stim ca versiunea publicata e mai
     /// noua. Daca verificarea a esuat (LatestVersion == null) NU aratam nimic
     /// — mai bine tacere decat un badge fals pe o informatie pur optionala.
@@ -76,6 +79,11 @@ public sealed partial class CustomLauncherViewModel : ObservableObject
 
     public string Name => Launcher.Name;
     public string Path => Launcher.Path;
+
+    /// Iconita reala a aplicatiei terte alese (DaVinci Resolve, Photoshop,
+    /// Lightroom etc.) — extrasa din .exe-ul deja instalat pe masina
+    /// userului, nu bundle-uita in cod. Vezi nota din IconExtractor.
+    public System.Windows.Media.ImageSource? IconSource => IconExtractor.Extract(Launcher.Path);
 
     [RelayCommand]
     private void Launch()
@@ -153,17 +161,19 @@ public sealed partial class MyAppsViewModel : ObservableObject
     {
         var dialog = new OpenFileDialog
         {
-            Title = "Alege o aplicatie (.exe)",
+            Title = "Alege una sau mai multe aplicatii (.exe)",
             Filter = "Aplicatii (*.exe)|*.exe",
             CheckFileExists = true,
+            Multiselect = true,
         };
         if (dialog.ShowDialog() != true) return;
 
-        var path = dialog.FileName;
-        var name = System.IO.Path.GetFileNameWithoutExtension(path);
-        if (CustomLaunchers.Any(l => string.Equals(l.Path, path, StringComparison.OrdinalIgnoreCase))) return;
-
-        CustomLaunchers.Add(new CustomLauncherViewModel(new CustomLauncher(name, path), RemoveCustomLauncher));
+        foreach (var path in dialog.FileNames)
+        {
+            if (CustomLaunchers.Any(l => string.Equals(l.Path, path, StringComparison.OrdinalIgnoreCase))) continue;
+            var name = System.IO.Path.GetFileNameWithoutExtension(path);
+            CustomLaunchers.Add(new CustomLauncherViewModel(new CustomLauncher(name, path), RemoveCustomLauncher));
+        }
         PersistCustomLaunchers();
     }
 

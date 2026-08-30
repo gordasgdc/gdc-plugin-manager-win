@@ -17,6 +17,7 @@
     <Window.Resources>
         <conv:InverseBooleanConverter x:Key="InverseBoolean" />
         <conv:NullToVisibilityConverter x:Key="NullToVisibility" />
+        <conv:NullToVisibilityInverseConverter x:Key="NullToVisibilityInverse" />
         <conv:SymbolNameConverter x:Key="SymbolName" />
         <conv:CategoryEqualsMultiConverter x:Key="CategoryEquals" />
         <conv:EnumEqualsVisibilityConverter x:Key="PageVisible" />
@@ -1771,14 +1772,23 @@
                                     <StackPanel>
                                         <Grid Margin="0,0,0,8">
                                             <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
                                                 <ColumnDefinition Width="*" />
                                                 <ColumnDefinition Width="Auto" />
                                             </Grid.ColumnDefinitions>
-                                            <TextBlock Grid.Column="0" Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
+                                            <!-- Iconita reala a aplicatiei (extrasa din exe) - fallback pe
+                                                 simbol generic doar daca extragerea a esuat. -->
+                                            <Grid Grid.Column="0" Width="24" Height="24" Margin="0,0,10,0" VerticalAlignment="Center">
+                                                <Image Source="{Binding IconSource}" Width="24" Height="24"
+                                                       Visibility="{Binding IconSource, Converter={StaticResource NullToVisibility}}" />
+                                                <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="20"
+                                                               Visibility="{Binding IconSource, Converter={StaticResource NullToVisibilityInverse}}" />
+                                            </Grid>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
                                                        FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
                                             <!-- Badge ACTUALIZARE doar cand chiar stim ca exista
                                                  o versiune mai noua (verificarea a reusit). -->
-                                            <Border Grid.Column="1" Style="{StaticResource BadgeBorderStyle}" Background="#FF4EA1F5"
+                                            <Border Grid.Column="2" Style="{StaticResource BadgeBorderStyle}" Background="#FF4EA1F5"
                                                     ToolTip="{Binding UpdateTooltip}"
                                                     Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
                                                 <TextBlock Text="ACTUALIZARE" FontSize="9" FontWeight="Bold" Foreground="White" />
@@ -1833,8 +1843,20 @@
                             <DataTemplate>
                                 <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="300">
                                     <StackPanel>
-                                        <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
-                                                   FontSize="14" TextWrapping="Wrap" />
+                                        <Grid Margin="0,0,0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <Grid Grid.Column="0" Width="22" Height="22" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                <Image Source="{Binding IconSource}" Width="22" Height="22"
+                                                       Visibility="{Binding IconSource, Converter={StaticResource NullToVisibility}}" />
+                                                <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="18"
+                                                               Visibility="{Binding IconSource, Converter={StaticResource NullToVisibilityInverse}}" />
+                                            </Grid>
+                                            <TextBlock Grid.Column="1" Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
+                                                       FontSize="14" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                        </Grid>
                                         <TextBlock Text="{Binding Path}" Style="{StaticResource MutedTextStyle}"
                                                    FontSize="11" TextWrapping="Wrap" Margin="0,2,0,10" />
                                         <StackPanel Orientation="Horizontal">
