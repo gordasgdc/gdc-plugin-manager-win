@@ -54,6 +54,24 @@ public partial class MainWindow : Window
         LaunchBannerImage.Source = image;
         LaunchBannerTopText.Text = config.TopText;
         LaunchBannerMainText.Text = config.MainText;
+
+        // Pozitia benzii de text (sus/jos) e o optiune aleasa de Cristi din
+        // Furnizor (config.TextOnTop), nu fixa in XAML - reordonam cele doua
+        // elemente in StackPanel-ul parinte. Port 1:1 al if/else din
+        // LaunchOfferBanner.swift (Mac).
+        LaunchBannerGrid.Children.Remove(LaunchBannerTextBand);
+        LaunchBannerGrid.Children.Remove(LaunchBannerImage);
+        if (config.TextOnTop)
+        {
+            LaunchBannerGrid.Children.Add(LaunchBannerTextBand);
+            LaunchBannerGrid.Children.Add(LaunchBannerImage);
+        }
+        else
+        {
+            LaunchBannerGrid.Children.Add(LaunchBannerImage);
+            LaunchBannerGrid.Children.Add(LaunchBannerTextBand);
+        }
+
         LaunchBannerGrid.Visibility = Visibility.Visible;
     }
 

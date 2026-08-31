@@ -21,6 +21,11 @@ public sealed record LaunchBannerConfig
     /// `Enabled == true`.
     public Scheduling? Scheduling { get; init; }
 
+    /// Pozitia benzii de text solide fata de imagine - true = deasupra,
+    /// false = dedesubt (optiune aleasa de Cristi din Furnizor, nu fixa
+    /// in cod). Implicit true (deasupra).
+    public bool TextOnTop { get; init; } = true;
+
     [JsonIgnore]
     public Uri? ImageUrl => CatalogAssets.ImageUrl(ImagePath);
 

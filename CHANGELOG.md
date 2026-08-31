@@ -5,6 +5,11 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.24.3 (2026-08-31) — Poziție text sus/jos, aleasă din Furnizor
+
+Port 1:1 al Mac v1.24.3: text și imagine separate, fără suprapunere;
+poziția (deasupra/sub imagine) aleasă din Furnizor (Mac).
+
 ## v1.24.2 (2026-08-31) — Fix: textul bannerului se suprapunea peste imagine
 
 Port 1:1 al Mac v1.24.2: voal întunecat sub text, robust la orice imagine

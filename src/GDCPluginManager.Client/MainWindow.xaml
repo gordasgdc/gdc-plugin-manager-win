@@ -2162,44 +2162,34 @@
             <!-- Banner de lansare (2026-08-31) - controlat de Furnizor (Mac)
                  fara recompilare, vezi LaunchBannerChecker.cs. Ascuns implicit
                  (Collapsed) pana la primul fetch reusit cu enabled=true. -->
-            <Grid x:Name="LaunchBannerGrid" Grid.Row="2" VerticalAlignment="Bottom" IsHitTestVisible="False"
-                  MaxHeight="160" ClipToBounds="True" Visibility="Collapsed">
-                <Image x:Name="LaunchBannerImage" Stretch="UniformToFill" />
-                <!-- Voal intunecat sus - textul ramane lizibil INDIFERENT ce
-                     se afla in imagine la acel punct (port 1:1 al fix-ului
-                     Mac 2026-08-31: nu ne mai bazam pe o "banda goala"
-                     anume in imagine, orice imagine viitoare incarcata prin
-                     uploader-ul standard de coperta poate avea alta
-                     compozitie/raport de aspect). -->
-                <Border VerticalAlignment="Top" Height="70">
-                    <Border.Background>
-                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                            <GradientStop Color="#8C000000" Offset="0" />
-                            <GradientStop Color="#00000000" Offset="1" />
-                        </LinearGradientBrush>
-                    </Border.Background>
+            <!-- [2026-08-31, DECIZIE FINALA, port 1:1 al fix-ului Mac] Textul
+                 suprapus PESTE imagine s-a dovedit fragil de doua ori la rand
+                 (raport de aspect gresit, apoi tot poziționare relativa la
+                 continutul imaginii). Textul nu mai sta NICIODATA suprapus -
+                 sta intr-o banda SOLIDA, SEPARATA, sub imagine, cu fundal
+                 opac propriu, complet independenta de ce se afla in imagine. -->
+            <StackPanel x:Name="LaunchBannerGrid" Grid.Row="2" VerticalAlignment="Bottom" IsHitTestVisible="False"
+                        Visibility="Collapsed">
+                <Image x:Name="LaunchBannerImage" Stretch="UniformToFill" Height="150" />
+                <!-- x:Name pe Border-ul benzii, nu doar pe StackPanel-ul
+                     parinte - vezi UpdateLaunchBanner() in code-behind, care
+                     reordoneaza LaunchBannerGrid.Children dupa TextOnTop. -->
+                <Border x:Name="LaunchBannerTextBand" Background="#D1000000" Height="46">
+                    <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                        <TextBlock x:Name="LaunchBannerTopText" FontSize="11" FontWeight="Bold" Foreground="#D9FFFFFF"
+                                   HorizontalAlignment="Center" TextAlignment="Center" />
+                        <TextBlock x:Name="LaunchBannerMainText" FontSize="15" FontWeight="Black"
+                                   HorizontalAlignment="Center" TextAlignment="Center" Margin="0,2,0,0">
+                            <TextBlock.Foreground>
+                                <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                                    <GradientStop Color="#FFFFDE99" Offset="0" />
+                                    <GradientStop Color="#FFD9A63F" Offset="1" />
+                                </LinearGradientBrush>
+                            </TextBlock.Foreground>
+                        </TextBlock>
+                    </StackPanel>
                 </Border>
-                <StackPanel VerticalAlignment="Top" Margin="0,10,0,0" HorizontalAlignment="Center">
-                    <TextBlock x:Name="LaunchBannerTopText" FontSize="12" FontWeight="Bold" Foreground="#E6FFFFFF"
-                               HorizontalAlignment="Center" TextAlignment="Center">
-                        <TextBlock.Effect>
-                            <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.7" />
-                        </TextBlock.Effect>
-                    </TextBlock>
-                    <TextBlock x:Name="LaunchBannerMainText" FontSize="18" FontWeight="Black"
-                               HorizontalAlignment="Center" TextAlignment="Center" Margin="0,2,0,0">
-                        <TextBlock.Foreground>
-                            <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
-                                <GradientStop Color="#FFFFDE99" Offset="0" />
-                                <GradientStop Color="#FFD9A63F" Offset="1" />
-                            </LinearGradientBrush>
-                        </TextBlock.Foreground>
-                        <TextBlock.Effect>
-                            <DropShadowEffect Color="Black" BlurRadius="8" ShadowDepth="0" Opacity="0.7" />
-                        </TextBlock.Effect>
-                    </TextBlock>
-                </StackPanel>
-            </Grid>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>
