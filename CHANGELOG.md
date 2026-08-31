@@ -5,6 +5,11 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.24.5 (2026-08-31) — Sincronizare versiune (fix Marime Text, Mac-only)
+
+Fara schimbari de cod pe Windows - Marime Text functiona deja corect aici
+(ScaleTransform). Bump doar pentru sincronizare cu versiunea comuna.
+
 ## v1.24.3 (2026-08-31) — Poziție text sus/jos, aleasă din Furnizor
 
 Port 1:1 al Mac v1.24.3: text și imagine separate, fără suprapunere;
