@@ -5,6 +5,18 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.21.0 (2026-08-31) — Ceas live opțional (countdown) pentru oferte cu termen
+
+Port 1:1 al Client Mac v1.21.0: conținutul cu perioadă limitată (produse,
+cursuri, resurse educaționale, evenimente, magazine/centre partenere,
+oferte partener, aplicații, audio, resurse descărcabile, bundle-uri) poate
+afișa acum, opțional, un badge live „Mai sunt Xz Yh"/"Yh Zm"/"Zm" până la
+expirare, auto-actualizat la 60s. Compatibil cu `catalog.json` existent —
+apare doar acolo unde Furnizorul a activat explicit countdown-ul.
+
+**Notă**: acest release rezolvă și eroarea HTTP 404 raportată la self-update
+— versiunea Windows nu mai rămăsese în urmă față de `update.json`.
+
 ## v1.20.0 (2026-08-30) — Iconițe reale în „Aplicațiile Mele" + Scurtături
 
 Port 1:1 din Mac v1.20.0: cardurile din „Aplicații GDC instalate" și

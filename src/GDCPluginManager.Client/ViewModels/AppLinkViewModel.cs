@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
+using GDCPluginManager.Client.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -20,7 +21,12 @@ public sealed partial class AppLinkViewModel : ObservableObject
         // constructor, deci coperta se citeste din parametru, nu din camp
         // (acelasi pattern ca PartnerStoreViewModel).
         Cover = new CoverViewModel(app.CoverImageUrl, app.Name);
+        CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
     }
+
+    /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
+    /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
+    public string? CountdownText => App.Scheduling?.CountdownText;
 
     public string Name => App.Name;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(App.YoutubeURL);

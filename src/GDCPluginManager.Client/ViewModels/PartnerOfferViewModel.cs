@@ -3,6 +3,7 @@ using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
+using GDCPluginManager.Client.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -21,7 +22,12 @@ public sealed partial class PartnerOfferViewModel : ObservableObject
     {
         Offer = offer;
         Cover = new CoverViewModel(offer.CoverImageUrl, offer.BrandName);
+        CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
     }
+
+    /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
+    /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
+    public string? CountdownText => Offer.Scheduling?.CountdownText;
 
     public CoverViewModel Cover { get; }
 

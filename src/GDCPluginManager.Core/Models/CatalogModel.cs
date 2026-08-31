@@ -310,6 +310,34 @@ public sealed record Scheduling
 
     [JsonIgnore]
     public bool IsEmpty => StartDate is null && EndDate is null;
+
+    /// Port 1:1 al `Scheduling.showCountdown` (Mac, CatalogModel.swift,
+    /// 2026-08-31) - ceas live optional "Mai sunt Xz Yh" pentru continut cu
+    /// termen. Implicit `false` - lipsa campului in `catalog.json` existent
+    /// (System.Text.Json foloseste automat valoarea din initializator daca
+    /// proprietatea lipseste, la fel ca `decodeIfPresent ?? false` pe Swift).
+    public bool ShowCountdown { get; init; }
+
+    /// Text scurt "Mai sunt Xz Yh" / "Mai sunt Yh Zm" / "Mai sunt Zm" -
+    /// `null` daca nu se aplica (fara EndDate, expirat, sau flag-ul OFF).
+    /// Fara secunde - port 1:1 al `countdownText` (Mac).
+    [JsonIgnore]
+    public string? CountdownText
+    {
+        get
+        {
+            if (!ShowCountdown || EndDate is not { } end || !IsActiveNow) return null;
+            var remaining = end - DateTime.UtcNow;
+            if (remaining <= TimeSpan.Zero) return null;
+            var totalMinutes = (int)remaining.TotalMinutes;
+            var days = totalMinutes / (24 * 60);
+            var hours = totalMinutes % (24 * 60) / 60;
+            var minutes = totalMinutes % 60;
+            if (days > 0) return $"Mai sunt {days}z {hours}h";
+            if (hours > 0) return $"Mai sunt {hours}h {minutes}m";
+            return $"Mai sunt {minutes}m";
+        }
+    }
 }
 
 /// Helper pentru filtrarea oricarei colectii dupa `Scheduling` — un singur loc

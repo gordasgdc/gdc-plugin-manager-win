@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
+using GDCPluginManager.Client.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -17,7 +18,12 @@ public sealed partial class PartnerStoreViewModel : ObservableObject
         // Dupa atribuirea de mai sus: `Store` e inca null la intrarea in
         // constructor, deci coperta se citeste din parametru, nu din camp.
         Cover = new CoverViewModel(store.CoverImageUrl, store.Name);
+        CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
     }
+
+    /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
+    /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
+    public string? CountdownText => Store.Scheduling?.CountdownText;
 
     public string Name => Store.Name;
 

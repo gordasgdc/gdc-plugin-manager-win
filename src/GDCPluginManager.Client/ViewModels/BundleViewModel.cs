@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
 using GDCPluginManager.Core.Services;
+using GDCPluginManager.Client.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -33,7 +34,12 @@ public sealed partial class BundleViewModel : ObservableObject
         Bundle = bundle;
         Cover = new CoverViewModel(bundle.CoverImageUrl, bundle.Name);
         ResolveEntries();
+        CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
     }
+
+    /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
+    /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
+    public string? CountdownText => Bundle.Scheduling?.CountdownText;
 
     public CoverViewModel Cover { get; }
 

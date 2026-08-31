@@ -751,6 +751,46 @@ mutate în `CLAUDE_ARCHIVE.md` (NU se citește automat) — citește-l explicit
 când investighezi o zonă veche de cod. Rezumat "stare curentă" mai jos rămâne
 în acest fișier, fiindcă e activ relevant sesiune de sesiune.
 
+## v1.21.0 (2026-08-31) — Ceas live opțional (countdown) + fix 404 self-update
+
+**Bug real, raportat live**: self-update pe Windows dădea `HTTP 404` la
+descărcare — `update.json` (comun Mac+Windows) fusese bumpat la `1.21.0`
+(countdown pe Mac), dar clientul Windows local rămăsese la `1.20.0`, fără
+build/release publicat pentru acea versiune — exact riscul deja documentat
+în arhivă ("update.json in avans fata de ce e chiar descarcabil"),
+materializat din nou.
+
+**Port countdown (Core + Client)**:
+- `Scheduling.ShowCountdown` (bool, `CatalogModel.cs`) + `CountdownText`
+  computed — identic cu Mac (`Scheduling.swift`), fără secunde.
+- `CountdownRefreshTimer` (nou, `Services/`) — un singur `DispatcherTimer`
+  static de 60s, partajat de toate viewmodel-urile de card (evită câte un
+  timer per card). Fiecare din cele 10 ViewModel-uri `ObservableObject`
+  (Product/DownloadResource/PartnerOffer/Bundle/PartnerStore/ServiceCenter/
+  AppLink/AudioTrack/EducationalResource/Event) se aboneaza la `Tick` in
+  constructor si expune `CountdownText => <Model>.Scheduling?.CountdownText`.
+  **Excepție**: `CourseViewModel` e o clasă simplă (nu `ObservableObject`,
+  fără `INotifyPropertyChanged`) — are `CountdownText` computed, dar nu se
+  reabonează la tick (badge-ul se calculeaza o singura data, la afisare;
+  degradare minora acceptata, nu a fost convertit la ObservableObject doar
+  pentru asta).
+- `MainWindow.xaml` — badge portocaliu (`#FFB05B00`, icon `Timer24`) adăugat
+  în toate cele 11 `DataTemplate` de card: pe cele cu `StackPanel` rădăcină,
+  ca prim element vizibil (deasupra copertei); pe cele cu `Grid` rădăcină
+  (AppLink/AudioTrack/EducationalResource/Event, care deja foloseau Grid ca
+  overlay pentru butonul de tutorial), ca overlay separat, colț stânga-sus.
+  Vizibilitate prin `NullToVisibility` (deja existent, reutilizat).
+
+**Fix definitiv al 404**: bump `<Version>` (`.csproj`) și `MyAppVersion`
+(`installer.iss`) la `1.21.0`, apoi build CI + upload
+`GDCPluginManager-Windows.zip` în release-ul `v1.21.0` de pe
+`gdc-plugin-manager` (Mac) — vezi checklist-ul de proces din arhivă:
+bump de `update.json` și publicarea reală a binarelor NU sunt opționale
+una față de cealaltă, în ACEEAȘI sesiune.
+
+**Verificat**: `dotnet build GDCPluginManagerWin.slnx` — 0 erori (Core +
+Client, XAML→BAML inclus, cross-compilat pe Mac).
+
 ## Stare curentă (2026-08-29) — versiune `1.19.10`
 
 - **Bug critic imagini rezolvat**: `BitmapImage.UriSource` (WinINet) trecut

@@ -62,6 +62,14 @@
         <DataTemplate DataType="{x:Type vm:ProductViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
@@ -286,6 +294,14 @@
         <DataTemplate DataType="{x:Type vm:DownloadResourceViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
@@ -446,6 +462,14 @@
         <DataTemplate DataType="{x:Type vm:PartnerOfferViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
@@ -533,6 +557,14 @@
         <DataTemplate DataType="{x:Type vm:BundleViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="340">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">
@@ -602,6 +634,14 @@
         <DataTemplate DataType="{x:Type vm:CourseViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
@@ -665,6 +705,14 @@
                         <Button Content="Deschide" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
                         <views:SocialLinksPanel SocialLinks="{Binding App.SocialLinks}" Margin="0,8,0,0" />
                     </StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTip="Vezi tutorialul explicativ pentru aceasta aplicatie"
                             Command="{Binding OpenTutorialCommand}"
@@ -699,6 +747,14 @@
                         <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="54" TextTrimming="CharacterEllipsis" />
                         <Button Content="Descarca" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
                     </StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTip="Vezi tutorialul explicativ pentru acest element audio"
                             Command="{Binding OpenTutorialCommand}"
@@ -736,6 +792,14 @@
                         <Button Content="Doneaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding BuyCommand}" />
                         <views:SocialLinksPanel SocialLinks="{Binding Resource.SocialLinks}" Margin="0,8,0,0" />
                     </StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTip="Vezi tutorialul explicativ"
                             Command="{Binding OpenTutorialCommand}"
@@ -782,6 +846,14 @@
                     </Button>
                     <views:SocialLinksPanel SocialLinks="{Binding Event.SocialLinks}" Margin="0,8,0,0" />
                 </StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
                             ToolTip="Vezi tutorialul explicativ"
                             Command="{Binding OpenTutorialCommand}"
@@ -796,6 +868,14 @@
         <DataTemplate DataType="{x:Type vm:PartnerStoreViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280" MinHeight="120">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
@@ -832,6 +912,14 @@
         <DataTemplate DataType="{x:Type vm:ServiceCenterViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280" MinHeight="120">
                 <StackPanel>
+                    <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
                             Command="{Binding Cover.ShowCommand}"
                             Visibility="{Binding Cover.HasImage, Converter={StaticResource BoolToVisibility}}">

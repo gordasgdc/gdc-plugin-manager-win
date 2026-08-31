@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
+using GDCPluginManager.Client.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -46,6 +47,10 @@ public sealed class CourseViewModel
         Cover = new CoverViewModel(course.CoverImageUrl, course.Name);
         Options = course.Options.Select(o => new CourseOptionViewModel(o, course.Name)).ToList();
     }
+
+    /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
+    /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
+    public string? CountdownText => Course.Scheduling?.CountdownText;
 
     public string Name => Course.Name;
 

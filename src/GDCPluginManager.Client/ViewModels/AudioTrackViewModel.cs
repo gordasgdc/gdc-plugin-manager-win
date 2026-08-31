@@ -2,6 +2,7 @@ using System.Diagnostics;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
+using GDCPluginManager.Client.Services;
 
 namespace GDCPluginManager.Client.ViewModels;
 
@@ -16,7 +17,12 @@ public sealed partial class AudioTrackViewModel : ObservableObject
     {
         Track = track;
         Cover = new CoverViewModel(track.CoverImageUrl, track.Name);
+        CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
     }
+
+    /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
+    /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
+    public string? CountdownText => Track.Scheduling?.CountdownText;
 
     public string Name => Track.Name;
     public string Description => Track.Description;
