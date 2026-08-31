@@ -702,6 +702,26 @@
                         <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="20" Margin="0,10,0,0" Foreground="#4EA1F5"
                                        Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        <!-- Pret dinamic (Regula 27, 2026-08-31) - vezi AppPricingFetcher. -->
+                        <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
+                                    Visibility="{Binding HasPromo, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding PromoPriceText}" FontSize="13" FontWeight="Bold" Foreground="#FFB05B00" />
+                            <TextBlock Text="{Binding PriceText}" FontSize="11" Margin="6,0,0,0"
+                                       Foreground="{DynamicResource InkTextMutedBrush}" TextDecorations="Strikethrough" />
+                        </StackPanel>
+                        <TextBlock Text="{Binding PriceText}" FontSize="13" FontWeight="SemiBold" Margin="0,4,0,0"
+                                   Foreground="{DynamicResource InkTextMutedBrush}"
+                                   Visibility="{Binding HasPrice, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasPromo}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
                         <Button Content="Deschide" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
                         <views:SocialLinksPanel SocialLinks="{Binding App.SocialLinks}" Margin="0,8,0,0" />
                     </StackPanel>

@@ -740,6 +740,11 @@ public sealed record AppLink
     /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
     public SocialLinks? SocialLinks { get; init; }
 
+    /// Leaga cardul de un produs din pricing.json (Regula 27, 2026-08-31) —
+    /// port 1:1 din Mac (AppLink.pricingProductID). null = cardul ramane
+    /// neschimbat (aplicatia n-are pret dinamic de donatie).
+    public string? PricingProductID { get; init; }
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
 }

@@ -113,6 +113,7 @@ public partial class MainWindow : Window
         await MaybeShowUpdatePopupAsync();
 
         _ = LaunchBannerChecker.Shared.RefreshAsync();
+        _ = AppPricingFetcher.Shared.RefreshAsync();
 
         // Onboarding opțional la prima pornire - port 1:1 al
         // "gdcpm_onboarded" din ContentView.swift (Mac). Lipsea complet
