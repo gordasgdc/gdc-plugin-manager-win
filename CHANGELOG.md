@@ -5,6 +5,12 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.23.0 (2026-08-31) — Banner de lansare controlabil din Furnizor
+
+Port 1:1 al Client Mac v1.23.0: un banner jos de tot pe ecranul principal,
+cu imagine + text de ofertă de lansare, controlat de Cristi din Furnizor
+(Mac) fără nicio recompilare pe Windows.
+
 ## v1.21.0 (2026-08-31) — Ceas live opțional (countdown) pentru oferte cu termen
 
 Port 1:1 al Client Mac v1.21.0: conținutul cu perioadă limitată (produse,

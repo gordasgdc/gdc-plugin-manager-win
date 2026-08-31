@@ -739,6 +739,25 @@ la timp). Vezi `PROJECT_STRUCTURE.md` pentru harta completă.
 ## Unde se rulează testele reale
 Testarea reală se face pe PC-ul unui prieten al userului, prin AnyDesk la distanță — depinde de disponibilitatea lui, poate dura ore/zile între ferestre. Nu bloca alt lucru așteptând un retest; ține build-urile/release-urile la zi ca testul să poată începe imediat ce se deschide o fereastră.
 
+## v1.23.0 (2026-08-31) — Banner de lansare, controlabil din Furnizor
+
+Port 1:1 al arhitecturii de pe Mac (`gdc-plugin-manager-catalog-vendor`,
+`LaunchBannerModel.swift`/`LaunchBannerChecker.swift`/Furnizor):
+- `LaunchBannerModel.cs` (Core, nou) - `LaunchBannerConfig` record, aceleasi
+  campuri (Enabled/ImagePath/TopText/MainText).
+- `Services/LaunchBannerChecker.cs` (Client, nou) - fetch `gordas.dev/
+  launch-banner.json` + retry + cache local pe disc (offline-first),
+  imaginea decodata direct din `MemoryStream` (NU `BitmapImage.UriSource` -
+  vezi bug-ul critic deja documentat mai jos in acest fisier despre
+  WinINet).
+- `MainWindow.xaml`/`.xaml.cs` - `Grid` nou, ancorat jos, `Collapsed`
+  implicit pana la primul fetch reusit cu `IsDisplayable == true`.
+- Furnizorul (Mac) e SINGURUL loc care scrie `launch-banner.json` - Windows
+  nu are (si nu are nevoie de) o interfata de publicare, la fel ca restul
+  catalogului.
+
+**Verificat**: `dotnet build src/GDCPluginManager.Client/GDCPluginManager.Client.csproj -r win-x64` - 0 erori, XAML->BAML inclus.
+
 ## Technical Decisions & Known Pitfalls
 
 

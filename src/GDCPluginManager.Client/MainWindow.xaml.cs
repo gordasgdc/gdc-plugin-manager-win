@@ -3,6 +3,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Media;
+using GDCPluginManager.Client.Services;
 using GDCPluginManager.Client.ViewModels;
 using GDCPluginManager.Core.Services;
 
@@ -35,6 +36,25 @@ public partial class MainWindow : Window
 
         DataContext = _viewModel;
         Log("DataContext setat. MainWindow() constructor complet.");
+
+        LaunchBannerChecker.Shared.Updated += () => Dispatcher.Invoke(UpdateLaunchBanner);
+    }
+
+    /// Banner de lansare (2026-08-31) - vezi LaunchBannerChecker.cs. Actualizat
+    /// pe UI thread la fiecare fetch reusit (initial sau din cache offline).
+    private void UpdateLaunchBanner()
+    {
+        var config = LaunchBannerChecker.Shared.Config;
+        var image = LaunchBannerChecker.Shared.Image;
+        if (config is null || !config.IsDisplayable || image is null)
+        {
+            LaunchBannerGrid.Visibility = Visibility.Collapsed;
+            return;
+        }
+        LaunchBannerImage.Source = image;
+        LaunchBannerTopText.Text = config.TopText;
+        LaunchBannerMainText.Text = config.MainText;
+        LaunchBannerGrid.Visibility = Visibility.Visible;
     }
 
     /// Mărime text (2026-08-29, CLAUDE.md Partea 1, Regula 24) — port al
@@ -73,6 +93,8 @@ public partial class MainWindow : Window
         }
 
         await MaybeShowUpdatePopupAsync();
+
+        _ = LaunchBannerChecker.Shared.RefreshAsync();
 
         // Onboarding opțional la prima pornire - port 1:1 al
         // "gdcpm_onboarded" din ContentView.swift (Mac). Lipsea complet
