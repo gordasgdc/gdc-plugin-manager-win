@@ -2165,7 +2165,21 @@
             <Grid x:Name="LaunchBannerGrid" Grid.Row="2" VerticalAlignment="Bottom" IsHitTestVisible="False"
                   MaxHeight="160" ClipToBounds="True" Visibility="Collapsed">
                 <Image x:Name="LaunchBannerImage" Stretch="UniformToFill" />
-                <StackPanel VerticalAlignment="Top" Margin="0,18,0,0" HorizontalAlignment="Center">
+                <!-- Voal intunecat sus - textul ramane lizibil INDIFERENT ce
+                     se afla in imagine la acel punct (port 1:1 al fix-ului
+                     Mac 2026-08-31: nu ne mai bazam pe o "banda goala"
+                     anume in imagine, orice imagine viitoare incarcata prin
+                     uploader-ul standard de coperta poate avea alta
+                     compozitie/raport de aspect). -->
+                <Border VerticalAlignment="Top" Height="70">
+                    <Border.Background>
+                        <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="#8C000000" Offset="0" />
+                            <GradientStop Color="#00000000" Offset="1" />
+                        </LinearGradientBrush>
+                    </Border.Background>
+                </Border>
+                <StackPanel VerticalAlignment="Top" Margin="0,10,0,0" HorizontalAlignment="Center">
                     <TextBlock x:Name="LaunchBannerTopText" FontSize="12" FontWeight="Bold" Foreground="#E6FFFFFF"
                                HorizontalAlignment="Center" TextAlignment="Center">
                         <TextBlock.Effect>
