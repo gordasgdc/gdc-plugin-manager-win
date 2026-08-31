@@ -5,6 +5,11 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.24.0 (2026-08-31) — Valabilitate temporală pentru bannerul de lansare
+
+Port 1:1 al Client Mac v1.24.0: bannerul de lansare poate avea acum o
+perioadă programată — se ascunde automat după data de sfârșit.
+
 ## v1.23.0 (2026-08-31) — Banner de lansare controlabil din Furnizor
 
 Port 1:1 al Client Mac v1.23.0: un banner jos de tot pe ecranul principal,

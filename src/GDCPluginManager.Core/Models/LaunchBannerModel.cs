@@ -16,9 +16,15 @@ public sealed record LaunchBannerConfig
     public string MainText { get; init; } = "";
     public string UpdatedAt { get; init; } = "";
 
+    /// Valabilitate temporala optionala (2026-08-31) - aceeasi `Scheduling`
+    /// folosita de tot restul catalogului. `null` = mereu vizibil cat timp
+    /// `Enabled == true`.
+    public Scheduling? Scheduling { get; init; }
+
     [JsonIgnore]
     public Uri? ImageUrl => CatalogAssets.ImageUrl(ImagePath);
 
     [JsonIgnore]
-    public bool IsDisplayable => Enabled && ImageUrl is not null && !string.IsNullOrEmpty(TopText) && !string.IsNullOrEmpty(MainText);
+    public bool IsDisplayable => Enabled && ImageUrl is not null && !string.IsNullOrEmpty(TopText)
+        && !string.IsNullOrEmpty(MainText) && (Scheduling?.IsActiveNow ?? true);
 }
