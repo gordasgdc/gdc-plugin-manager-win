@@ -5,6 +5,11 @@ Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
 rezumatul a "ce s-a schimbat", ușor de scanat rapid).
 
+## v1.24.1 (2026-08-31) — Sincronizare versiune (fix Mac în v1.24.1)
+
+Fără schimbări de cod pe Windows — bump de versiune pentru a rămâne
+sincron cu Mac v1.24.1 (fix real la bannerul de lansare, cod Mac-only).
+
 ## v1.24.0 (2026-08-31) — Valabilitate temporală pentru bannerul de lansare
 
 Port 1:1 al Client Mac v1.24.0: bannerul de lansare poate avea acum o
