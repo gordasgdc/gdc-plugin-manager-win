@@ -1,5 +1,11 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.25.1 (2026-09-01) — Iconiță nouă: roata de culori
+
+Iconița aplicației a fost înlocuită cu un design nou — un inel plin cu
+spectrul complet de culori, cu „GDC” în centru — la cererea lui Cristi.
+Aplicată identic pe versiunea Mac.
+
 Jurnal scurt, orientat spre utilizator, al schimbărilor livrate clienților
 — o intrare per versiune, cu dată. Complementar jurnalului tehnic detaliat
 din CLAUDE.md (acolo sunt și deciziile/motivele/pitfall-urile; aici doar
