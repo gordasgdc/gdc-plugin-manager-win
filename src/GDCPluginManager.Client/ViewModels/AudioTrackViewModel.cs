@@ -26,6 +26,13 @@ public sealed partial class AudioTrackViewModel : ObservableObject
 
     public string Name => Track.Name;
     public string Description => Track.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Track.YoutubeURL);
 
     /// Coperta cardului + acțiunea de mărire — aceeași implementare unică

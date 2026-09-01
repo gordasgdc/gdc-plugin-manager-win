@@ -55,6 +55,13 @@ public sealed partial class ProductViewModel : ObservableObject
     /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
     public CoverViewModel Cover { get; }
     public string Description => Item.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
     public string TypeLabel => Item.Type.Label();
     public string VersionLabel => $"v{Item.Version}";
     /// Suma AFISATA acum — cea promotionala cat timp promotia e activa

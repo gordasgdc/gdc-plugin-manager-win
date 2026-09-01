@@ -34,6 +34,13 @@ public sealed partial class EventViewModel : ObservableObject
     /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
     public CoverViewModel Cover { get; }
     public string Description => Event.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
     public string DateAndLocation => $"{Event.DateDisplay} · {Event.Location}";
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Event.YoutubeURL);
 

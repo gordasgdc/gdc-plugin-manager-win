@@ -34,7 +34,11 @@ public sealed partial class CourseOptionViewModel : ObservableObject
 
 /// Port 1:1 al CourseCard din ContentView.swift — un curs bookabil, fara
 /// fisiere/instalare/licenta, doar optiuni de pret + contact WhatsApp.
-public sealed class CourseViewModel
+///
+/// Convertit din clasa simpla la `ObservableObject` (2026-09-01) - avea
+/// nevoie de notificare de schimbare pentru descrierea colapsabila noua
+/// (`IsDescriptionExpanded`), care altfel n-ar reflecta toggle-ul in UI.
+public sealed partial class CourseViewModel : ObservableObject
 {
     public Course Course { get; }
     public IReadOnlyList<CourseOptionViewModel> Options { get; }
@@ -60,4 +64,11 @@ public sealed class CourseViewModel
     /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
     public CoverViewModel Cover { get; }
     public string Description => Course.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
 }

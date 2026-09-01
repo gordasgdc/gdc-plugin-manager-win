@@ -1,5 +1,11 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.27.0 (2026-09-01) — Descriere colapsabilă peste tot în catalog
+
+Toate cardurile din catalog au acum descrierea ascunsă implicit, cu un
+buton „Descriere” care o desfășoară la cerere — aceeași schimbare ca pe
+Mac.
+
 ## v1.26.0 (2026-09-01) — Tutoriale (YouTube embedded) + căutare în meniu
 
 Secțiune nouă „Tutoriale” (Comunitate & Educație) — video-uri YouTube

@@ -33,6 +33,13 @@ public sealed partial class PartnerOfferViewModel : ObservableObject
 
     public string BrandName => Offer.BrandName;
     public string Description => Offer.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
 
     /// Badge rosu de discount — afisat DOAR daca furnizorul a completat textul.
     /// Text liber (nu procent numeric), ca sa acopere si "2 la pret de 1".

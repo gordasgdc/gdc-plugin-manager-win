@@ -31,8 +31,16 @@ public sealed partial class TutorialViewModel : ObservableObject
     [ObservableProperty]
     private bool _isDescriptionExpanded;
 
+    [ObservableProperty]
+    private bool _isTagsExpanded;
+
+    public string TagsToggleLabel => $"Taguri ({Tutorial.Tags.Count})";
+
     [RelayCommand]
     private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleTags() => IsTagsExpanded = !IsTagsExpanded;
 
     [RelayCommand]
     private void Watch() => Process.Start(new ProcessStartInfo(Tutorial.YoutubeURL) { UseShellExecute = true });

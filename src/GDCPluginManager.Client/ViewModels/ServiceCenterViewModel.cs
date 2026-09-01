@@ -25,6 +25,14 @@ public sealed partial class ServiceCenterViewModel : ObservableObject
 
     public string Name => Center.Name;
     public string Specialization => Center.Specialization;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Specialization);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
+
     public ServiceCategory Category => Center.Category;
     public CoverViewModel Cover { get; }
 

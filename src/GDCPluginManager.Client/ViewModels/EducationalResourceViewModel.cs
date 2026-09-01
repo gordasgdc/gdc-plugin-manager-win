@@ -34,6 +34,13 @@ public sealed partial class EducationalResourceViewModel : ObservableObject
     /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
     public CoverViewModel Cover { get; }
     public string Description => Resource.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
     public string KindLabel => Resource.Kind.Label();
     public bool HasYoutube => !string.IsNullOrWhiteSpace(Resource.YoutubeURL);
 

@@ -33,6 +33,13 @@ public sealed partial class PartnerStoreViewModel : ObservableObject
     /// ar primi un obiect nou la fiecare redesenare si ar reincarca imaginea.
     public CoverViewModel Cover { get; }
     public string Description => Store.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
 
     [RelayCommand]
     private void Visit() => Process.Start(new ProcessStartInfo(Store.Url) { UseShellExecute = true });

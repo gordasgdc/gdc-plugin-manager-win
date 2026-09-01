@@ -108,11 +108,14 @@
                         </StackPanel>
                     </Grid>
 
-                    <!-- MaxHeight 54 -> 90 (cca. 3 -> 5 randuri): descrierile reale de
-                         produs erau taiate la jumatate de fraza. Aceeasi decizie ca
-                         lineLimit(5) din PluginCard, pe Mac. -->
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="90" TextTrimming="CharacterEllipsis" />
+                    <!-- Descriere colapsabila (2026-09-01, cerinta directa: "la tot
+                         unde am tema de descriere ... sa se poata desfasura"),
+                         inlocuieste vechea trunchiere cu ellipsis. -->
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,8,0,0"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
 
                     <Grid Margin="0,10,0,0">
                         <Grid.ColumnDefinitions>
@@ -328,8 +331,12 @@
                                        Symbol="{Binding OSBadgeSymbol, Converter={StaticResource SymbolName}}" />
                     </Grid>
 
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,0,0,4"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,0,0,8" />
+                               TextWrapping="Wrap" Margin="0,0,0,8"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <Border Style="{StaticResource BadgeBorderStyle}" Background="{Binding BadgeBrush}">
@@ -492,8 +499,12 @@
                         </Border>
                     </Grid>
 
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,0,0,4"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,0,0,8" />
+                               TextWrapping="Wrap" Margin="0,0,0,8"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
 
                     <!-- Cod de cupon + copiere rapida, daca exista. -->
                     <Grid Margin="0,0,0,8" Visibility="{Binding HasCoupon, Converter={StaticResource BoolToVisibility}}">
@@ -581,8 +592,12 @@
 
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}"
                                FontSize="15" TextWrapping="Wrap" Margin="0,0,0,4" />
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,0,0,4"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
                     <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}"
-                               TextWrapping="Wrap" Margin="0,0,0,8" />
+                               TextWrapping="Wrap" Margin="0,0,0,8"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
 
                     <!-- Continutul pachetului. -->
                     <TextBlock Text="Include:" Style="{StaticResource MutedTextStyle}" FontSize="11"
@@ -657,7 +672,11 @@
                     </Button>
                     <ui:SymbolIcon Symbol="HatGraduation24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding Options}" Margin="0,10,0,0">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate DataType="{x:Type vm:CourseOptionViewModel}">
@@ -764,7 +783,11 @@
                         <ui:SymbolIcon Symbol="MusicNote224" FontSize="20" Margin="0,10,0,0" Foreground="#7C7CF0"
                                        Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" MaxHeight="54" TextTrimming="CharacterEllipsis" />
+                        <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                Command="{Binding ToggleDescriptionCommand}"
+                                Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                         <Button Content="Descarca" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
                     </StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
@@ -808,7 +831,11 @@
                         </Button>
                         <ui:SymbolIcon Symbol="Book24" FontSize="20" Margin="0,10,0,0" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                Command="{Binding ToggleDescriptionCommand}"
+                                Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                         <Button Content="Doneaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding BuyCommand}" />
                         <views:SocialLinksPanel SocialLinks="{Binding Resource.SocialLinks}" Margin="0,8,0,0" />
                     </StackPanel>
@@ -850,8 +877,13 @@
                             <TextBlock Text="{Binding Category}" FontSize="9" FontWeight="Bold" Foreground="#4EA1F5" />
                         </Border>
                         <TextBlock Text="{Binding Title}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        <!-- Taguri colapsabile - "cat mai putin spatiu ... sageata sa se lungeasca"
+                             (cerinta directa, 2026-09-01) - acelasi tipar ca Descrierea de mai jos. -->
+                        <Button Content="{Binding TagsToggleLabel}" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                Command="{Binding ToggleTagsCommand}"
+                                Visibility="{Binding HasTags, Converter={StaticResource BoolToVisibility}}" />
                         <ItemsControl ItemsSource="{Binding Tags}" Margin="0,6,0,0"
-                                      Visibility="{Binding HasTags, Converter={StaticResource BoolToVisibility}}">
+                                      Visibility="{Binding IsTagsExpanded, Converter={StaticResource BoolToVisibility}}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
@@ -902,7 +934,11 @@
                         <ui:SymbolIcon Symbol="Calendar24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Title}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <TextBlock Text="{Binding DateAndLocation}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,4,0,0" />
-                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                        <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
+                                Command="{Binding ToggleDescriptionCommand}"
+                                Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                         <Button Content="Detalii/Inscriere" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenDetailsCommand}" />
                     
                     <!-- Buton harta (Etapa 5) — nu se randeaza deloc daca
@@ -962,7 +998,11 @@
                     </Button>
                     <ui:SymbolIcon Symbol="ShoppingBag24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                     <Button Content="Viziteaza" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding VisitCommand}" />
                 
                     <!-- Buton harta (Etapa 5) — nu se randeaza deloc daca
@@ -1002,7 +1042,11 @@
                     </Button>
                     <ui:SymbolIcon Symbol="Wrench24" FontSize="20" Foreground="{DynamicResource BrandBrush}" Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                     <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding Specialization}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0" />
+                    <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
+                            Command="{Binding ToggleDescriptionCommand}"
+                            Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                    <TextBlock Text="{Binding Specialization}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                               Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                     <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                         <Button Content="Contact rapid" Command="{Binding ContactCommand}" Margin="0,0,8,0" />
                         <Button Content="Website / Locație" Command="{Binding OpenWebsiteCommand}"

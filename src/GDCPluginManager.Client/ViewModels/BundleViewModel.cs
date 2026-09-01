@@ -45,6 +45,13 @@ public sealed partial class BundleViewModel : ObservableObject
 
     public string Name => Bundle.Name;
     public string Description => Bundle.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
     public string BundlePriceDisplay => Bundle.BundlePriceDisplay;
 
     /// Suma individuala, afisata TAIATA langa pretul pachetului — doar daca e

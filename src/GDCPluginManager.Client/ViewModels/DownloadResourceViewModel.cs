@@ -38,6 +38,13 @@ public sealed partial class DownloadResourceViewModel : ObservableObject
 
     public string Name => Resource.Name;
     public string Description => Resource.Description;
+    public bool HasDescription => !string.IsNullOrWhiteSpace(Description);
+
+    [ObservableProperty]
+    private bool _isDescriptionExpanded;
+
+    [RelayCommand]
+    private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
     public string CategoryLabel => Resource.Category.Label();
     public string CategorySymbol => Resource.Category.Symbol();
 
