@@ -1,5 +1,12 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.26.0 (2026-09-01) — Tutoriale (YouTube embedded) + căutare în meniu
+
+Secțiune nouă „Tutoriale” (Comunitate & Educație) — video-uri YouTube
+afișate ca playere embedded, cu descriere expandabilă, taguri, grupare pe
+categorie și căutare deasupra grilei. Publicarea tutorialelor noi se face
+doar din aplicația Furnizor (Mac), la fel ca restul catalogului.
+
 ## v1.25.1 (2026-09-01) — Iconiță nouă: roata de culori
 
 Iconița aplicației a fost înlocuită cu un design nou — un inel plin cu

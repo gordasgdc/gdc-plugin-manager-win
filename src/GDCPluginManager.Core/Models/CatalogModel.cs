@@ -1264,6 +1264,27 @@ public sealed record ProductBundle
 /// lipseste din JSON (catalog mai vechi, fara acea cheie inca) — System.Text.Json
 /// lasa proprietatea la valoarea implicita din initializator cand cheia
 /// lipseste complet din payload, exact ca decodeIfPresent(...) ?? [] pe Mac.
+/// Port 1:1 al Tutorial.swift — tutorial YouTube embedded (secțiunea
+/// "Tutoriale" din Comunitate & Educație, 2026-09-01).
+public sealed record Tutorial
+{
+    public required string Id { get; init; }
+    public required string YoutubeURL { get; init; }
+    public required string VideoID { get; init; }
+    public required string Title { get; init; }
+    public string Description { get; init; } = "";
+    public string ThumbnailURL { get; init; } = "";
+    public IReadOnlyList<string> Tags { get; init; } = [];
+    public string Category { get; init; } = "General";
+    public string? AddedAt { get; init; }
+    public Scheduling? Scheduling { get; init; }
+
+    [JsonIgnore]
+    public Uri? WatchUrl => Uri.TryCreate(YoutubeURL, UriKind.Absolute, out var u) ? u : null;
+    [JsonIgnore]
+    public Uri? ThumbnailUri => Uri.TryCreate(ThumbnailURL, UriKind.Absolute, out var u) ? u : null;
+}
+
 public sealed class Catalog
 {
     public string? UpdatedAt { get; init; }
@@ -1285,6 +1306,9 @@ public sealed class Catalog
 
     /// Pachete/Bundle-uri — Etapa 9 (2026-08-29). Default `[]`: retrocompatibil.
     public IReadOnlyList<ProductBundle> ProductBundles { get; init; } = [];
+
+    /// Tutoriale YouTube embedded — 2026-09-01. Default `[]`: retrocompatibil.
+    public IReadOnlyList<Tutorial> Tutorials { get; init; } = [];
 
     /// Filigran/fundal sezonier optional pentru Client — Etapa 6 (2026-08-29).
     /// NU un banner mic, ci o imagine mare, discreta, "gravata" in fundalul

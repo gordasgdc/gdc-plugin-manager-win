@@ -44,6 +44,8 @@ public enum SidebarPage
     Apps,
     Android,
     License,
+    /// Tutoriale YouTube embedded (2026-09-01).
+    Tutorials,
     /// Cele 4 rubrici noi de Resurse Download (Etapa 2, 2026-08-29) — una per
     /// DownloadCategory, exact ca `SidebarSection.download(DownloadCategory)`
     /// de pe Mac.
@@ -73,6 +75,18 @@ public sealed partial class MainViewModel : ObservableObject
 
     public ObservableCollection<CourseViewModel> Courses { get; } = [];
     public ObservableCollection<EducationalResourceViewModel> EducationalResources { get; } = [];
+    public ObservableCollection<TutorialViewModel> Tutorials { get; } = [];
+    /// Vedere filtrata (cautare + categorie) peste `Tutorials` — cerinta
+    /// directa (2026-09-01): "un cautator deasupra ... si o optiune de
+    /// grupare [pe categorie]". Categoria e liberă, gestionată de Furnizor,
+    /// nu un enum fix — `TutorialCategories` se calculeaza din ce exista.
+    public ICollectionView TutorialsView { get; }
+    [ObservableProperty]
+    private string _tutorialSearchText = string.Empty;
+    [ObservableProperty]
+    private string? _selectedTutorialCategory; // null = "Toate"
+    public IEnumerable<string> TutorialCategories =>
+        Tutorials.Select(t => t.Category).Distinct().OrderBy(c => c);
     public ObservableCollection<EventViewModel> Events { get; } = [];
     public ObservableCollection<PartnerStoreViewModel> PartnerStores { get; } = [];
     public ObservableCollection<ServiceCenterViewModel> ServiceCenters { get; } = [];
@@ -109,6 +123,7 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<ProductViewModel> GlobalProducts { get; } = [];
     public ObservableCollection<CourseViewModel> GlobalCourses { get; } = [];
     public ObservableCollection<EducationalResourceViewModel> GlobalEducationalResources { get; } = [];
+    public ObservableCollection<TutorialViewModel> GlobalTutorials { get; } = [];
     public ObservableCollection<EventViewModel> GlobalEvents { get; } = [];
     public ObservableCollection<PartnerStoreViewModel> GlobalPartnerStores { get; } = [];
     public ObservableCollection<ServiceCenterViewModel> GlobalServiceCenters { get; } = [];
@@ -146,7 +161,7 @@ public sealed partial class MainViewModel : ObservableObject
         && GlobalPartnerStores.Count == 0 && GlobalServiceCenters.Count == 0
         && GlobalApps.Count == 0 && GlobalAudioTracks.Count == 0
         && GlobalDownloadResources.Count == 0 && GlobalPartnerOffers.Count == 0
-        && GlobalBundles.Count == 0;
+        && GlobalBundles.Count == 0 && GlobalTutorials.Count == 0;
 
     public LicensePaneViewModel LicensePane { get; }
 
@@ -273,6 +288,9 @@ public sealed partial class MainViewModel : ObservableObject
         ProductsView = CollectionViewSource.GetDefaultView(Products);
         ProductsView.Filter = FilterProduct;
 
+        TutorialsView = CollectionViewSource.GetDefaultView(Tutorials);
+        TutorialsView.Filter = FilterTutorial;
+
         // Cardul unui produs deblocheaza singur din ProductViewModel — dar
         // starea trebuie recalculata pe toate cardurile dupa orice
         // activare/dezactivare facuta din panoul Licenta.
@@ -312,6 +330,19 @@ public sealed partial class MainViewModel : ObservableObject
     }
 
     partial void OnPriceFilterChanged(PriceFilter value) => ProductsView.Refresh();
+
+    partial void OnTutorialSearchTextChanged(string value) => TutorialsView.Refresh();
+    partial void OnSelectedTutorialCategoryChanged(string? value) => TutorialsView.Refresh();
+
+    [RelayCommand]
+    private void SelectTutorialCategory(string? category) => SelectedTutorialCategory = category;
+
+    private bool FilterTutorial(object obj)
+    {
+        if (obj is not TutorialViewModel t) return false;
+        if (SelectedTutorialCategory is { } cat && t.Category != cat) return false;
+        return FuzzySearch.MatchesAny(TutorialSearchText, [t.Title, t.Description, t.Category, .. t.Tags]);
+    }
 
     partial void OnSelectedOSChanged(OSFilter value)
     {
@@ -399,6 +430,7 @@ public sealed partial class MainViewModel : ObservableObject
         GlobalDownloadResources.Clear();
         GlobalPartnerOffers.Clear();
         GlobalBundles.Clear();
+        GlobalTutorials.Clear();
 
         var query = SearchText;
         if (!string.IsNullOrWhiteSpace(query))
@@ -473,6 +505,13 @@ public sealed partial class MainViewModel : ObservableObject
             {
                 if (FuzzySearch.MatchesAny(query, bundle.Name, bundle.Description, bundle.Bundle.Id))
                     GlobalBundles.Add(bundle);
+            }
+
+            // A 12-a colectie (2026-09-01) — tutoriale YouTube.
+            foreach (var tutorial in Tutorials)
+            {
+                if (FuzzySearch.MatchesAny(query, [tutorial.Title, tutorial.Description, tutorial.Category, tutorial.Tutorial.Id, .. tutorial.Tags]))
+                    GlobalTutorials.Add(tutorial);
             }
         }
 
@@ -562,6 +601,9 @@ public sealed partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     private void ShowEducationalResources() => CurrentPage = SidebarPage.EducationalResources;
+
+    [RelayCommand]
+    private void ShowTutorials() => CurrentPage = SidebarPage.Tutorials;
 
     [RelayCommand]
     private void ShowEvents() => CurrentPage = SidebarPage.Events;
@@ -678,6 +720,14 @@ public sealed partial class MainViewModel : ObservableObject
         {
             EducationalResources.Add(new EducationalResourceViewModel(resource));
         }
+
+        Tutorials.Clear();
+        foreach (var tutorial in CatalogService.Shared.Tutorials.Where(x => x.Scheduling.IsVisibleNow()))
+        {
+            Tutorials.Add(new TutorialViewModel(tutorial));
+        }
+        OnPropertyChanged(nameof(TutorialCategories));
+        TutorialsView?.Refresh(); // acelasi bug de refresh ca la ProductsView (vezi comentariul de mai jos)
 
         Events.Clear();
         foreach (var ev in CatalogService.Shared.Events.Where(x => x.Scheduling.IsVisibleNow()))

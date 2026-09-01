@@ -830,6 +830,57 @@
             </Border>
         </DataTemplate>
 
+        <!-- Un card de tutorial YouTube embedded (2026-09-01). -->
+        <DataTemplate DataType="{x:Type vm:TutorialViewModel}">
+            <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
+                <Grid>
+                    <StackPanel>
+                        <Button Style="{StaticResource CoverButtonStyle}" Command="{Binding WatchCommand}">
+                            <Border CornerRadius="6" ClipToBounds="True" Height="160"
+                                    Background="{DynamicResource InkSurfaceRaisedBrush}">
+                                <Grid>
+                                    <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
+                                           RenderOptions.BitmapScalingMode="HighQuality" />
+                                    <ui:SymbolIcon Symbol="Play24" FontSize="34" Foreground="White"
+                                                   HorizontalAlignment="Center" VerticalAlignment="Center" />
+                                </Grid>
+                            </Border>
+                        </Button>
+                        <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Left" Margin="0,8,0,0">
+                            <TextBlock Text="{Binding Category}" FontSize="9" FontWeight="Bold" Foreground="#4EA1F5" />
+                        </Border>
+                        <TextBlock Text="{Binding Title}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
+                        <ItemsControl ItemsSource="{Binding Tags}" Margin="0,6,0,0"
+                                      Visibility="{Binding HasTags, Converter={StaticResource BoolToVisibility}}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border CornerRadius="9" Background="{DynamicResource InkSurfaceRaisedBrush}" Padding="7,2" Margin="0,0,6,6">
+                                        <TextBlock Text="{Binding}" FontSize="10" Foreground="{DynamicResource InkTextMutedBrush}" />
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                        <!-- Descriere colapsabila - "sa nu fie lung odata" (cerinta directa). -->
+                        <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,8,0,0"
+                                Command="{Binding ToggleDescriptionCommand}"
+                                Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+                        <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
+                                   Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
+                    </StackPanel>
+                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                            Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </Border>
+        </DataTemplate>
+
         <!-- Un card de eveniment. -->
         <DataTemplate DataType="{x:Type vm:EventViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320" MinHeight="140">
@@ -1098,6 +1149,14 @@
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="Book24" FontSize="16" Margin="0,0,10,0" />
                         <TextBlock Text="Materiale" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowTutorialsCommand}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Tutorials, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Video24" FontSize="16" Margin="0,0,10,0" />
+                        <TextBlock Text="Tutoriale" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
@@ -1557,6 +1616,55 @@
                     <TextBlock Text="Niciun material disponibil momentan." Style="{StaticResource MutedTextStyle}"
                                Visibility="{Binding EducationalResources.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding EducationalResources}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <WrapPanel Orientation="Horizontal" />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Pagina Tutoriale (2026-09-01) - cautare + filtru pe categorie deasupra grilei. -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Tutorials}">
+                <StackPanel>
+                    <TextBlock Text="Tutoriale" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <Grid Margin="0,0,0,10" MaxWidth="420" HorizontalAlignment="Left">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <ui:SymbolIcon Grid.Column="0" Symbol="Search24" FontSize="15" Margin="10,0,4,0"
+                                       Foreground="{DynamicResource InkTextMutedBrush}" VerticalAlignment="Center" />
+                        <TextBox Grid.Column="1" Style="{StaticResource SearchTextBoxStyle}"
+                                 Text="{Binding TutorialSearchText, UpdateSourceTrigger=PropertyChanged}" />
+                    </Grid>
+                    <WrapPanel Orientation="Horizontal" Margin="0,0,0,14"
+                               Visibility="{Binding TutorialCategories.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="TutorialCategory" Margin="0,0,8,8"
+                                     IsChecked="True"
+                                     Command="{Binding SelectTutorialCategoryCommand}">
+                            <TextBlock Text="Toate" />
+                        </RadioButton>
+                        <ItemsControl ItemsSource="{Binding TutorialCategories}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="TutorialCategory" Margin="0,0,8,8"
+                                                 Command="{Binding DataContext.SelectTutorialCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                 CommandParameter="{Binding}">
+                                        <TextBlock Text="{Binding}" />
+                                    </RadioButton>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </WrapPanel>
+                    <TextBlock Text="Niciun tutorial disponibil momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding Tutorials.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding TutorialsView}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate>
                                 <WrapPanel Orientation="Horizontal" />
@@ -2111,6 +2219,16 @@
                     <StackPanel Visibility="{Binding GlobalEducationalResources.Count, Converter={StaticResource NonZeroToVisibility}}">
                         <TextBlock Text="Materiale" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
                         <ItemsControl ItemsSource="{Binding GlobalEducationalResources}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                        </ItemsControl>
+                    </StackPanel>
+
+                    <!-- Tutoriale -->
+                    <StackPanel Visibility="{Binding GlobalTutorials.Count, Converter={StaticResource NonZeroToVisibility}}">
+                        <TextBlock Text="Tutoriale" Style="{StaticResource HeadingTextStyle}" FontSize="15" Margin="0,14,0,8" />
+                        <ItemsControl ItemsSource="{Binding GlobalTutorials}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                             </ItemsControl.ItemsPanel>
