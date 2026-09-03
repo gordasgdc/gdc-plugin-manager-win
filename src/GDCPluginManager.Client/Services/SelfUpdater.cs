@@ -21,7 +21,7 @@ namespace GDCPluginManager.Client.Services;
 /// (`Sources/GDCPluginManager/SelfUpdater.swift`). Fisierul asta e portul
 /// Windows, adaptat la ce exista deja:
 ///
-///   1. `docs/update.json` -> `DownloadUrl["windows"]` (deja fetch-uit de
+///   1. `docs/update.json` -> `windows.download_url` (deja fetch-uit de
 ///      `UpdateChecker.CheckAsync()`) — indica `GDCPluginManager-Windows.zip`,
 ///      care contine un singur `GDCPluginManagerSetup.exe` (Inno Setup).
 ///   2. Instalatorul e lansat NESILENTIOS (fereastra lui Inno ramane
@@ -68,7 +68,7 @@ public static class SelfUpdater
 
     public static async Task DownloadAndInstallAsync(UpdateInfo info)
     {
-        var url = info.DownloadUrl.GetValueOrDefault("windows");
+        var url = info.DownloadUrl;
         if (string.IsNullOrWhiteSpace(url)
             || (!url.StartsWith("http://", StringComparison.OrdinalIgnoreCase)
                 && !url.StartsWith("https://", StringComparison.OrdinalIgnoreCase)))

@@ -1,5 +1,11 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.27.2 (2026-09-03) — Versiuni Mac/Windows independente
+
+Schimbare internă: verificarea de actualizări citește acum un număr de
+versiune separat pentru Windows, în loc de unul comun cu Mac. Nicio
+schimbare vizibilă pentru utilizator.
+
 ## v1.27.1 (2026-09-03) — Fix: imagini care nu se încărcau pe unele Windows 10
 
 Forțare explicită TLS 1.2/1.3 la nivel de sistem, pentru situațiile în care

@@ -528,7 +528,7 @@ public sealed partial class MainViewModel : ObservableObject
         {
             UpdateBannerText = $"Versiune noua disponibila: {info.Version}" +
                                 (string.IsNullOrWhiteSpace(info.Changes) ? "" : $" — {info.Changes}");
-            UpdateDownloadUrl = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
+            UpdateDownloadUrl = info.DownloadUrl;
         }
 
         RefreshDependencies();

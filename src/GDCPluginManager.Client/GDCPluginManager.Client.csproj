@@ -14,10 +14,10 @@
     <RootNamespace>GDCPluginManager.Client</RootNamespace>
     <AssemblyName>GDCPluginManager</AssemblyName>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <!-- Acelasi numar ca versiunea Mac (docs/update.json foloseste un singur
-         camp "version" comun ambelor platforme) — UpdateChecker.CurrentVersion
+    <!-- Versiune independenta de Mac (docs/update.json are sectiuni separate
+         "mac"/"windows" din 2026-09-03) — UpdateChecker.CurrentVersion
          citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
-    <Version>1.27.1</Version>
+    <Version>1.27.2</Version>
     <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
          AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

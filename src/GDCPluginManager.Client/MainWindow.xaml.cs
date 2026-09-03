@@ -200,7 +200,7 @@ public partial class MainWindow : Window
         info ??= UpdateChecker.Shared.AvailableUpdate;
         if (info is null) return;
 
-        var url = info.DownloadUrl.GetValueOrDefault("windows") ?? info.DownloadUrl.Values.FirstOrDefault();
+        var url = info.DownloadUrl;
 
         // Faza 4 (vezi CLAUDE.md Partea 1 Regula 13): rezumatul modificarilor
         // (Release Notes) din update.json (`Changes`) - camp optional,

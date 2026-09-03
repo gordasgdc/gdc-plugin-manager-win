@@ -24,12 +24,25 @@ public sealed class UpdateInfo
     public string? Changes { get; init; }
 
     [JsonPropertyName("download_url")]
-    public required Dictionary<string, string> DownloadUrl { get; init; }
+    public required string DownloadUrl { get; init; }
 
     public bool? Mandatory { get; init; }
 
     [JsonPropertyName("min_version")]
     public string? MinVersion { get; init; }
+}
+
+/// [2026-09-03] `update.json` a trecut de la un singur camp `version`
+/// comun ambelor platforme la doua sectiuni separate (`mac`/`windows`) —
+/// motiv real: un fix Windows-only obliga inainte la un "bump doar de
+/// versiune" si pe Mac (fara nicio schimbare de cod), doar ca sa ramana
+/// numerele sincronizate — un release Mac inutil de fiecare data cand doar
+/// Windows se schimba, si invers. Fiecare platforma isi are acum propriul
+/// numar de versiune, complet independent. Pereche: UpdateChecker.swift.
+file sealed class UpdateManifest
+{
+    public UpdateInfo? Mac { get; init; }
+    public UpdateInfo? Windows { get; init; }
 }
 
 /// Port 1:1 al UpdateChecker.swift — verifica docs/update.json (acelasi
@@ -68,7 +81,7 @@ public sealed class UpdateChecker : INotifyPropertyChanged
     public async Task CheckAsync()
     {
         Log.Write($"CheckAsync start. CurrentVersion={CurrentVersion}");
-        UpdateInfo? info;
+        UpdateManifest? manifest;
         // Cache-buster pe fiecare cerere: GitHub Pages (Fastly) serveste
         // docs/update.json cu max-age=600 - un nod CDN care a raspuns o
         // data la un update.json vechi il tine cache-uit pana la 10 minute,
@@ -83,7 +96,7 @@ public sealed class UpdateChecker : INotifyPropertyChanged
             if (!response.IsSuccessStatusCode) return;
             var data = await response.Content.ReadAsByteArrayAsync();
             Log.Write($"Body: {System.Text.Encoding.UTF8.GetString(data)}");
-            info = JsonSerializer.Deserialize<UpdateInfo>(data, new JsonSerializerOptions
+            manifest = JsonSerializer.Deserialize<UpdateManifest>(data, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
             });
@@ -93,9 +106,9 @@ public sealed class UpdateChecker : INotifyPropertyChanged
             Log.Write($"Exceptie la fetch/parse: {ex}");
             return;
         }
-        if (info is null)
+        if (manifest?.Windows is not { } info)
         {
-            Log.Write("Deserializare a intors null.");
+            Log.Write("Deserializare a intors null sau update.json nu are sectiunea \"windows\".");
             return;
         }
 
