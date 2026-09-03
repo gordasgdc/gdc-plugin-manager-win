@@ -220,6 +220,17 @@ public sealed partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private string? _updateDownloadUrl;
 
+    /// [2026-09-03] Banner SEPARAT de UpdateBannerText — cerut explicit
+    /// de Cristi, direct din incidentul de azi: cand verificarea automata
+    /// nu poate confirma daca exista o versiune noua (retea, sau format de
+    /// update.json neparsabil pe o versiune veche), userul trebuie sa afle
+    /// asta, nu doar sa nu vada niciun banner deloc. Distinct de banner-ul
+    /// normal pentru ca aici NU exista un numar de versiune de aratat, iar
+    /// butonul trimite la gordas.dev (descarcare manuala), nu la
+    /// SelfUpdater (care are nevoie tocmai de datele pe care nu le avem).
+    [ObservableProperty]
+    private string? _checkFailedBannerText;
+
     /// Dependinte de sistem lipsa OBLIGATORII (ex. DaVinci Resolve
     /// neinstalat) — vezi SystemDependencyChecker.cs. Port 1:1 al
     /// DependencyBanner din ContentView.swift. Cele optionale NU intra
@@ -523,6 +534,11 @@ public sealed partial class MainViewModel : ObservableObject
     {
         await RefreshAsync();
         await UpdateChecker.Shared.CheckAsync();
+        if (UpdateChecker.Shared.CheckFailed)
+        {
+            CheckFailedBannerText = "Nu am putut verifica automat dacă există o versiune nouă — " +
+                                     "descarcă manual de pe gordas.dev, ca să fii sigur că ai ultima versiune.";
+        }
         var info = UpdateChecker.Shared.AvailableUpdate;
         if (info is not null)
         {
@@ -685,6 +701,18 @@ public sealed partial class MainViewModel : ObservableObject
     {
         UpdateChecker.Shared.Dismiss();
         UpdateBannerText = null;
+    }
+
+    [RelayCommand]
+    private void OpenWebsiteForManualDownload()
+    {
+        System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("https://gordas.dev/") { UseShellExecute = true });
+    }
+
+    [RelayCommand]
+    private void DismissCheckFailedBanner()
+    {
+        CheckFailedBannerText = null;
     }
 
     /// Incarca TOATE filigranele active acum (bibliotecă, 2026-08-29).

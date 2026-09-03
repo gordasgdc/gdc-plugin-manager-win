@@ -73,6 +73,22 @@ public sealed class UpdateChecker : INotifyPropertyChanged
     /// niciodata din `AvailableUpdate`.
     public UpdateInfo? LatestInfo { get; private set; }
 
+    /// [2026-09-03] Distinct de "ești la zi" — cerut explicit de Cristi,
+    /// direct din incidentul de azi: cand formatul `update.json` s-a
+    /// schimbat (versiuni Windows/Mac separate), un client mai vechi
+    /// (v1.27.0) nu mai putea PARSA raspunsul deloc. `CheckAsync` prindea
+    /// exceptia, o scria in log, si se oprea in tacere — `AvailableUpdate`
+    /// ramanea `null`, exact ca la "nu exista update", desi realitatea era
+    /// "nu am de unde sti daca exista un update". Userul a ramas ore
+    /// intregi pe o versiune stricata, fara NICIUN semn ca ceva nu merge.
+    ///
+    /// Cand verificarea automata esueaza (retea, parsare), `CheckFailed`
+    /// devine true — MainWindow arata un banner separat, care trimite
+    /// direct la pagina de descarcare (gordas.dev), nu la GitHub (Regula
+    /// 20: clientul nu vede niciodata GitHub). Se reseteaza la urmatoarea
+    /// verificare reusita, ca sa nu ramana agatat dupa ce problema trece.
+    public bool CheckFailed { get; private set; }
+
     public event PropertyChangedEventHandler? PropertyChanged;
 
     private static string CurrentVersion =>
@@ -93,7 +109,11 @@ public sealed class UpdateChecker : INotifyPropertyChanged
         {
             using var response = await _http.GetAsync(bustedUri);
             Log.Write($"GET {bustedUri} -> {(int)response.StatusCode} {response.StatusCode}");
-            if (!response.IsSuccessStatusCode) return;
+            if (!response.IsSuccessStatusCode)
+            {
+                SetCheckFailed(true);
+                return;
+            }
             var data = await response.Content.ReadAsByteArrayAsync();
             Log.Write($"Body: {System.Text.Encoding.UTF8.GetString(data)}");
             manifest = JsonSerializer.Deserialize<UpdateManifest>(data, new JsonSerializerOptions
@@ -104,13 +124,16 @@ public sealed class UpdateChecker : INotifyPropertyChanged
         catch (Exception ex)
         {
             Log.Write($"Exceptie la fetch/parse: {ex}");
+            SetCheckFailed(true);
             return;
         }
         if (manifest?.Windows is not { } info)
         {
             Log.Write("Deserializare a intors null sau update.json nu are sectiunea \"windows\".");
+            SetCheckFailed(true);
             return;
         }
+        SetCheckFailed(false);
 
         var isNewer = IsNewer(info.Version, CurrentVersion);
         Log.Write($"info.Version={info.Version}, CurrentVersion={CurrentVersion}, IsNewer={isNewer}");
@@ -136,6 +159,13 @@ public sealed class UpdateChecker : INotifyPropertyChanged
         var alreadyDismissed = dismissed == info.Version && info.Mandatory != true;
         AvailableUpdate = alreadyDismissed ? null : info;
         Raise(nameof(AvailableUpdate));
+    }
+
+    private void SetCheckFailed(bool failed)
+    {
+        if (CheckFailed == failed) return;
+        CheckFailed = failed;
+        Raise(nameof(CheckFailed));
     }
 
     public void Dismiss()

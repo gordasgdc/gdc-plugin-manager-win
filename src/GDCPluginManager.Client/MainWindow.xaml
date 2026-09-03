@@ -1594,6 +1594,31 @@
                         </StackPanel>
                     </Grid>
                 </Border>
+
+                <!-- [2026-09-03] Banner separat pentru "nu pot verifica" — vezi
+                     CheckFailedBannerText din MainViewModel. Culoare de avertisment
+                     (nu brand), ca sa nu se confunde vizual cu "exista update nou". -->
+                <Border Background="{DynamicResource InkSurfaceRaisedBrush}" CornerRadius="4" Padding="12,8" Margin="0,8,0,0"
+                        Visibility="{Binding CheckFailedBannerText, Converter={StaticResource NullToVisibility}}">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Warning24" FontSize="16" Margin="0,0,8,0"
+                                           Foreground="#FFE0A030" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding CheckFailedBannerText}" Foreground="#FFE0A030"
+                                       TextWrapping="Wrap" VerticalAlignment="Center" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <Button Content="Deschide gordas.dev" Margin="10,0,0,0"
+                                    Command="{Binding OpenWebsiteForManualDownloadCommand}" />
+                            <Button Content="Ascunde" Margin="8,0,0,0" Command="{Binding DismissCheckFailedBannerCommand}" />
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
                 <TextBlock Text="{Binding LoadError}" Foreground="#FFE8544D" TextWrapping="Wrap" Margin="0,6,0,0"
                            Visibility="{Binding LoadError, Converter={StaticResource NullToVisibility}}" />
 

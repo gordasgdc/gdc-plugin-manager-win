@@ -1,5 +1,19 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.27.4 (2026-09-03) — Avertisment vizibil când verificarea de actualizări eșuează
+
+Bug real, găsit direct din incidentul de azi cu formatul `update.json`:
+când verificarea automată eșua (rețea, sau un format neparsabil pe o
+versiune veche a aplicației), aplicația spunea tăcut "ești la zi" — exact
+la fel ca atunci când chiar era la zi. Un client rămas fără nicio cale de
+a-și da seama că are o problemă putea sta blocat ore/zile pe o versiune
+veche, fără niciun semn.
+
+Acum verificarea eșuată arată explicit un banner separat + un mesaj clar
+la apăsarea manuală a "Caută actualizări", cu buton direct către
+gordas.dev — ca utilizatorul să știe sigur că trebuie să descarce manual,
+în loc să presupună că totul e în regulă.
+
 ## v1.27.3 (2026-09-03) — Fix real: DataMover apărea cu versiune necunoscută în „Aplicațiile mele”
 
 ID-ul de instalare căutat pentru DataMover rămăsese cel al clientului vechi

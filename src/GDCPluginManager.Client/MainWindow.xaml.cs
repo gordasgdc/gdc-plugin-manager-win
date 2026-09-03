@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -177,6 +178,31 @@ public partial class MainWindow : Window
         // live cu un log real (info.Version=1.3.0, IsNewer=True,
         // dismissed=1.3.0). `LatestInfo` nu e filtrat de dismissal — sursa
         // corecta pentru orice verificare declansata explicit de user.
+        // [2026-09-03] BUG REAL, gasit direct din incidentul de azi: pana
+        // acum, `info is null` insemna FIE "esti la zi" FIE "verificarea a
+        // esuat" (retea sau format nou de update.json neparsabil) — cele
+        // doua cazuri aratau IDENTIC userului, "Esti la zi". Un client mai
+        // vechi, stricat de o schimbare de format, ar fi confirmat gresit
+        // "esti la zi" la infinit, fara nicio indicatie ca trebuie sa
+        // descarce manual. `CheckFailed` distinge explicit cele doua cazuri.
+        if (UpdateChecker.Shared.CheckFailed)
+        {
+            var failedBox = new Wpf.Ui.Controls.MessageBox
+            {
+                Title = "Nu am putut verifica actualizările",
+                Content = "Verificarea automată a eșuat (posibil o schimbare de format sau o problemă de rețea) — " +
+                          "nu putem confirma dacă ai ultima versiune. Descarcă manual de pe gordas.dev, ca să fii sigur.",
+                PrimaryButtonText = "Deschide gordas.dev",
+                CloseButtonText = "Mai târziu",
+            };
+            var failedResult = await failedBox.ShowDialogAsync();
+            if (failedResult == Wpf.Ui.Controls.MessageBoxResult.Primary)
+            {
+                Process.Start(new ProcessStartInfo("https://gordas.dev/") { UseShellExecute = true });
+            }
+            return;
+        }
+
         var info = UpdateChecker.Shared.LatestInfo;
         if (info is null)
         {
