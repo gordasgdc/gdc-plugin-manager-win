@@ -1,5 +1,24 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.28.0 (2026-09-03) — Cursuri: model de acces, format & valabilitate (port 1:1 Mac)
+
+Port 1:1 al v1.28.0 de pe Mac (`gdc-plugin-manager-catalog-vendor`):
+fiecare curs poate fi clasificat explicit — Gratuit, Plată Unică, Abonament
+sau Live / Mentorat 1-la-1 — afișat ca etichetă colorată pe card, alături
+de Format & Durată și Valabilitatea accesului (pe viață sau N zile de la
+înscriere). Cursurile cu Link Acces / Școală Online arată un buton direct.
+„Abonament" rămâne strict etichetă informativă — fără sistem real de
+membri/tiere.
+
+`CourseAccessType`/`CourseValidity` noi în `CatalogModel.cs`, `Course`
+extins cu `AccessType`/`AccessLink`/`FormatLabel`/`Validity` (toate
+opționale, retrocompatibile cu orice `catalog.json` publicat înainte).
+`CourseViewModel`/`MainWindow.xaml` actualizate cu badge-ul + butonul nou.
+
+**TODO**: `docs/update.json` (Mac) rămâne neactualizat pentru Windows până
+la publicarea reală a `.exe`-ului — bump-ul de-aici e doar pe sursă/build
+local verificat (`dotnet build`), nu pe releasul descărcabil.
+
 ## v1.27.4 (2026-09-03) — Avertisment vizibil când verificarea de actualizări eșuează
 
 Bug real, găsit direct din incidentul de azi cu formatul `update.json`:

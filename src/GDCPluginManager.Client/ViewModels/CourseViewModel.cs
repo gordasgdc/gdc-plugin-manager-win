@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Windows.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
@@ -71,4 +72,31 @@ public sealed partial class CourseViewModel : ObservableObject
 
     [RelayCommand]
     private void ToggleDescription() => IsDescriptionExpanded = !IsDescriptionExpanded;
+
+    // Model de acces + detalii desfasurare/valabilitate — Etapa 2026-09-03.
+    // Port 1:1 al badge-ului din CourseCard (ContentView.swift, Mac).
+    public string AccessTypeLabel => Course.EffectiveAccessType.Label();
+
+    /// Aceleasi culori ca pe Mac (verde/albastru/mov/portocaliu) — vezi
+    /// BadgeBrush din DownloadResourceViewModel/ProductViewModel pentru
+    /// tiparul deja stabilit (Brushes.* direct, fara resursa noua).
+    public Brush AccessTypeBrush => Course.EffectiveAccessType switch
+    {
+        CourseAccessType.Free => Brushes.MediumSeaGreen,
+        CourseAccessType.Subscription => Brushes.MediumPurple,
+        CourseAccessType.LiveMentoring => Brushes.DarkOrange,
+        _ => Brushes.DodgerBlue,
+    };
+
+    public string? FormatLabel => Course.FormatLabel;
+    public bool HasFormatLabel => !string.IsNullOrWhiteSpace(FormatLabel);
+    public string ValidityLabel => Course.Validity?.Label ?? "Acces pe viață";
+    public bool HasAccessLink => !string.IsNullOrWhiteSpace(Course.AccessLink);
+
+    [RelayCommand]
+    private void OpenAccessLink()
+    {
+        if (string.IsNullOrWhiteSpace(Course.AccessLink)) return;
+        Process.Start(new ProcessStartInfo(Course.AccessLink) { UseShellExecute = true });
+    }
 }

@@ -696,6 +696,49 @@ public sealed record CourseOption
     public string PriceDisplay => PriceEUR.ToString("C", new System.Globalization.CultureInfo("ro-RO") { NumberFormat = { CurrencySymbol = "EUR" } });
 }
 
+/// Port 1:1 al CourseAccessType (Mac, CatalogModel.swift, 2026-09-03) —
+/// clasificare model de acces. NU declanseaza nicio verificare reala de
+/// acces (GDC Plugin Manager n-are login/cont) — strict clasificare +
+/// eticheta vizuala. `Subscription` ramane doar informativ, fara
+/// infrastructura de membri/tiere (decizie explicita Cristi: "Doar
+/// eticheta vizuala").
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum CourseAccessType
+{
+    Free,
+    OneTime,
+    Subscription,
+    LiveMentoring,
+}
+
+public static class CourseAccessTypeExtensions
+{
+    public static string Label(this CourseAccessType type) => type switch
+    {
+        CourseAccessType.Free => "Gratuit",
+        CourseAccessType.OneTime => "Plată Unică",
+        CourseAccessType.Subscription => "Abonament",
+        CourseAccessType.LiveMentoring => "Live / Mentorat 1-la-1",
+        _ => "Plată Unică",
+    };
+}
+
+/// Port 1:1 al CourseValidity (Mac, CatalogModel.swift, 2026-09-03) — enum
+/// cu payload, encodat identic pe fir ca {"kind":"lifetime"} sau
+/// {"kind":"days","days":N}. Optional pe Course: null/kind lipsa => lifetime
+/// (retrocompatibil cu orice curs publicat inainte de acest camp).
+public sealed record CourseValidity
+{
+    public string Kind { get; init; } = "lifetime";
+    public int? Days { get; init; }
+
+    [JsonIgnore]
+    public bool IsLimited => Kind == "days" && Days is > 0;
+
+    [JsonIgnore]
+    public string Label => IsLimited ? $"Acces {Days} zile de la înscriere" : "Acces pe viață";
+}
+
 /// Port 1:1 al Course.swift — sesiune rezervabila, nu produs descarcabil.
 public sealed record Course
 {
@@ -715,6 +758,24 @@ public sealed record Course
     /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac
     /// ("rețelele sociale la toate rubricile"). Retrocompatibil (null).
     public SocialLinks? SocialLinks { get; init; }
+
+    /// Model de acces — Etapa 2026-09-03. Null/lipsa in catalog.json vechi
+    /// => tratat ca OneTime prin EffectiveAccessType (comportamentul de
+    /// facto anterior: pret fix, contact WhatsApp). Vezi CourseAccessType.
+    public CourseAccessType? AccessType { get; init; }
+
+    /// Link Acces / Scoala Online (Zoom/Meet/platforma proprie) — activat
+    /// automat la achizitie/acces, aratat de Client ca buton direct, fara login.
+    public string? AccessLink { get; init; }
+
+    /// Format & Durata — text liber ("6 ore, 4 module", "1 sesiune 1-la-1").
+    public string? FormatLabel { get; init; }
+
+    /// Valabilitate acces — null => lifetime. Vezi CourseValidity.
+    public CourseValidity? Validity { get; init; }
+
+    [JsonIgnore]
+    public CourseAccessType EffectiveAccessType => AccessType ?? CourseAccessType.OneTime;
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
