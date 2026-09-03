@@ -1,5 +1,14 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.27.3 (2026-09-03) — Fix real: DataMover apărea cu versiune necunoscută în „Aplicațiile mele”
+
+ID-ul de instalare căutat pentru DataMover rămăsese cel al clientului vechi
+(Python), de dinainte ca DataMover Windows să treacă la clientul nou — nu
+mai găsea nimic în Registry, iar aplicația (deși pornea normal) arăta
+"v0.0.0" în loc de versiunea reală. Celelalte trei aplicații detectate
+(GDC Vault, MediaFlow Monitor, Master Control Studio Pro) foloseau deja
+identitatea corectă.
+
 ## v1.27.2 (2026-09-03) — Versiuni Mac/Windows independente
 
 Schimbare internă: verificarea de actualizări citește acum un număr de

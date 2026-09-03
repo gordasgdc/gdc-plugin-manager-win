@@ -69,6 +69,24 @@ public static class MyAppsService
     /// (2026-08-29). AppId apare acolo ca `AppId={{X}}` — Inno interpreteaza
     /// `{{` ca un `{` literal, deci cheia reala din Registry e `{X}_is1`.
     ///
+    /// [BUG REAL, gasit 2026-09-03: raportat de Cristi, "Aplicatiile mele"
+    /// arata v0.0.0 pentru toate] GUID-ul de DataMover ramasese cel VECHI
+    /// (client Python/PyInstaller) dupa ce DataMover Windows a trecut la
+    /// clientul WPF nou — `installer.iss` a primit un AppId nou atunci, dar
+    /// acest fisier nu a fost actualizat in acelasi commit. Cautarea in
+    /// Registry nu gasea niciodata cheia, cadea pe fallback (exe gasit prin
+    /// `FallbackRelativeDir`, deci butonul Lanseaza tot mergea), si versiunea
+    /// ramanea hardcodata la "0.0.0" — exact simptomul raportat. Verificat
+    /// live impotriva celor 4 `installer.iss` reale (nu presupus): GDC Vault,
+    /// MediaFlow Monitor si Master Control Studio Pro au GUID-uri identice
+    /// cu cele de mai jos — daca tot arata 0.0.0 pe acea masina, cauza e alta
+    /// (instalare portabila/manuala, nu prin Inno) si trebuie verificata
+    /// separat, nu presupusa acelasi bug.
+    /// REGULA PRACTICA: la orice schimbare de installer/client (rescriere,
+    /// migrare de tehnologie) care regenereaza `AppId` in `installer.iss`,
+    /// actualizeaza ACEEASI zi acest fisier — un GUID invechit aici e complet
+    /// tacut (nicio eroare, doar un fallback care "functioneaza" degradat).
+    ///
     /// Endpoint-urile de versiune au fost verificate LIVE, nu presupuse:
     /// DataMover -> v2.7.1 (HTTP 200), GDC Vault -> v0.5.4 (HTTP 200),
     /// MediaFlow Monitor -> update.json propriu, 1.8.0, cu `download_url.windows`
@@ -78,7 +96,7 @@ public static class MyAppsService
         new(
             Id: "datamover",
             Name: "DataMover",
-            InnoAppId: "{A4E1C3F0-2F0F-4B0E-9C1A-DATAMOVERSETUP1}",
+            InnoAppId: "{B7F2E4D5-9A1C-4F3B-8E2D-DATAMOVERWPF1}",
             ExeName: "DataMover.exe",
             FallbackRelativeDir: @"DataMover",
             VersionSource: VersionSourceKind.GitHubRelease,
