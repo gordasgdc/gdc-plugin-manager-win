@@ -1,4 +1,5 @@
 using System.IO;
+using System.Net;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -15,6 +16,16 @@ public partial class App : Application
 
     public App()
     {
+        // [2026-09-03] Windows 10 poate avea TLS 1.2 dezactivat la nivel
+        // de sistem (registry SChannel) — HttpClientFactory deja forteaza
+        // Tls12|Tls13 pe SocketsHttpHandler, dar ServicePointManager
+        // (folosit de orice cale legacy/WinINet ramasa in .NET/WPF) poate
+        // ramane pe un default mai vechi. Fortam explicit aici, cat mai
+        // devreme, ca sa eliminam aceasta variabila pentru bug-ul cu
+        // imaginile care nu se incarca pe Windows 10 (raportat 2026-09-03,
+        // neconfirmat inca prin log real — vezi gdcpm-crash.log).
+        ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
+
         Log("App() constructor started.");
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>

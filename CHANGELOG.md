@@ -1,5 +1,12 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.27.1 (2026-09-03) — Fix: imagini care nu se încărcau pe unele Windows 10
+
+Forțare explicită TLS 1.2/1.3 la nivel de sistem, pentru situațiile în care
+Windows 10 are un protocol de securitate mai vechi activat implicit —
+elimină o cauză posibilă a imaginilor care nu se afișau (Evenimente,
+Materiale, Aplicații) pe astfel de instalări.
+
 ## v1.27.0 (2026-09-01) — Descriere colapsabilă peste tot în catalog
 
 Toate cardurile din catalog au acum descrierea ascunsă implicit, cu un
