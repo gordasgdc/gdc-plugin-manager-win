@@ -2,9 +2,15 @@ name: Build GDC Plugin Manager (Windows .exe + installer)
 
 # Se ruleaza automat cand faci "git push" pe branch-ul main, sau manual
 # din tab-ul "Actions" al repo-ului (butonul "Run workflow"). Rezultatul
-# (GDCPluginManagerSetup.exe) e apoi urcat MANUAL pe release-ul de la
-# gordasgdc/gdc-plugin-manager (acolo unde traiesc si asset-urile Mac),
-# nu exista un release propriu-zis pe acest repo.
+# (GDCPluginManagerSetup.exe) e apoi urcat AUTOMAT (2026-09-05) pe
+# release-ul de la gordasgdc/gdc-plugin-manager (acolo unde traiesc si
+# asset-urile Mac, care raman semnate/notarizate manual pe Mac-ul lui
+# Cristi) + docs/update.json (sectiunea "windows") e bumpuit automat in
+# ACELASI repo — vezi pasul final "Publica automat pe release + bump
+# update.json". Necesita secretul RELEASE_PAT (fine-grained PAT, Contents:
+# Read&Write, scopat DOAR la gordasgdc/gdc-plugin-manager) — fara el,
+# pasul de publicare esueaza clar, restul build-ului (exe+installer)
+# ramane neschimbat si tot descarcabil ca artefact.
 on:
   push:
     branches: [ main ]
@@ -130,3 +136,62 @@ jobs:
           retention-days: 1
           name: GDCPluginManager-Windows-Installer
           path: Output\GDCPluginManagerSetup.exe
+
+      # Publicare automata (2026-09-05). Doar pe push la main (nu la un
+      # "Run workflow" manual de test) - un dispatch manual de test nu
+      # trebuie sa poata publica singur un release real neasteptat.
+      # RELEASE_PAT e un fine-grained PAT scopat DOAR la
+      # gordasgdc/gdc-plugin-manager, Contents: Read&Write - suficient
+      # pentru "gh release upload/create" SI pentru commit+push pe
+      # docs/update.json din acelasi repo (nu are acces la niciun alt
+      # repo). Regula 29 (zero info interna in locuri publice): notele de
+      # release/textul din update.json raman generice, fara nume proprii
+      # sau detalii de debugging - jurnalul complet ramane in CHANGELOG.md
+      # din acest repo.
+      - name: Publica automat pe release + bump update.json (doar push pe main)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $version = (Select-String -Path installer.iss -Pattern '#define MyAppVersion "([^"]+)"').Matches[0].Groups[1].Value
+          Write-Host "Versiune detectata: $version"
+
+          $exeVersioned = "GDCPluginManagerSetup-$version.exe"
+          Copy-Item "Output\GDCPluginManagerSetup.exe" $exeVersioned
+          Compress-Archive -Path $exeVersioned -DestinationPath "GDCPluginManager-Windows.zip" -Force
+
+          $tag = "v$version"
+          $releaseRepo = "gordasgdc/gdc-plugin-manager"
+
+          $exists = $true
+          gh release view $tag --repo $releaseRepo *> $null
+          if ($LASTEXITCODE -ne 0) { $exists = $false }
+
+          if (-not $exists) {
+            Write-Host "Release $tag nu exista inca pe $releaseRepo - il creez (doar cu asset-ul Windows; Mac isi adauga separat pachetul semnat)."
+            gh release create $tag --repo $releaseRepo --title $tag --notes "Actualizare Windows." --latest=false
+          }
+
+          gh release upload $tag "GDCPluginManager-Windows.zip" --repo $releaseRepo --clobber
+
+          git clone "https://x-access-token:$env:GH_TOKEN@github.com/$releaseRepo.git" release-repo
+          Push-Location release-repo
+          $updateJson = Get-Content "docs\update.json" -Raw | ConvertFrom-Json
+          $updateJson.windows.version = $version
+          $updateJson.windows.release_date = (Get-Date -Format "yyyy-MM-dd")
+          $updateJson.windows.changes = "Actualizare Windows, sincronizata cu ultima versiune."
+          $updateJson | ConvertTo-Json -Depth 10 | Set-Content "docs\update.json"
+          git config user.name "gdc-plugin-manager-win-ci"
+          git config user.email "ci@gordas.dev"
+          git add docs/update.json
+          git diff --cached --quiet
+          if ($LASTEXITCODE -ne 0) {
+            git commit -m "Windows CI: update.json -> $version"
+            git push
+          } else {
+            Write-Host "update.json deja la $version - nimic de comis."
+          }
+          Pop-Location
+          Remove-Item -Recurse -Force release-repo

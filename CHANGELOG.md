@@ -1,5 +1,14 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## CI (2026-09-05) — Publicare automată pe release + update.json
+
+De acum, orice `git push` pe `main` care produce un build reușit urcă
+singur installer-ul pe GitHub Release (`gordasgdc/gdc-plugin-manager`,
+comun cu Mac) și bumpuiește `docs/update.json` (secțiunea Windows) — nu
+mai e nevoie de un build manual pe o mașină Windows separată decât pentru
+verificare vizuală. Necesită secretul `RELEASE_PAT` (fine-grained,
+`Contents: Read&Write`, scopat DOAR la `gordasgdc/gdc-plugin-manager`).
+
 ## v1.29.2 (2026-09-05) — Release real, aliniat cu Mac v1.29.2
 
 Primul release Windows real (build+installer publicat) după v1.27.2 —
