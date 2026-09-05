@@ -1,5 +1,21 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.29.0 (2026-09-05) — Evenimente multi-locație, sedii suplimentare (port 1:1 Mac)
+
+Port 1:1 al v1.29.0 de pe Mac (`gdc-plugin-manager-catalog-vendor`, doar
+partea de Client — publicarea rămâne exclusiv pe Mac): `Event.Occurrences`
+(nou record `EventOccurrence`: locație/interval/preț/etichetă preț, toate
+opționale) și `ServiceCenter.AdditionalAddresses`/`PartnerStore.
+AdditionalAddresses` (liste de adrese suplimentare). `EventViewModel`/
+`ServiceCenterViewModel`/`PartnerStoreViewModel` + `MainWindow.xaml`
+extinse cu câte un rând per intrare suplimentară, buton hartă propriu.
+Retrocompatibil — `catalog.json` publicat înainte de această schimbare
+decodează fără eroare (liste implicit goale).
+
+**TODO**: `docs/update.json` (Mac) rămâne neactualizat pentru Windows până
+la publicarea reală a `.exe`-ului — bump-ul de-aici e doar pe sursă/build
+local verificat (`dotnet build ... -r win-x64`), nu pe releasul descărcabil.
+
 ## v1.28.0 (2026-09-03) — Cursuri: model de acces, format & valabilitate (port 1:1 Mac)
 
 Port 1:1 al v1.28.0 de pe Mac (`gdc-plugin-manager-catalog-vendor`):

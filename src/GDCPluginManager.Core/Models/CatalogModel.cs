@@ -913,8 +913,42 @@ public sealed record Event
     /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
     public SocialLinks? SocialLinks { get; init; }
 
+    /// Locatii/perioade/preturi SUPLIMENTARE — Multi-Locatie (2026-09-05).
+    /// Port 1:1 al Event.occurrences (Mac). `Location`/`DateDisplay` de mai
+    /// sus raman "principalele", neschimbate. System.Text.Json lasa
+    /// implicit `Array.Empty<...>()` cand cheia lipseste din JSON, deci
+    /// evenimentele deja publicate (fara aceasta cheie) decodeaza fara
+    /// eroare, fara niciun converter custom.
+    public IReadOnlyList<EventOccurrence> Occurrences { get; init; } = Array.Empty<EventOccurrence>();
+
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
+}
+
+/// O locatie/interval/pret SUPLIMENTAR pentru un Event — Multi-Locatie
+/// (2026-09-05). Port 1:1 al EventOccurrence.swift. Toate campurile sunt
+/// libere/optionale prin design.
+public sealed record EventOccurrence
+{
+    public required string Id { get; init; }
+    public required string Location { get; init; }
+    public required string DateDisplay { get; init; }
+    public double? PriceEUR { get; init; }
+    public string? PriceLabel { get; init; }
+
+    [JsonIgnore]
+    public Uri? MapsUrl => MapsLink.Url(Location);
+
+    [JsonIgnore]
+    public string? PriceDisplay
+    {
+        get
+        {
+            if (PriceEUR is not double price) return null;
+            var amount = price % 1 == 0 ? ((long)price).ToString() : price.ToString();
+            return string.IsNullOrWhiteSpace(PriceLabel) ? $"{amount} €" : $"{PriceLabel}: {amount} €";
+        }
+    }
 }
 
 /// Port 1:1 al PartnerStore.swift — magazin partener de echipament
@@ -947,6 +981,10 @@ public sealed record PartnerStore
 
     /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
     public SocialLinks? SocialLinks { get; init; }
+
+    /// Sedii/locatii SUPLIMENTARE ale aceluiasi partener — Multi-Locatie
+    /// (2026-09-05). Vezi ServiceCenter.AdditionalAddresses.
+    public IReadOnlyList<string> AdditionalAddresses { get; init; } = Array.Empty<string>();
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);
@@ -995,6 +1033,10 @@ public sealed record ServiceCenter
 
     /// Linkuri sociale (2026-08-29) — port al extinderii de pe Mac.
     public SocialLinks? SocialLinks { get; init; }
+
+    /// Sedii/locatii SUPLIMENTARE ale aceleiasi afaceri — Multi-Locatie
+    /// (2026-09-05). Port 1:1 al ServiceCenter.additionalAddresses (Mac).
+    public IReadOnlyList<string> AdditionalAddresses { get; init; } = Array.Empty<string>();
 
     [JsonIgnore]
     public Uri? CoverImageUrl => CatalogAssets.ImageUrl(CoverImage);

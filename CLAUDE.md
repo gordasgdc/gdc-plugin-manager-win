@@ -771,6 +771,30 @@ la timp). Vezi `PROJECT_STRUCTURE.md` pentru harta completă.
 ## Unde se rulează testele reale
 Testarea reală se face pe PC-ul unui prieten al userului, prin AnyDesk la distanță — depinde de disponibilitatea lui, poate dura ore/zile între ferestre. Nu bloca alt lucru așteptând un retest; ține build-urile/release-urile la zi ca testul să poată începe imediat ce se deschide o fereastră.
 
+## v1.29.0 (2026-09-05) — Evenimente multi-locație, sedii suplimentare (port 1:1 Mac)
+
+Port 1:1 al Client v1.29.0 de pe Mac (`gdc-plugin-manager-catalog-vendor`)
+— vezi CLAUDE.md de acolo pentru context complet. `CatalogModel.cs`:
+record nou `EventOccurrence` (Location/DateDisplay libere, PriceEUR/
+PriceLabel opționale) + `Event.Occurrences`, plus `ServiceCenter.
+AdditionalAddresses`/`PartnerStore.AdditionalAddresses` — toate
+`IReadOnlyList<T>` cu default `Array.Empty<T>()` (System.Text.Json lasă
+implicit valoarea declarată când cheia lipsește din JSON — retrocompatibil
+automat, fără niciun converter custom, spre deosebire de portul Swift).
+
+`EventViewModel.cs` — `Occurrences: IReadOnlyList<EventOccurrenceViewModel>`
+(nou, în același fișier). `AddressLinkViewModel.cs` (nou, reutilizat de
+`PartnerStoreViewModel`/`ServiceCenterViewModel`) — un rând cu buton hartă
+propriu per adresă suplimentară. `MainWindow.xaml` — câte un `ItemsControl`
+nou în cele 3 `DataTemplate` (Event/PartnerStore/ServiceCenter).
+
+**Verificat**: `dotnet build src/GDCPluginManager.Client/
+GDCPluginManager.Client.csproj -r win-x64` — 0 erori (Core+Client, XAML→BAML
+inclus). Decoder de test separat, rulat REAL pe `docs/catalog.json` de
+producție (copiat de pe Mac) + round-trip encode/decode + JSON vechi
+("fără cheia nouă deloc") construit manual — toate corecte, identic ca
+acoperire cu testul echivalent de pe Mac.
+
 ## v1.24.0 (2026-08-31) — Valabilitate temporala pentru banner
 
 Port 1:1 al Mac v1.24.0: `LaunchBannerConfig.Scheduling` (nou, nullable) -

@@ -968,6 +968,28 @@
                             <TextBlock Text="Vezi pe hartă" FontSize="12" />
                         </StackPanel>
                     </Button>
+                    <!-- Multi-Locatie (2026-09-05) — locatii/perioade/preturi
+                         suplimentare, cate un rand. Port 1:1 al `ForEach(event.occurrences)`
+                         din ContentView.swift (Mac). O lista goala nu randeaza nimic. -->
+                    <ItemsControl ItemsSource="{Binding Occurrences}" Margin="0,2,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding DisplayText}" Style="{StaticResource MutedTextStyle}"
+                                               Visibility="{Binding HasDisplayText, Converter={StaticResource BoolToVisibility}}" />
+                                    <Button Style="{StaticResource ExtraLinkButtonStyle}" Margin="4,0,0,0" Padding="2"
+                                            Command="{Binding OpenMapsCommand}" ToolTip="Vezi pe hartă"
+                                            Visibility="{Binding HasMaps, Converter={StaticResource BoolToVisibility}}">
+                                        <ui:SymbolIcon Symbol="Location24" FontSize="12" />
+                                    </Button>
+                                    <Border Background="{DynamicResource InkSurfaceRaisedBrush}" CornerRadius="8" Padding="6,1" Margin="4,0,0,0"
+                                            Visibility="{Binding HasPrice, Converter={StaticResource BoolToVisibility}}">
+                                        <TextBlock Text="{Binding PriceDisplay}" FontSize="10" Style="{StaticResource MutedTextStyle}" />
+                                    </Border>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                     <views:SocialLinksPanel SocialLinks="{Binding Event.SocialLinks}" Margin="0,8,0,0" />
                 </StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
@@ -1032,6 +1054,22 @@
                             <TextBlock Text="Vezi pe hartă" FontSize="12" />
                         </StackPanel>
                     </Button>
+                    <!-- Multi-Locatie (2026-09-05) — magazine/sedii suplimentare,
+                         cate un rand. Port 1:1 al `ForEach(store.additionalAddresses)`. -->
+                    <ItemsControl ItemsSource="{Binding AdditionalAddresses}" Margin="0,2,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding Address}" Style="{StaticResource MutedTextStyle}" />
+                                    <Button Style="{StaticResource ExtraLinkButtonStyle}" Margin="4,0,0,0" Padding="2"
+                                            Command="{Binding OpenMapsCommand}" ToolTip="Vezi pe hartă"
+                                            Visibility="{Binding HasMaps, Converter={StaticResource BoolToVisibility}}">
+                                        <ui:SymbolIcon Symbol="Location24" FontSize="12" />
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                     <views:SocialLinksPanel SocialLinks="{Binding Store.SocialLinks}" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>
@@ -1080,6 +1118,22 @@
                             <TextBlock Text="Vezi pe hartă" FontSize="12" />
                         </StackPanel>
                     </Button>
+                    <!-- Multi-Locatie (2026-09-05) — sedii suplimentare, cate un rand.
+                         Port 1:1 al `ForEach(center.additionalAddresses)`. -->
+                    <ItemsControl ItemsSource="{Binding AdditionalAddresses}" Margin="0,2,0,0">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                                    <TextBlock Text="{Binding Address}" Style="{StaticResource MutedTextStyle}" />
+                                    <Button Style="{StaticResource ExtraLinkButtonStyle}" Margin="4,0,0,0" Padding="2"
+                                            Command="{Binding OpenMapsCommand}" ToolTip="Vezi pe hartă"
+                                            Visibility="{Binding HasMaps, Converter={StaticResource BoolToVisibility}}">
+                                        <ui:SymbolIcon Symbol="Location24" FontSize="12" />
+                                    </Button>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
                     <views:SocialLinksPanel SocialLinks="{Binding Center.SocialLinks}" Margin="0,8,0,0" />
                 </StackPanel>
             </Border>

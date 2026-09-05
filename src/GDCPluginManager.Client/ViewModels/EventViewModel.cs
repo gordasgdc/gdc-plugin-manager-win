@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
@@ -20,7 +21,14 @@ public sealed partial class EventViewModel : ObservableObject
         // constructor, deci coperta se citeste din parametru, nu din camp.
         Cover = new CoverViewModel(ev.CoverImageUrl, ev.Title);
         CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
+        // Multi-Locatie (2026-09-05) — port 1:1 al listei `ForEach(event.occurrences)`
+        // de pe Mac (ContentView.swift). Un eveniment fara ocurente suplimentare
+        // are aici o lista goala, XAML-ul (ItemsControl) nu randeaza nimic.
+        Occurrences = ev.Occurrences.Select(o => new EventOccurrenceViewModel(o)).ToList();
     }
+
+    /// Locatii/perioade/preturi suplimentare — vezi constructor.
+    public IReadOnlyList<EventOccurrenceViewModel> Occurrences { get; }
 
     /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
     /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
@@ -70,6 +78,35 @@ public sealed partial class EventViewModel : ObservableObject
         // DEZESCAPATA (spatii brute, diacritice ne-encodate), care ar
         // ajunge asa la ShellExecute. AbsoluteUri pastreaza
         // percent-encoding-ul corect. Verificat direct.
+        Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
+    }
+}
+
+/// O locatie/interval/pret suplimentar afisat pe cardul unui Event —
+/// Multi-Locatie (2026-09-05). Port 1:1 al randului din ContentView.swift
+/// (Mac): "\(dateDisplay) · \(location)" + buton harta + badge de pret.
+public sealed partial class EventOccurrenceViewModel : ObservableObject
+{
+    public EventOccurrence Occurrence { get; }
+
+    public EventOccurrenceViewModel(EventOccurrence occurrence)
+    {
+        Occurrence = occurrence;
+    }
+
+    /// "12 oct 2026 · Cluj-Napoca" — segmentele goale sunt omise, ca pe Mac.
+    public string DisplayText => string.Join(" · ", new[] { Occurrence.DateDisplay, Occurrence.Location }
+        .Where(s => !string.IsNullOrWhiteSpace(s)));
+
+    public bool HasDisplayText => !string.IsNullOrWhiteSpace(DisplayText);
+    public string? PriceDisplay => Occurrence.PriceDisplay;
+    public bool HasPrice => PriceDisplay is not null;
+    public bool HasMaps => Occurrence.MapsUrl is not null;
+
+    [RelayCommand]
+    private void OpenMaps()
+    {
+        if (Occurrence.MapsUrl is not { } url) return;
         Process.Start(new ProcessStartInfo(url.AbsoluteUri) { UseShellExecute = true });
     }
 }

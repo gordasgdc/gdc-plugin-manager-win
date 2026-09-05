@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
@@ -17,7 +18,12 @@ public sealed partial class ServiceCenterViewModel : ObservableObject
         Center = center;
         Cover = new CoverViewModel(center.CoverImageUrl, center.Name);
         CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
+        // Multi-Locatie (2026-09-05) — port 1:1 al `ForEach(center.additionalAddresses)`.
+        AdditionalAddresses = center.AdditionalAddresses.Select(a => new AddressLinkViewModel(a)).ToList();
     }
+
+    /// Sedii suplimentare — vezi constructor.
+    public IReadOnlyList<AddressLinkViewModel> AdditionalAddresses { get; }
 
     /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
     /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.

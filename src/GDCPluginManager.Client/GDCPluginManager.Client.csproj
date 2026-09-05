@@ -17,7 +17,7 @@
     <!-- Versiune independenta de Mac (docs/update.json are sectiuni separate
          "mac"/"windows" din 2026-09-03) — UpdateChecker.CurrentVersion
          citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
-    <Version>1.28.0</Version>
+    <Version>1.29.0</Version>
     <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
          AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>

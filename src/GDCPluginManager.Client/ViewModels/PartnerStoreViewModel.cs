@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using GDCPluginManager.Core.Models;
@@ -19,7 +20,12 @@ public sealed partial class PartnerStoreViewModel : ObservableObject
         // constructor, deci coperta se citeste din parametru, nu din camp.
         Cover = new CoverViewModel(store.CoverImageUrl, store.Name);
         CountdownRefreshTimer.Tick += () => OnPropertyChanged(nameof(CountdownText));
+        // Multi-Locatie (2026-09-05) — port 1:1 al `ForEach(store.additionalAddresses)`.
+        AdditionalAddresses = store.AdditionalAddresses.Select(a => new AddressLinkViewModel(a)).ToList();
     }
+
+    /// Magazine/sedii suplimentare — vezi constructor.
+    public IReadOnlyList<AddressLinkViewModel> AdditionalAddresses { get; }
 
     /// Badge "Mai sunt Xz Yh" pentru continut cu valabilitate temporala
     /// si countdown activat de Furnizor - vezi Scheduling.CountdownText.
