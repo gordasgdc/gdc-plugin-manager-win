@@ -1,5 +1,13 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.29.1 (2026-09-05) — Banner de lansare vizibil fără imagine (port 1:1 Mac)
+
+Port 1:1 al fix-ului Mac v1.29.1: banda de text a bannerului de lansare
+rămâne vizibilă chiar dacă Furnizorul (Mac) alege „Fără imagine” — până
+acum întregul banner dispărea fără o fotografie. Nu se aplică echivalent
+pentru CGConvertor în „Aplicațiile Mele” — acea aplicație e exclusiv Mac
+(Xcode/Swift nativ), fără variantă Windows.
+
 ## v1.29.0 (2026-09-05) — Evenimente multi-locație, sedii suplimentare (port 1:1 Mac)
 
 Port 1:1 al v1.29.0 de pe Mac (`gdc-plugin-manager-catalog-vendor`, doar

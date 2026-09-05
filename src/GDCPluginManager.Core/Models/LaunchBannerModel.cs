@@ -29,7 +29,9 @@ public sealed record LaunchBannerConfig
     [JsonIgnore]
     public Uri? ImageUrl => CatalogAssets.ImageUrl(ImagePath);
 
+    // 2026-09-05, port 1:1 al fix-ului Mac: imaginea e OPȚIONALĂ — banda
+    // de text trebuie să rămână vizibilă și fără fotografie.
     [JsonIgnore]
-    public bool IsDisplayable => Enabled && ImageUrl is not null && !string.IsNullOrEmpty(TopText)
+    public bool IsDisplayable => Enabled && !string.IsNullOrEmpty(TopText)
         && !string.IsNullOrEmpty(MainText) && (Scheduling?.IsActiveNow ?? true);
 }

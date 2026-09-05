@@ -47,12 +47,11 @@ public partial class MainWindow : Window
     {
         var config = LaunchBannerChecker.Shared.Config;
         var image = LaunchBannerChecker.Shared.Image;
-        if (config is null || !config.IsDisplayable || image is null)
+        if (config is null || !config.IsDisplayable)
         {
             LaunchBannerGrid.Visibility = Visibility.Collapsed;
             return;
         }
-        LaunchBannerImage.Source = image;
         LaunchBannerTopText.Text = config.TopText;
         LaunchBannerMainText.Text = config.MainText;
 
@@ -62,14 +61,29 @@ public partial class MainWindow : Window
         // LaunchOfferBanner.swift (Mac).
         LaunchBannerGrid.Children.Remove(LaunchBannerTextBand);
         LaunchBannerGrid.Children.Remove(LaunchBannerImage);
-        if (config.TextOnTop)
+
+        // 2026-09-05, port 1:1 al fix-ului Mac: imaginea e OPTIONALA - fara
+        // ea, ramane doar banda de text (Image.Source ramane null, Height
+        // colapsat la 0 ca sa nu lase spatiu gol).
+        if (image is not null)
         {
-            LaunchBannerGrid.Children.Add(LaunchBannerTextBand);
-            LaunchBannerGrid.Children.Add(LaunchBannerImage);
+            LaunchBannerImage.Source = image;
+            LaunchBannerImage.Visibility = Visibility.Visible;
+            if (config.TextOnTop)
+            {
+                LaunchBannerGrid.Children.Add(LaunchBannerTextBand);
+                LaunchBannerGrid.Children.Add(LaunchBannerImage);
+            }
+            else
+            {
+                LaunchBannerGrid.Children.Add(LaunchBannerImage);
+                LaunchBannerGrid.Children.Add(LaunchBannerTextBand);
+            }
         }
         else
         {
-            LaunchBannerGrid.Children.Add(LaunchBannerImage);
+            LaunchBannerImage.Source = null;
+            LaunchBannerImage.Visibility = Visibility.Collapsed;
             LaunchBannerGrid.Children.Add(LaunchBannerTextBand);
         }
 
