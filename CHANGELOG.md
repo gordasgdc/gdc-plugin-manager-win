@@ -1,5 +1,12 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.29.2 (2026-09-05) — Release real, aliniat cu Mac v1.29.2
+
+Primul release Windows real (build+installer publicat) după v1.27.2 —
+versiunile 1.28.0-1.29.1 existaseră doar pe sursă. Aduce efectiv la userii
+Windows: evenimente multi-locație cu preț opțional, adrese suplimentare
+pentru service/magazine partenere, fix banner de lansare fără imagine.
+
 ## v1.29.1 (2026-09-05) — Banner de lansare vizibil fără imagine (port 1:1 Mac)
 
 Port 1:1 al fix-ului Mac v1.29.1: banda de text a bannerului de lansare
