@@ -17,7 +17,7 @@
     <!-- Versiune independenta de Mac (docs/update.json are sectiuni separate
          "mac"/"windows" din 2026-09-03) — UpdateChecker.CurrentVersion
          citeste asta prin Assembly.GetEntryAssembly().GetName().Version. -->
-    <Version>1.29.2</Version>
+    <Version>1.29.3</Version>
     <!-- Iconita exe-ului si a ferestrei (Assets\app.ico — generata din
          AppIcon.icns de pe Mac, ca cele doua clienti sa aiba acelasi logo). -->
     <ApplicationIcon>Assets\app.ico</ApplicationIcon>
@@ -46,6 +46,17 @@
 
   <ItemGroup>
     <ProjectReference Include="..\GDCPluginManager.Core\GDCPluginManager.Core.csproj" />
+  </ItemGroup>
+
+  <!-- [2026-09-06] Ghidurile PDF (RO/EN/ES, deja existente pentru Mac,
+       copiate 1:1 in installer/guides/ - repo-uri separate, fara cale
+       relativa intre ele). Clientul e RO-only azi (fara selector de
+       limba), deci butonul "Ghid" deschide mereu RO - EN/ES raman
+       bundle-uite pentru cand se adauga un selector. -->
+  <ItemGroup>
+    <Content Include="..\..\installer\guides\Ghid-GDCPluginManager-ro.pdf" Link="Ghid-GDCPluginManager-ro.pdf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\installer\guides\Ghid-GDCPluginManager-en.pdf" Link="Ghid-GDCPluginManager-en.pdf" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="..\..\installer\guides\Ghid-GDCPluginManager-es.pdf" Link="Ghid-GDCPluginManager-es.pdf" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

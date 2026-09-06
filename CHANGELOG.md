@@ -1,5 +1,11 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.29.3 (2026-09-06) — Ghid de utilizare (PDF), în fereastra de Setări
+
+Clientul Windows nu avea niciun acces la ghidul de utilizare, deși
+există de mult pentru Mac. Buton nou „Ghid de utilizare (PDF)” în
+Setări, deschide ghidul complet.
+
 ## CI (2026-09-05) — Publicare automată pe release + update.json
 
 De acum, orice `git push` pe `main` care produce un build reușit urcă

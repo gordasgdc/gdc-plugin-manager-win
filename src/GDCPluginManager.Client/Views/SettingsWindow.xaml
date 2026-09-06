@@ -32,6 +32,10 @@
             <ComboBoxItem Content="Întunecată" Tag="Dark" />
         </ComboBox>
 
+        <!-- [2026-09-06] Ghid de utilizare (PDF) — lipsea complet din
+             clientul Windows, deși există de mult pentru Mac. -->
+        <Button Content="Ghid de utilizare (PDF)" HorizontalAlignment="Left" Margin="0,0,0,16" Click="OpenHelpGuide_Click" />
+
         <Grid>
             <Grid.ColumnDefinitions>
                 <ColumnDefinition Width="*" />

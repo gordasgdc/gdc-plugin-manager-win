@@ -983,3 +983,21 @@ Client, XAML→BAML inclus, cross-compilat pe Mac).
   cu SAN incomplet pentru `gordas.dev`.
 - Detalii complete: `CLAUDE_ARCHIVE.md` (val 3/4) sau `CHANGELOG.md`
   v1.19.7→v1.19.10.
+
+## v1.29.3 (2026-09-06) — Ghid de utilizare (PDF) în fereastra de Setări
+
+Audit ecosistem (cerut de Cristi): clientul Windows nu avea NICIUN acces
+la ghidul PDF, deși există de mult pentru Mac (`HelpGuide.swift`,
+16 secțiuni, RO/EN/ES). Cele 3 PDF-uri copiate 1:1 în `installer/guides/`
+(repo-uri separate, fără cale relativă între ele) — bundle-uite via
+`Content`/`CopyToOutputDirectory` în `.csproj`, ajung automat în
+`publish/` → `installer.iss` (care copiază tot `publish\*`, fără
+modificare necesară acolo). Buton nou „Ghid de utilizare (PDF)” în
+`SettingsWindow.xaml` → `OpenHelpGuide_Click` (port 1:1 al
+`HelpGuide.swift`) — deschide mereu varianta RO (clientul e RO-only,
+fără selector de limbă; EN/ES rămân bundle-uite pentru cand se adaugă
+unul).
+
+`docs/update.json` (Mac, secțiunea "windows") sincronizat la 1.29.3.
+
+**Verificat**: `dotnet build ... -r win-x64` — 0 erori, XAML→BAML inclus.

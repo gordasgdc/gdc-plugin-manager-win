@@ -1,3 +1,6 @@
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using GDCPluginManager.Client.Services;
@@ -78,4 +81,14 @@ public partial class SettingsWindow : Window
     }
 
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
+
+    /// [2026-09-06] Deschide ghidul PDF bundle-uit langa exe (port 1:1 al
+    /// HelpGuide.swift, Mac) — clientul Windows nu avea NICIUN acces la
+    /// ghid pana acum. App-ul e RO-only azi, deci deschide mereu RO.
+    private void OpenHelpGuide_Click(object sender, RoutedEventArgs e)
+    {
+        var path = Path.Combine(AppContext.BaseDirectory, "Ghid-GDCPluginManager-ro.pdf");
+        if (!File.Exists(path)) return;
+        Process.Start(new ProcessStartInfo(path) { UseShellExecute = true });
+    }
 }
