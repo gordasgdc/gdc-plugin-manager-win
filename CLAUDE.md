@@ -1087,3 +1087,38 @@ v1.29.3 existent, iar clientii instalati n-ar fi primit nicio notificare
 (exact bug-ul documentat in Regula 14). Bump-ul la 1.29.4 a declansat corect
 crearea automata a release-ului in `gordasgdc/gdc-plugin-manager` +
 `docs/update.json` (sectiunea windows) la 1.29.4 - verificat live.
+
+## Etapa 2026-09-11 — Port `CatalogAccess`: filtrare/grupare/etichete unificate
+
+Paritate Mac/Windows în aceeași sesiune (Regula 31) pentru sistemul universal
+de acces introdus în `gdc-plugin-manager-catalog-vendor` — vezi jurnalul de
+acolo pentru raționamentul complet al arhitecturii.
+
+**Fișiere noi**: `Core/Models/CatalogAccess.cs` (`AccessKind`, `CatalogGroup`,
+`CatalogAccess`, `ResolvedAccess`, `IAccessDescribing`, `AccessResolvers`),
+`Client/ViewModels/CatalogFilterViewModel.cs`, `Client/Views/CatalogFilterBar.xaml(.cs)`.
+
+**Două capcane reale, prinse la portare (nu presupuse):**
+
+1. **`JsonStringEnumMemberName` e .NET 9+, proiectul e .NET 8.** Prima
+   încercare n-a compilat. Rezolvat cu convertoare explicite, pe tiparul deja
+   existent al lui `SupportedOSJsonConverter` — string-urile din JSON trebuie
+   să fie IDENTICE cu `rawValue`-urile Swift, altfel Mac-ul și Windows-ul ar
+   scrie același catalog în două dialecte.
+
+2. **`PluginItemJsonConverter` și `DownloadableResourceJsonConverter` sunt
+   scrise MANUAL** — nu moștenesc nimic automat de la model. Câmpul `access`
+   s-ar fi pierdut tăcut la fiecare deserializare, deși modelul îl declara.
+   Adăugate citirea ȘI scrierea explicită în ambele. Lecție generală: la orice
+   câmp nou pe un model cu convertor JSON scris de mână, verifică activ
+   convertorul — declararea proprietății nu e suficientă.
+
+**Verificat pe catalogul LIVE real**, cu aceleași date ca pe Swift: rezultate
+identice (378 €, 487 €, gratuit), precedența confirmată (`IsFree` nativ bate
+`access.kind=.paid`/999 €), round-trip prin convertorul custom păstrează
+`access`. Rulat cu `RollForward` (runtime-ul .NET 8 nu e instalat pe acest Mac,
+doar SDK 10) — doar în proiectul de test, nu în cel real.
+
+`AppLink.SupportedOS` adăugat și pe Windows, pentru paritate cu Swift.
+
+Versiune: 1.29.4 → **1.30.0** (MINOR, Regula 14).
