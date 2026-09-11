@@ -1,5 +1,9 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.29.4 (2026-09-07) — Semnare digitală a aplicației Windows
+
+Executabilul și installer-ul sunt acum semnate digital la fiecare build.
+
 ## v1.29.3 (2026-09-06) — Ghid de utilizare (PDF), în fereastra de Setări
 
 Clientul Windows nu avea niciun acces la ghidul de utilizare, deși
