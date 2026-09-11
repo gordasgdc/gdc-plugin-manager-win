@@ -1,5 +1,21 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.30.0 (2026-09-11) — Sistem unificat de filtrare, grupare și etichete
+
+Paritate completă cu clientul Mac (Regula 31).
+
+### Added
+- Filtre rapide în toate secțiunile: Toate / Gratuite / Premium, plus
+  Mac / Windows acolo unde are sens.
+- Grupare pe categorii (Proiecte GDC, Parteneri, Resursele mele, Externe) și
+  etichete de tip, configurate din panoul Furnizor (Mac).
+- Etichete de status pe carduri: Gratuit / Licență / Probă / Extern, cu aviz
+  liber și preț de referință pentru elementele externe.
+
+### Fixed
+- Convertoarele JSON scrise manual (plugin-uri și resurse de download) ignorau
+  câmpurile noi de catalog — găsit la portare, reparat înainte de publicare.
+
 ## v1.29.4 (2026-09-07) — Semnare digitală a aplicației Windows
 
 Executabilul și installer-ul sunt acum semnate digital la fiecare build.

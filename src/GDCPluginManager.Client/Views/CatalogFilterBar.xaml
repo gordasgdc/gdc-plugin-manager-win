@@ -1,0 +1,49 @@
+<UserControl x:Class="GDCPluginManager.Client.Views.CatalogFilterBar"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:vm="clr-namespace:GDCPluginManager.Client.ViewModels"
+             x:Name="Root">
+    <UserControl.Resources>
+        <!-- Declarat LOCAL: `BoolToVisibility` din MainWindow.xaml traieste
+             in resursele ferestrei, deci nu e vizibil dintr-un UserControl. -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibility" />
+    </UserControl.Resources>
+    <!-- Port 1:1 al CatalogFilterBar.swift (Mac) — Regula 31.
+         O singura bara, refolosita de TOATE sectiunile, in loc de filtre
+         copiate per sectiune. Filtreaza pe ResolvedAccess, deci regula
+         „ce inseamna gratuit" ramane aplicata o singura data, in Core.
+
+         Randul doi (grup + etichete) apare doar daca sectiunea chiar are
+         valori — o bara cu o singura optiune e zgomot, nu functionalitate. -->
+    <StackPanel Margin="16,10" DataContext="{Binding Filters, ElementName=Root}">
+        <StackPanel Orientation="Horizontal">
+            <ComboBox x:Name="PriceBox" Width="180" Margin="0,0,12,0"
+                      SelectedIndex="0" SelectionChanged="OnPriceChanged"
+                      ToolTip="Filtrează după preț">
+                <ComboBoxItem Content="Toate" />
+                <ComboBoxItem Content="Gratuite" />
+                <ComboBoxItem Content="Premium" />
+            </ComboBox>
+
+            <ComboBox x:Name="OSBox" Width="160"
+                      SelectedIndex="0" SelectionChanged="OnOSChanged"
+                      ToolTip="Filtrează după platformă">
+                <ComboBoxItem Content="Toate" />
+                <ComboBoxItem Content="Mac" />
+                <ComboBoxItem Content="Windows" />
+            </ComboBox>
+        </StackPanel>
+
+        <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+            <ComboBox x:Name="GroupBox" Width="200" Margin="0,0,12,0"
+                      SelectionChanged="OnGroupChanged"
+                      Visibility="{Binding HasGroups, Converter={StaticResource BoolToVisibility}}"
+                      ToolTip="Filtrează după grup" />
+
+            <ComboBox x:Name="TagBox" Width="200"
+                      SelectionChanged="OnTagChanged"
+                      Visibility="{Binding HasTags, Converter={StaticResource BoolToVisibility}}"
+                      ToolTip="Filtrează după tip" />
+        </StackPanel>
+    </StackPanel>
+</UserControl>

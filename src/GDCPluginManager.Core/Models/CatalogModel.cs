@@ -488,8 +488,16 @@ public sealed record SocialLinks
 /// Port 1:1 al PluginItem.swift — o intrare din catalog. `Id` e intrarea in
 /// hash-ul SHA-512 al licentei (vezi LicenseCore.productHash pe Mac) — NU se
 /// schimba niciodata dupa prima vanzare.
-public sealed class PluginItem
+public sealed class PluginItem : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessResolvers.ForPriced(IsFree, EffectivePriceEUR, Access, SupportedOS);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required PluginType Type { get; init; }
@@ -645,6 +653,13 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             PromoPriceEUR = root.TryGetProperty("promoPriceEUR", out var promo) && promo.ValueKind == JsonValueKind.Number
                 ? promo.GetDouble()
                 : null,
+            // [2026-09-11] Convertorul custom trebuie sa citeasca EXPLICIT
+            // `access` — modelul il declara, dar un convertor scris de mana
+            // nu mosteneste nimic automat, deci campul s-ar fi pierdut tacut
+            // la fiecare deserializare (gasit la portarea pe Windows).
+            Access = root.TryGetProperty("access", out var acc) && acc.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<CatalogAccess>(acc.GetRawText(), options)
+                : null,
         };
     }
 
@@ -681,6 +696,11 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             JsonSerializer.Serialize(writer, value.Scheduling, options);
         }
         if (value.PromoPriceEUR is { } promoOut) writer.WriteNumber("promoPriceEUR", promoOut);
+        if (value.Access is { } accessOut)
+        {
+            writer.WritePropertyName("access");
+            JsonSerializer.Serialize(writer, accessOut, options);
+        }
         writer.WriteEndObject();
     }
 }
@@ -740,8 +760,16 @@ public sealed record CourseValidity
 }
 
 /// Port 1:1 al Course.swift — sesiune rezervabila, nu produs descarcabil.
-public sealed record Course
+public sealed record Course : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessResolvers.ForCourse(AccessType, Options.Select(o => o.PriceEUR), Access);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -783,8 +811,22 @@ public sealed record Course
 
 /// Port 1:1 al AppLink.swift — link catre o alta aplicatie GDC, afisat in
 /// sectiunea "Aplicatii" a clientului.
-public sealed record AppLink
+public sealed record AppLink : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// Platformele pe care ruleaza aplicatia — alimenteaza filtrul rapid
+    /// Mac/Windows. null = necunoscut, apare la orice filtru (fail-open).
+    /// Paritate cu AppLink.supportedOS din Swift (Regula 31).
+    [JsonPropertyName("supportedOS")]
+    public SupportedOS? SupportedOS { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessResolvers.ForApp(PricingProductID, Access, SupportedOS);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Url { get; init; }
@@ -813,8 +855,16 @@ public sealed record AppLink
 /// Port 1:1 al AudioTrack.swift — element din sectiunea "Audio", modelat
 /// pe AppLink dar cu Description in plus (un fisier/pachet audio are
 /// nevoie de mai mult context decat un simplu nume+link: format, metadate).
-public sealed record AudioTrack
+public sealed record AudioTrack : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessDefaults.FromAccessOnly(Access);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -857,8 +907,16 @@ public static class EducationalResourceKindExtensions
 /// Port 1:1 al EducationalResource.swift — carte/curs online/ghid vandut de
 /// o terta parte (Amazon, Gumroad, Udemy...). Spre deosebire de Course, NU
 /// e rezervabil prin WhatsApp: clientul leaga direct spre ExternalURL.
-public sealed record EducationalResource
+public sealed record EducationalResource : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessDefaults.FromAccessOnly(Access);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -884,8 +942,16 @@ public sealed record EducationalResource
 /// Port 1:1 al Event.swift — anunt de comunitate (workshop, curs, festival).
 /// DateDisplay e text liber intentionat (ex. "15-17 martie 2026") — nu se
 /// face nicio logica de calendar pe el, nici in Furnizor, nici aici.
-public sealed record Event
+public sealed record Event : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessDefaults.FromAccessOnly(Access);
+
     public required string Id { get; init; }
     public required string Title { get; init; }
     public required string Description { get; init; }
@@ -953,8 +1019,16 @@ public sealed record EventOccurrence
 
 /// Port 1:1 al PartnerStore.swift — magazin partener de echipament
 /// foto-video, doar nume/descriere/link, nimic de instalat.
-public sealed record PartnerStore
+public sealed record PartnerStore : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessDefaults.FromAccessOnly(Access);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -1005,8 +1079,16 @@ public enum ServiceCategory
 /// Port 1:1 al ServiceCenter.swift — partener de service/reparatii
 /// echipament foto-video (drone/camere/optica/urgente). Doar informativ,
 /// niciun fisier, nicio licenta.
-public sealed record ServiceCenter
+public sealed record ServiceCenter : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessDefaults.FromAccessOnly(Access);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required ServiceCategory Category { get; init; }
@@ -1116,8 +1198,16 @@ public static class DownloadCategoryExtensions
 /// PluginItem: userul descarca fisierul de la Url si il importa manual.
 /// Model 1:1 pe AudioTrack + campurile de linkuri/social din Etapa 2 +
 /// SupportedOS + licentiere completa (vezi mai jos).
-public sealed class DownloadableResource
+public sealed class DownloadableResource : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessResolvers.ForPriced(IsFree, EffectivePriceEUR, Access, SupportedOS);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -1206,6 +1296,13 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             PromoPriceEUR = root.TryGetProperty("promoPriceEUR", out var promo) && promo.ValueKind == JsonValueKind.Number
                 ? promo.GetDouble()
                 : null,
+            // [2026-09-11] Convertorul custom trebuie sa citeasca EXPLICIT
+            // `access` — modelul il declara, dar un convertor scris de mana
+            // nu mosteneste nimic automat, deci campul s-ar fi pierdut tacut
+            // la fiecare deserializare (gasit la portarea pe Windows).
+            Access = root.TryGetProperty("access", out var acc) && acc.ValueKind == JsonValueKind.Object
+                ? JsonSerializer.Deserialize<CatalogAccess>(acc.GetRawText(), options)
+                : null,
         };
     }
 
@@ -1238,6 +1335,11 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
         writer.WriteBoolean("isTrial", value.IsTrial);
         writer.WriteNumber("priceEUR", value.PriceEUR);
         if (value.PromoPriceEUR is { } promoOut) writer.WriteNumber("promoPriceEUR", promoOut);
+        if (value.Access is { } accessOut)
+        {
+            writer.WritePropertyName("access");
+            JsonSerializer.Serialize(writer, accessOut, options);
+        }
         writer.WriteEndObject();
     }
 }
@@ -1250,8 +1352,16 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
 /// (Partea 1) acopera continutul propriu — acesta e o relatie comerciala cu un
 /// tert, unde un discount chiar e un discount. Badge-ul rosu de reducere
 /// exista DOAR pe acest model.
-public sealed record PartnerOffer
+public sealed record PartnerOffer : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessDefaults.FromAccessOnly(Access);
+
     public required string Id { get; init; }
     /// Numele brandului/partenerului (ex. "Aputure", "Nanlite").
     public required string BrandName { get; init; }
@@ -1341,8 +1451,16 @@ public sealed record BundleItemRef
 /// licentiere**. Achizitia ramane prin WhatsApp (ca la orice produs), iar
 /// Furnizorul genereaza in continuare, manual, cate o licenta per produs
 /// inclus. Fluxul de incredere bazat pe donatie+WhatsApp nu se schimba.
-public sealed record ProductBundle
+public sealed record ProductBundle : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessResolvers.ForBundle(BundlePriceEUR, Access);
+
     public required string Id { get; init; }
     public required string Name { get; init; }
     public required string Description { get; init; }
@@ -1369,8 +1487,16 @@ public sealed record ProductBundle
 /// lipseste complet din payload, exact ca decodeIfPresent(...) ?? [] pe Mac.
 /// Port 1:1 al Tutorial.swift — tutorial YouTube embedded (secțiunea
 /// "Tutoriale" din Comunitate & Educație, 2026-09-01).
-public sealed record Tutorial
+public sealed record Tutorial : IAccessDescribing
 {
+    /// Acces/grup/etichete comune — vezi CatalogAccess.cs.
+    /// Optional: catalogul deja publicat decodeaza neschimbat.
+    public CatalogAccess? Access { get; init; }
+
+    /// <inheritdoc/>
+    [JsonIgnore]
+    public ResolvedAccess ResolvedAccess => AccessResolvers.ForTutorial(Tags, Access);
+
     public required string Id { get; init; }
     public required string YoutubeURL { get; init; }
     public required string VideoID { get; init; }
