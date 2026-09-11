@@ -1069,3 +1069,21 @@ unul).
 `docs/update.json` (Mac, secțiunea "windows") sincronizat la 1.29.3.
 
 **Verificat**: `dotnet build ... -r win-x64` — 0 erori, XAML→BAML inclus.
+
+## Etapa 2026-09-11 — v1.29.4 publicat cu semnare Windows activa
+
+Secretele CI (`WIN_SELFSIGN_PFX_BASE64`/`WIN_SELFSIGN_PFX_PASSWORD`,
+certificat COMUN ecosistemului) erau deja incarcate de Cristi. Acest release
+e primul in care semnarea Regulii 34 chiar a rulat pe un build real.
+
+Verificat direct, nu presupus: pasul de semnare marcat OK in lista de pasi a
+job-ului, plus directorul de securitate din header-ul PE al installer-ului
+descarcat = 7496 bytes de semnatura Authenticode (acelasi certificat +
+timestamp pe toate aplicatiile). Link stabil `releases/latest/download/...`
+verificat HTTP 200.
+
+Fara bump de versiune, CI-ul ar fi urcat doar exe-ul semnat peste release-ul
+v1.29.3 existent, iar clientii instalati n-ar fi primit nicio notificare
+(exact bug-ul documentat in Regula 14). Bump-ul la 1.29.4 a declansat corect
+crearea automata a release-ului in `gordasgdc/gdc-plugin-manager` +
+`docs/update.json` (sectiunea windows) la 1.29.4 - verificat live.
