@@ -16,8 +16,17 @@ public static class VersionCompare
     /// vezi Regula 14), care nu foloseste sufixe de pre-release.
     public static bool IsNewer(string a, string b)
     {
-        var partsA = Parse(a);
-        var partsB = Parse(b);
+        // [2026-09-12] Sufixul de build GDC (`-cg.N`) se desparte INAINTE de
+        // parsarea numerica. Fara asta, "3.10.0.dev82-cg.3" si
+        // "3.10.0.dev82" produc liste de lungimi diferite, iar numarul de
+        // build ajunge comparat cu zero pe o pozitie de versiune — adica o
+        // actualizare "disponibila" permanent, oricate s-ar instala.
+        // Gasit pe clientul Mac (DisplayCAL-CG); portat aici desi aplicatia
+        // nu e inca listata pe Windows, ca defectul sa nu apara la adaugarea ei.
+        var (coreA, buildA) = SplitBuild(a);
+        var (coreB, buildB) = SplitBuild(b);
+        var partsA = Parse(coreA);
+        var partsB = Parse(coreB);
         var len = Math.Max(partsA.Length, partsB.Length);
         for (var i = 0; i < len; i++)
         {
@@ -25,7 +34,16 @@ public static class VersionCompare
             var y = i < partsB.Length ? partsB[i] : 0;
             if (x != y) return x > y;
         }
-        return false;
+        return buildA > buildB;
+    }
+
+    /// "3.10.0.dev82-cg.3" -> ("3.10.0.dev82", 3). Fara sufix, build = 0.
+    private static (string Core, int Build) SplitBuild(string v)
+    {
+        var idx = v.LastIndexOf("-cg.", StringComparison.OrdinalIgnoreCase);
+        if (idx < 0) return (v, 0);
+        var build = int.TryParse(v[(idx + 4)..], out var n) ? n : 0;
+        return (v[..idx], build);
     }
 
     /// Normalizeaza un tag de release ("v2.7.1") la o versiune ("2.7.1").
