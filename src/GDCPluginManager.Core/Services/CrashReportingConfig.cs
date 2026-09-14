@@ -16,7 +16,7 @@ public static class CrashReportingConfig
 
     /// PUNE AICI DSN-ul din Sentry -> Settings -> Client Keys (DSN).
     /// Gol = raportarea e OPRITA complet.
-    private const string CompiledDsn = "";
+    private const string CompiledDsn = "https://1df3dfe13c935d9ac9f2ef9763305de2@o4512086216933376.ingest.de.sentry.io/4512086226305104";
 
     public static string Dsn
     {
