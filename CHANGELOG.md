@@ -1,5 +1,13 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.37.0 (2026-09-14) — Raportare automata a erorilor
+
+### Added
+- Cand aplicatia intampina o eroare neasteptata, trimite automat un raport
+  tehnic care ajuta la reparare: tipul erorii, versiunea, sistemul de operare
+  si limba. NU se trimit adresa IP, numele de utilizator, fisierele tale sau
+  continutul lor. Vezi politica de confidentialitate pentru detalii complete.
+
 ## v1.36.1 (2026-09-14) — Badge de actualizare fals si contrast
 
 ### Fixed
