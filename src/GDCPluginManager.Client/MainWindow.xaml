@@ -1247,6 +1247,14 @@
                         <TextBlock Text="Plugin-uri" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPdf}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPdf, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="16" Margin="0,0,10,0" Foreground="#E06C6C" />
+                        <TextBlock Text="PDF-uri / Ghiduri" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
 
                 <Separator Margin="16,16" />
 
@@ -2288,6 +2296,23 @@
                     <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
                                Visibility="{Binding DownloadPlugins.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding DownloadPlugins}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- PDF-uri / Ghiduri / Carti (2026-09-14). Acelasi tipar ca
+                 rubricile de mai sus; difera colectia legata. Fisierele stau
+                 in repo-ul privat dedicat si se descarca din aplicatie. -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=DownloadPdf}">
+                <StackPanel>
+                    <TextBlock Text="PDF-uri / Ghiduri / Carti" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding DownloadPdfs.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding DownloadPdfs}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>

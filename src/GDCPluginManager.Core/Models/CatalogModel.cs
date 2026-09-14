@@ -79,6 +79,7 @@ public static class PluginTypeExtensions
         PluginType.Fuse => "Fuse",
         PluginType.PowerGrade => "PowerGrade",
         PluginType.Ofx => "OFX",
+        PluginType.Scripts => "Scripts",
         _ => type.ToString(),
     };
 
@@ -109,8 +110,19 @@ public static class PluginTypeExtensions
             case PluginType.Ofx:
                 var commonFiles = Environment.GetFolderPath(Environment.SpecialFolder.CommonProgramFiles);
                 return Path.Combine(commonFiles, "OFX", "Plugins");
+            case PluginType.Scripts:
+                // [2026-09-14] NIVEL UTILIZATOR (%APPDATA%), nu ProgramData —
+                // spre deosebire de toate celelalte tipuri de mai sus. Layout-ul
+                // de Windows are un segment "Support" in plus fata de macOS,
+                // unde calea e ~/Library/.../Fusion/Scripts (verificat pe o
+                // instalare reala, vezi CLAUDE.md).
+                var appData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                return Path.Combine(appData, "Blackmagic Design", "DaVinci Resolve",
+                                    "Support", "Fusion", "Scripts");
             default:
-                throw new ArgumentOutOfRangeException(nameof(type));
+                // Unknown nu se instaleaza niciodata (nu apare in UI); o exceptie
+                // aici ar darama fluxul pentru un tip pe care oricum il ignoram.
+                return Path.Combine(Path.GetTempPath(), "GDCPluginManager-unknown");
         }
     }
 }
@@ -1292,6 +1304,8 @@ public sealed class DownloadableResource : IAccessDescribing
     public string? FilePath { get; init; }
     /// SHA-256 al fisierului de mai sus, verificat dupa descarcare.
     public string? FileSHA256 { get; init; }
+    /// Repo-ul privat in care sta fisierul — vezi PluginFile.Repo.
+    public string? FileRepo { get; init; }
     /// Doar pentru Category == Pdf.
     public PdfKind? PdfKind { get; init; }
 
@@ -1389,6 +1403,7 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             // Chei noi (2026-09-14) — retrocompatibile, lipsa lor e normala.
             FilePath = root.TryGetProperty("filePath", out var fp) ? fp.GetString() : null,
             FileSHA256 = root.TryGetProperty("fileSHA256", out var sha) ? sha.GetString() : null,
+            FileRepo = root.TryGetProperty("fileRepo", out var frepo) ? frepo.GetString() : null,
             PdfKind = root.TryGetProperty("pdfKind", out var pk) && pk.ValueKind == JsonValueKind.String
                 ? pk.GetString() switch
                 {
@@ -1413,6 +1428,7 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
         writer.WriteString("url", value.Url);
         if (value.FilePath is not null) writer.WriteString("filePath", value.FilePath);
         if (value.FileSHA256 is not null) writer.WriteString("fileSHA256", value.FileSHA256);
+        if (value.FileRepo is not null) writer.WriteString("fileRepo", value.FileRepo);
         if (value.PdfKind is not null)
         {
             writer.WriteString("pdfKind", value.PdfKind switch

@@ -87,6 +87,15 @@ public sealed class InstallManager : INotifyPropertyChanged
     private static string DestinationDirectory(PluginItem item)
     {
         var baseDir = item.Type.InstallDirectory();
+        // [2026-09-14] Scripturile NU intra intr-un subfolder numit dupa id
+        // (cum fac pack-urile): Resolve construieste meniul Scripts din
+        // subfolderele lui fixe, iar un folder in plus ar insemna un submeniu
+        // in plus, cu numele produsului. Merg direct in subfolderul ales.
+        if (item.Type == PluginType.Scripts)
+        {
+            var folder = (item.ScriptFolder ?? Models.ScriptFolder.Utility).ToString();
+            return Path.Combine(baseDir, folder);
+        }
         if (!item.IsPack) return baseDir;
         return Path.Combine(baseDir, item.BundleFolderName ?? item.Id);
     }
@@ -231,7 +240,9 @@ public sealed class InstallManager : INotifyPropertyChanged
             }
             : RemoveOutcome.Removed;
 
-        if (item.IsPack)
+        // Scripturile stau intr-un folder COMUN cu al userului — se sterg
+        // fisier cu fisier, niciodata tot folderul (vezi nota de pe Mac).
+        if (item.IsPack && item.Type != PluginType.Scripts)
         {
             DeleteDirectory(DestinationDirectory(item));
         }
@@ -252,6 +263,38 @@ public sealed class InstallManager : INotifyPropertyChanged
     /// prin GitHub Contents API, cu token-ul read-only (vezi PrivateCatalogAuth).
     /// catalog.json NU se ia asa — doar fisierele produs, care nu stau
     /// niciodata la un URL public.
+    /// [2026-09-14] Descarca fisierul unei resurse (PDF/ghid/carte) incarcat
+    /// direct in repo-ul privat si il salveaza local — FARA browser.
+    /// Port 1:1 al `downloadResourceFile` din InstallManager.swift: acelasi
+    /// mecanism autentificat de aducere a octetilor, aceeasi verificare SHA-256,
+    /// aceeasi destinatie (folderul ales de user, altfel Downloads).
+    /// Intoarce calea locala a fisierului salvat.
+    public async Task<string> DownloadResourceFileAsync(DownloadableResource resource, string? preferredFolder = null)
+    {
+        if (string.IsNullOrWhiteSpace(resource.FilePath)) throw InstallException.DownloadFailed();
+
+        var data = await FetchPrivateFileDataAsync(resource.FilePath!, resource.FileRepo);
+
+        // Verificarea de integritate nu e optionala doar pentru ca e "doar un
+        // PDF": un fisier trunchiat se deschide si arata gol, iar userul ar da
+        // vina pe continut, nu pe descarcare.
+        if (!string.IsNullOrEmpty(resource.FileSHA256))
+        {
+            var actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data)).ToLowerInvariant();
+            if (actual != resource.FileSHA256!.ToLowerInvariant()) throw InstallException.ChecksumMismatch();
+        }
+
+        var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+        var fallback = string.IsNullOrEmpty(home) ? Path.GetTempPath() : Path.Combine(home, "Downloads");
+        var folder = string.IsNullOrWhiteSpace(preferredFolder) ? fallback : preferredFolder!;
+        Directory.CreateDirectory(folder);
+
+        var fileName = resource.DirectFileName ?? $"{resource.Id}.pdf";
+        var destination = Path.Combine(folder, fileName);
+        await File.WriteAllBytesAsync(destination, data);
+        return destination;
+    }
+
     private async Task<byte[]> FetchPrivateFileDataAsync(string path, string? repoKey = null)
     {
         var encodedPath = Uri.EscapeDataString(path).Replace("%2F", "/");

@@ -1,5 +1,21 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.31.0 (2026-09-14) — PDF-uri și Scripturi DaVinci Resolve
+
+Paritate cu clientul Mac (Regula 31).
+
+### Added
+- **Secțiune nouă „PDF-uri / Ghiduri"** în Resurse Download, cu descărcare
+  directă din aplicație și deschidere în Explorer — fără browser.
+- **Categoria „Scripts"** în produsele DaVinci Resolve, cu instalare automată în
+  subfolderul potrivit din Fusion/Scripts. La nivel de utilizator, deci fără
+  drepturi de administrator.
+- **Stocare pe mai multe repo-uri private**, câte unul pentru fiecare tip de
+  resursă. Nimic din ce e publicat până acum nu are nevoie de migrare.
+
+### Fixed
+- O categorie sau un tip necunoscut nu mai fac întreg catalogul ilizibil.
+
 ## v1.30.0 (2026-09-11) — Sistem unificat de filtrare, grupare și etichete
 
 Paritate completă cu clientul Mac (Regula 31).

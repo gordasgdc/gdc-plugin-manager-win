@@ -53,6 +53,8 @@ public enum SidebarPage
     DownloadSfx,
     DownloadVfx,
     DownloadPlugin,
+    /// PDF-uri / ghiduri / carti (2026-09-14).
+    DownloadPdf,
     /// "Aplicatiile Mele" (Etapa 3, 2026-08-29) — aplicatiile GDC gasite
     /// instalate pe masina asta + scurtaturi personalizate.
     MyApps,
@@ -184,6 +186,7 @@ public sealed partial class MainViewModel : ObservableObject
         new(PluginType.Fuse.Label(), PluginType.Fuse, SymbolRegular.PuzzlePiece24),
         new(PluginType.PowerGrade.Label(), PluginType.PowerGrade, SymbolRegular.PaintBrush24),
         new(PluginType.Ofx.Label(), PluginType.Ofx, SymbolRegular.Camera24),
+        new(PluginType.Scripts.Label(), PluginType.Scripts, SymbolRegular.Code24),
     ];
 
     [ObservableProperty]
@@ -734,7 +737,11 @@ public sealed partial class MainViewModel : ObservableObject
     private void RebuildFromCatalog()
     {
         Products.Clear();
-        foreach (var item in CatalogService.Shared.Items.Where(x => x.Scheduling.IsVisibleNow()))
+        // Scripturile vin din cheia LOR de catalog (vezi Catalog.ScriptItems),
+        // dar in UI sunt produse ca oricare altele.
+        foreach (var item in CatalogService.Shared.Items
+                     .Concat(CatalogService.Shared.ScriptItems)
+                     .Where(x => x.Scheduling.IsVisibleNow()))
         {
             Products.Add(new ProductViewModel(item));
         }

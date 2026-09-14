@@ -140,11 +140,44 @@ public sealed partial class DownloadResourceViewModel : ObservableObject
         OnPropertyChanged(nameof(HasSavedFolder));
     }
 
+    /// [2026-09-14] Fisier incarcat direct pe server (PDF/ghid/carte): se
+    /// descarca din aplicatie si se arata in Explorer. Fara browser.
+    public bool HasDirectFile => Resource.HasDirectFile;
+
+    [ObservableProperty]
+    private bool _isDownloading;
+
+    [ObservableProperty]
+    private string? _downloadError;
+
     [RelayCommand]
-    private void Download()
+    private async Task DownloadAsync()
     {
         if (!IsUnlocked) return; // butonul e "Deblocheaza" in starea asta.
-        Process.Start(new ProcessStartInfo(Resource.Url) { UseShellExecute = true });
+
+        if (!Resource.HasDirectFile)
+        {
+            Process.Start(new ProcessStartInfo(Resource.Url) { UseShellExecute = true });
+            return;
+        }
+
+        DownloadError = null;
+        IsDownloading = true;
+        try
+        {
+            var saved = await InstallManager.Shared.DownloadResourceFileAsync(Resource, SavedFolder);
+            // Deschide Explorer cu fisierul selectat — echivalentul lui
+            // activateFileViewerSelecting de pe Mac.
+            Process.Start(new ProcessStartInfo("explorer.exe", $"/select,\"{saved}\"") { UseShellExecute = true });
+        }
+        catch (Exception ex)
+        {
+            DownloadError = ex.Message;
+        }
+        finally
+        {
+            IsDownloading = false;
+        }
     }
 
     /// Acelasi tipar WhatsApp ca ProductViewModel.Buy() — mesaj specific

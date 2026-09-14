@@ -1219,3 +1219,50 @@ doar SDK 10) — doar în proiectul de test, nu în cel real.
 `AppLink.SupportedOS` adăugat și pe Windows, pentru paritate cu Swift.
 
 Versiune: 1.29.4 → **1.30.0** (MINOR, Regula 14).
+
+## Etapa 2026-09-14 (v1.31.0) — interfața Windows pentru PDF-uri și Scripturi
+
+Completează Etapele 1-3 portate anterior doar la nivel de model.
+
+**PDF-uri**: `SidebarPage.DownloadPdf`, buton în sidebar, secțiune proprie în
+`MainWindow.xaml` legată de `MainViewModel.DownloadPdfs`, plus
+`InstallManager.DownloadResourceFileAsync` — port 1:1 al variantei de pe Mac:
+același mecanism autentificat, aceeași verificare SHA-256, salvare în folderul
+ales de user (altfel `Downloads`) și deschiderea Explorer-ului pe fișier.
+Comanda existentă `DownloadCommand` rămâne aceeași: pentru o resursă cu fișier
+direct descarcă din aplicație, altfel deschide linkul extern ca înainte.
+
+**Scripturi**: `PluginType.Scripts` apare ca filtru în lista de categorii de
+produse (Windows nu are pagini separate per tip, ci un filtru), iar produsele se
+construiesc acum din `Items + ScriptItems`. Calea de instalare:
+`%APPDATA%\Blackmagic Design\DaVinci Resolve\Support\Fusion\Scripts\<subfolder>`
+— **nivel utilizator**, cu un segment `Support` în plus față de macOS.
+`DestinationDirectory` nu mai adaugă un folder cu numele produsului pentru
+scripturi, iar dezinstalarea nu șterge folderul comun — exact ca pe Mac.
+
+### Cât de mult verifică `dotnet build` un XAML — măsurat, nu presupus
+
+Am testat deliberat trei tipuri de greșeli, ca să știu exact ce acoperă build-ul
+de pe Mac și ce NU:
+
+| Greșeală introdusă intenționat | Prinsă? |
+|---|---|
+| XML stricat | **DA** — `MC3000` |
+| `x:Static` către un membru inexistent | **DA** — `MC3011` |
+| `{Binding CampInexistentXyz}` | **NU** — 0 erori |
+
+Deci structura XAML și referințele de tip sunt garantate de compilator; **căile
+de binding nu**, fiindcă se rezolvă la runtime. Pentru ele am verificat manual
+că fiecare nume legat există în cod (`DownloadPdfs`, `ContentPage`,
+`CurrentPage`, `ShowDownloadCategoryCommand`), iar pentru `DownloadCommand` am
+citit **sursa generată** de CommunityToolkit:
+
+```
+public IAsyncRelayCommand DownloadCommand => ... new AsyncRelayCommand(DownloadAsync);
+```
+
+— confirmând că redenumirea metodei în `DownloadAsync` păstrează exact numele de
+comandă pe care XAML-ul îl lega deja.
+
+**Rămâne de confirmat vizual pe Windows**: aspectul efectiv al secțiunii și al
+butonului. Nu se poate randa de pe Mac.
