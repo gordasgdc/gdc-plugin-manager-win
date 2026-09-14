@@ -271,17 +271,20 @@ public sealed class InstallManager : INotifyPropertyChanged
     /// Intoarce calea locala a fisierului salvat.
     public async Task<string> DownloadResourceFileAsync(DownloadableResource resource, string? preferredFolder = null)
     {
-        if (string.IsNullOrWhiteSpace(resource.FilePath)) throw InstallException.DownloadFailed();
-
-        var data = await FetchPrivateFileDataAsync(resource.FilePath!, resource.FileRepo);
-
-        // Verificarea de integritate nu e optionala doar pentru ca e "doar un
-        // PDF": un fisier trunchiat se deschide si arata gol, iar userul ar da
-        // vina pe continut, nu pe descarcare.
-        if (!string.IsNullOrEmpty(resource.FileSHA256))
+        // [2026-09-14] O resursa poate fi un PACHET (folder cu subfoldere).
+        // Forma veche (FilePath) ramane suportata pentru ce e deja publicat.
+        List<PluginFile> toDownload;
+        if (resource.Files.Count > 0)
         {
-            var actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data)).ToLowerInvariant();
-            if (actual != resource.FileSHA256!.ToLowerInvariant()) throw InstallException.ChecksumMismatch();
+            toDownload = resource.Files.ToList();
+        }
+        else if (!string.IsNullOrWhiteSpace(resource.FilePath))
+        {
+            toDownload = [new PluginFile { Path = resource.FilePath!, Sha256 = resource.FileSHA256 ?? "", Repo = resource.FileRepo }];
+        }
+        else
+        {
+            throw InstallException.DownloadFailed();
         }
 
         var home = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
@@ -289,10 +292,35 @@ public sealed class InstallManager : INotifyPropertyChanged
         var folder = string.IsNullOrWhiteSpace(preferredFolder) ? fallback : preferredFolder!;
         Directory.CreateDirectory(folder);
 
-        var fileName = resource.DirectFileName ?? $"{resource.Id}.pdf";
-        var destination = Path.Combine(folder, fileName);
-        await File.WriteAllBytesAsync(destination, data);
-        return destination;
+        // Un pachet ajunge intr-un folder propriu, ca sa nu imprastie zeci de
+        // fisiere direct in Downloads. Un singur fisier ramane un fisier.
+        var root = toDownload.Count > 1 ? Path.Combine(folder, resource.Id) : folder;
+        Directory.CreateDirectory(root);
+
+        string? firstWritten = null;
+        foreach (var file in toDownload)
+        {
+            var data = await FetchPrivateFileDataAsync(file.Path, file.Repo ?? resource.FileRepo);
+            // Verificarea de integritate nu e optionala doar pentru ca e "doar un
+            // PDF": un fisier trunchiat se deschide si arata gol, iar userul ar da
+            // vina pe continut, nu pe descarcare.
+            if (!string.IsNullOrEmpty(file.Sha256))
+            {
+                var actual = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(data)).ToLowerInvariant();
+                if (actual != file.Sha256.ToLowerInvariant()) throw InstallException.ChecksumMismatch();
+            }
+            // Calea relativa la resursa se pastreaza, ca structura pachetului sa
+            // ajunga intacta la user.
+            var prefix = resource.Id + "/";
+            var relative = file.Path.StartsWith(prefix, StringComparison.Ordinal)
+                ? file.Path[prefix.Length..]
+                : file.Filename;
+            var destination = Path.Combine(root, relative.Replace('/', Path.DirectorySeparatorChar));
+            Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+            await File.WriteAllBytesAsync(destination, data);
+            firstWritten ??= destination;
+        }
+        return toDownload.Count > 1 ? root : (firstWritten ?? root);
     }
 
     private async Task<byte[]> FetchPrivateFileDataAsync(string path, string? repoKey = null)

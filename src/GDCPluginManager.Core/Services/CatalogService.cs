@@ -36,6 +36,8 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<DownloadableResource> PdfResources { get; private set; } = [];
     /// Scripturi Fusion — cheie separata in catalog, vezi Catalog.ScriptItems.
     public IReadOnlyList<PluginItem> ScriptItems { get; private set; } = [];
+    /// Scripturi de uz general, descarcabile.
+    public IReadOnlyList<DownloadableResource> ScriptResources { get; private set; } = [];
     /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; private set; } = [];
     /// Pachete/Bundle-uri — Etapa 9 (2026-08-29).
@@ -105,6 +107,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             DownloadableResources = catalog.DownloadableResources;
             PdfResources = catalog.PdfResources;
             ScriptItems = catalog.ScriptItems;
+            ScriptResources = catalog.ScriptResources;
             PartnerOffers = catalog.PartnerOffers;
             SeasonalBackground = catalog.SeasonalBackground;
             SeasonalBackgrounds = catalog.SeasonalBackgrounds;
@@ -121,6 +124,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(DownloadableResources));
             Raise(nameof(PdfResources));
             Raise(nameof(ScriptItems));
+            Raise(nameof(ScriptResources));
             Raise(nameof(PartnerOffers));
             Raise(nameof(SeasonalBackground));
             Raise(nameof(SeasonalBackgrounds));
@@ -182,6 +186,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             DownloadableResources = catalog.DownloadableResources;
             PdfResources = catalog.PdfResources;
             ScriptItems = catalog.ScriptItems;
+            ScriptResources = catalog.ScriptResources;
             PartnerOffers = catalog.PartnerOffers;
             SeasonalBackground = catalog.SeasonalBackground;
             SeasonalBackgrounds = catalog.SeasonalBackgrounds;

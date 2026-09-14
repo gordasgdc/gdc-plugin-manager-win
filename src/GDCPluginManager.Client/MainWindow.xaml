@@ -1255,6 +1255,14 @@
                         <TextBlock Text="PDF-uri / Ghiduri" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadScript}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadScript, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Code24" FontSize="16" Margin="0,0,10,0" Foreground="#C99A6E" />
+                        <TextBlock Text="Scripturi" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
 
                 <Separator Margin="16,16" />
 
@@ -2313,6 +2321,23 @@
                     <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
                                Visibility="{Binding DownloadPdfs.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding DownloadPdfs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Scripturi de uz general (2026-09-14) — descarcabile, nu se
+                 auto-instaleaza. Compatibilitatea Mac/Windows/ambele se vede
+                 pe fiecare card (SupportedOS). -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=DownloadScript}">
+                <StackPanel>
+                    <TextBlock Text="Scripturi" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding DownloadScripts.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding DownloadScripts}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>

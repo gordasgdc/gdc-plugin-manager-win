@@ -26,6 +26,7 @@ public static class PrivateCatalogAuth
         ["files"]   = new PrivateRepo(Owner, "gdc-plugin-manager-files",   Token),
         ["pdfs"]    = new PrivateRepo(Owner, "gdc-plugin-manager-pdfs",    Token),
         ["scripts"] = new PrivateRepo(Owner, "gdc-plugin-manager-scripts", Token),
+        ["resources"] = new PrivateRepo(Owner, "gdc-plugin-manager-resources", Token),
     };
 
     public const string DefaultRepoKey = "files";

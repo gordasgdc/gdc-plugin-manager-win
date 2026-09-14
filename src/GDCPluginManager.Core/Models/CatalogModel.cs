@@ -1194,6 +1194,10 @@ public enum DownloadCategory
     /// separata de catalog (pdfResources), tocmai ca aceasta valoare sa nu
     /// ajunga niciodata intr-un array citit de un client vechi.
     Pdf,
+    /// [2026-09-14] Scripturi de uz general (optimizare de sistem, automatizari),
+    /// FARA legatura cu DaVinci Resolve. Se descarca, nu se auto-instaleaza —
+    /// spre deosebire de PluginType.Scripts. SupportedOS spune pentru ce sistem e.
+    Script,
     /// Categorie necunoscuta — plasa de siguranta. Convertorul arunca
     /// inainte la orice valoare noua, iar exceptia darama deserializarea
     /// INTREGULUI catalog: clientul n-ar mai vedea nimic, nu doar resursa
@@ -1224,6 +1228,7 @@ public sealed class DownloadCategoryJsonConverter : JsonConverter<DownloadCatego
             "vfx" => DownloadCategory.Vfx,
             "plugin" => DownloadCategory.Plugin,
             "pdf" => DownloadCategory.Pdf,
+            "script" => DownloadCategory.Script,
             // NU arunca: vezi DownloadCategory.Unknown.
             _ => DownloadCategory.Unknown,
         };
@@ -1238,6 +1243,7 @@ public sealed class DownloadCategoryJsonConverter : JsonConverter<DownloadCatego
             DownloadCategory.Vfx => "vfx",
             DownloadCategory.Plugin => "plugin",
             DownloadCategory.Pdf => "pdf",
+            DownloadCategory.Script => "script",
             _ => "unknown",
         });
     }
@@ -1254,6 +1260,7 @@ public static class DownloadCategoryExtensions
         DownloadCategory.Vfx => "Efecte Video",
         DownloadCategory.Plugin => "Plugin-uri",
         DownloadCategory.Pdf => "PDF-uri / Ghiduri / Carti",
+        DownloadCategory.Script => "Scripturi",
         _ => category.ToString(),
     };
 
@@ -1306,11 +1313,18 @@ public sealed class DownloadableResource : IAccessDescribing
     public string? FileSHA256 { get; init; }
     /// Repo-ul privat in care sta fisierul — vezi PluginFile.Repo.
     public string? FileRepo { get; init; }
+
+    /// [2026-09-14] Resursa din MAI MULTE fisiere (pachet cu subfoldere).
+    /// Cand e nevida, are prioritate fata de FilePath.
+    public IReadOnlyList<PluginFile> Files { get; init; } = [];
+
+    [JsonIgnore]
+    public int DirectFileCount => Files.Count > 0 ? Files.Count : (HasDirectFile ? 1 : 0);
     /// Doar pentru Category == Pdf.
     public PdfKind? PdfKind { get; init; }
 
     [JsonIgnore]
-    public bool HasDirectFile => !string.IsNullOrWhiteSpace(FilePath);
+    public bool HasDirectFile => Files.Count > 0 || !string.IsNullOrWhiteSpace(FilePath);
 
     [JsonIgnore]
     public string? DirectFileName => string.IsNullOrEmpty(FilePath)
@@ -1404,6 +1418,9 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             FilePath = root.TryGetProperty("filePath", out var fp) ? fp.GetString() : null,
             FileSHA256 = root.TryGetProperty("fileSHA256", out var sha) ? sha.GetString() : null,
             FileRepo = root.TryGetProperty("fileRepo", out var frepo) ? frepo.GetString() : null,
+            Files = root.TryGetProperty("files", out var rf) && rf.ValueKind == JsonValueKind.Array
+                ? JsonSerializer.Deserialize<List<PluginFile>>(rf.GetRawText(), options) ?? []
+                : [],
             PdfKind = root.TryGetProperty("pdfKind", out var pk) && pk.ValueKind == JsonValueKind.String
                 ? pk.GetString() switch
                 {
@@ -1429,6 +1446,11 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
         if (value.FilePath is not null) writer.WriteString("filePath", value.FilePath);
         if (value.FileSHA256 is not null) writer.WriteString("fileSHA256", value.FileSHA256);
         if (value.FileRepo is not null) writer.WriteString("fileRepo", value.FileRepo);
+        if (value.Files.Count > 0)
+        {
+            writer.WritePropertyName("files");
+            JsonSerializer.Serialize(writer, value.Files, options);
+        }
         if (value.PdfKind is not null)
         {
             writer.WriteString("pdfKind", value.PdfKind switch
@@ -1665,6 +1687,10 @@ public sealed class Catalog
     /// PdfResources: o valoare noua de `type` in `items` ar face intreg
     /// catalogul nedeserializabil pe clientii deja instalati.
     public IReadOnlyList<PluginItem> ScriptItems { get; init; } = [];
+
+    /// [2026-09-14] Scripturi de uz general, descarcabile — cheie separata,
+    /// acelasi motiv ca PdfResources.
+    public IReadOnlyList<DownloadableResource> ScriptResources { get; init; } = [];
 
     /// Oferte/Promotii de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; init; } = [];
