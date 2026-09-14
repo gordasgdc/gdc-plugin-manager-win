@@ -16,4 +16,21 @@ public static class PrivateCatalogAuth
     // substitution silently does nothing and every build ships with an empty
     // token (401/403 on every download). Bug found 2026-08-21 the hard way.
     public const string Token = "PASTE_TOKEN_HERE";
+
+    /// [2026-09-14] Arhitectura multi-repo — pereche a PrivateCatalogAuth.swift.
+    /// Cheia e aceeasi cu `PluginFile.Repo` din catalog.
+    public sealed record PrivateRepo(string Owner, string Name, string Token);
+
+    public static readonly System.Collections.Generic.Dictionary<string, PrivateRepo> Repos = new()
+    {
+        ["files"]   = new PrivateRepo(Owner, "gdc-plugin-manager-files",   Token),
+        ["pdfs"]    = new PrivateRepo(Owner, "gdc-plugin-manager-pdfs",    Token),
+        ["scripts"] = new PrivateRepo(Owner, "gdc-plugin-manager-scripts", Token),
+    };
+
+    public const string DefaultRepoKey = "files";
+
+    /// Cade pe repo-ul principal la o cheie necunoscuta, in loc sa arunce.
+    public static PrivateRepo RepoFor(string? key)
+        => Repos.TryGetValue(key ?? DefaultRepoKey, out var r) ? r : Repos[DefaultRepoKey];
 }

@@ -121,7 +121,7 @@ public sealed class InstallManager : INotifyPropertyChanged
             // pe jumatate instalat.
             foreach (var file in item.Files)
             {
-                var data = await FetchPrivateFileDataAsync(file.Path);
+                var data = await FetchPrivateFileDataAsync(file.Path, file.Repo);
                 var actualSha = Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
                 if (actualSha != file.Sha256.ToLowerInvariant())
                 {
@@ -252,13 +252,16 @@ public sealed class InstallManager : INotifyPropertyChanged
     /// prin GitHub Contents API, cu token-ul read-only (vezi PrivateCatalogAuth).
     /// catalog.json NU se ia asa — doar fisierele produs, care nu stau
     /// niciodata la un URL public.
-    private async Task<byte[]> FetchPrivateFileDataAsync(string path)
+    private async Task<byte[]> FetchPrivateFileDataAsync(string path, string? repoKey = null)
     {
         var encodedPath = Uri.EscapeDataString(path).Replace("%2F", "/");
-        var url = $"https://api.github.com/repos/{PrivateCatalogAuth.Owner}/{PrivateCatalogAuth.Repo}/contents/{encodedPath}";
+        // [2026-09-14] Repo-ul vine din catalog (PluginFile.Repo); fara el se
+        // foloseste cel principal, exact ca pana acum.
+        var repo = PrivateCatalogAuth.RepoFor(repoKey);
+        var url = $"https://api.github.com/repos/{repo.Owner}/{repo.Name}/contents/{encodedPath}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", PrivateCatalogAuth.Token);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", repo.Token);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.raw+json"));
         request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
 

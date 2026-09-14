@@ -14,6 +14,25 @@ public enum PluginType
     Fuse,
     PowerGrade,
     Ofx,
+    /// [2026-09-14] Script Lua/Python pentru Fusion. Singurul tip care se
+    /// instaleaza la nivel de UTILIZATOR (%APPDATA%), nu in Program Files —
+    /// deci singurul fara escaladare de drepturi.
+    Scripts,
+    /// Tip necunoscut — plasa de siguranta, vezi DownloadCategory.Unknown.
+    Unknown,
+}
+
+/// Subfolderul din Fusion/Scripts in care Resolve cauta scriptul. Lista e cea
+/// REALA, citita de pe o instalare de Resolve, nu presupusa.
+public enum ScriptFolder
+{
+    Comp,
+    Tool,
+    Utility,
+    Edit,
+    Color,
+    Deliver,
+    Coding,
 }
 
 /// Mapeaza PluginType <-> stringul exact din JSON (System.Text.Json nu are
@@ -30,7 +49,9 @@ public sealed class PluginTypeJsonConverter : JsonConverter<PluginType>
             "fuse" => PluginType.Fuse,
             "powerGrade" => PluginType.PowerGrade,
             "ofx" => PluginType.Ofx,
-            _ => throw new JsonException($"Unknown PluginType: {raw}"),
+            "scripts" => PluginType.Scripts,
+            // NU arunca: o valoare noua ar face INTREG catalogul nedeserializabil.
+            _ => PluginType.Unknown,
         };
     }
 
@@ -43,7 +64,8 @@ public sealed class PluginTypeJsonConverter : JsonConverter<PluginType>
             PluginType.Fuse => "fuse",
             PluginType.PowerGrade => "powerGrade",
             PluginType.Ofx => "ofx",
-            _ => throw new JsonException($"Unknown PluginType: {value}"),
+            PluginType.Scripts => "scripts",
+            _ => "unknown",
         });
     }
 }
@@ -165,6 +187,12 @@ public sealed record PluginFile
 
     [JsonPropertyName("sha256")]
     public required string Sha256 { get; init; }
+
+    /// [2026-09-14] In ce repo privat sta fisierul ("files"/"pdfs"/"scripts").
+    /// null = repo-ul principal, deci tot ce e publicat inainte de arhitectura
+    /// multi-repo ramane valid fara migrare.
+    [JsonPropertyName("repo")]
+    public string? Repo { get; init; }
 
     /// Numele sub care se salveaza fisierul pe disc — ultima componenta din Path.
     [JsonIgnore]
@@ -525,6 +553,10 @@ public sealed class PluginItem : IAccessDescribing
     /// Resolve identifica un plugin OFX dupa acest nume literal de folder.
     public string? BundleFolderName { get; init; }
 
+    /// [2026-09-14] Doar pentru Type == Scripts: subfolderul din Fusion/Scripts.
+    /// null -> Utility.
+    public ScriptFolder? ScriptFolder { get; init; }
+
     /// Coperta produsului: cale relativa ("covers/&lt;id&gt;.jpg") sau URL extern
     /// absolut — vezi CatalogAssets. null daca nu are inca una, caz in care
     /// cardul cade pe IconSymbol.
@@ -631,6 +663,18 @@ public sealed class PluginItemJsonConverter : JsonConverter<PluginItem>
             IsTrial = root.TryGetProperty("isTrial", out var trial) && trial.GetBoolean(),
             YoutubeURL = root.TryGetProperty("youtubeURL", out var yt) ? yt.GetString() : null,
             BundleFolderName = root.TryGetProperty("bundleFolderName", out var bfn) ? bfn.GetString() : null,
+            ScriptFolder = root.TryGetProperty("scriptFolder", out var sf) && sf.ValueKind == JsonValueKind.String
+                ? sf.GetString() switch
+                {
+                    "Comp" => Models.ScriptFolder.Comp,
+                    "Tool" => Models.ScriptFolder.Tool,
+                    "Edit" => Models.ScriptFolder.Edit,
+                    "Color" => Models.ScriptFolder.Color,
+                    "Deliver" => Models.ScriptFolder.Deliver,
+                    "Coding" => Models.ScriptFolder.Coding,
+                    _ => Models.ScriptFolder.Utility,
+                }
+                : null,
             // Cheie noua (2026-08): intrarile publicate inainte de sistemul
             // de coperti nu o au deloc -> null, fara eroare.
             CoverImage = root.TryGetProperty("coverImage", out var cover) ? cover.GetString() : null,
@@ -1600,6 +1644,11 @@ public sealed class Catalog
     /// nedeserializabil pe clientii deja instalati. O cheie noua de nivel
     /// superior e pur si simplu ignorata de ei.
     public IReadOnlyList<DownloadableResource> PdfResources { get; init; } = [];
+
+    /// [2026-09-14] Scripturi Fusion — CHEIE SEPARATA, acelasi motiv ca
+    /// PdfResources: o valoare noua de `type` in `items` ar face intreg
+    /// catalogul nedeserializabil pe clientii deja instalati.
+    public IReadOnlyList<PluginItem> ScriptItems { get; init; } = [];
 
     /// Oferte/Promotii de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; init; } = [];
