@@ -23,6 +23,7 @@
                      App.xaml.cs) suprascrie cu preferinta salvata, daca exista. -->
                 <ResourceDictionary Source="Styles/Theme.Dark.xaml" />
                 <ResourceDictionary Source="Styles/Theme.xaml" />
+                <ResourceDictionary Source="Styles/BrandColors.xaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

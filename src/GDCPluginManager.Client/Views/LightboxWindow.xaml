@@ -35,7 +35,7 @@
 
         <!-- Zona imaginii. ClipToBounds: cand imaginea e marita, partea care
              iese din cadru nu trebuie sa se reverse peste bara de sus. -->
-        <Border Grid.Row="1" Background="#FF0A0A0A" ClipToBounds="True"
+        <Border Grid.Row="1" Background="{DynamicResource LightboxSurfaceBrush}" ClipToBounds="True"
                 MouseWheel="Image_MouseWheel"
                 MouseLeftButtonDown="Image_MouseDown"
                 MouseLeftButtonUp="Image_MouseUp"

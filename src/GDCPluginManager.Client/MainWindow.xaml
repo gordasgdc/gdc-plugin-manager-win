@@ -63,11 +63,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
@@ -125,7 +125,7 @@
                         <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                             <Border Background="{Binding BadgeBrush}" CornerRadius="9" Padding="7,2"
                                     ToolTip="{Binding BadgeTooltip}">
-                                <TextBlock Text="{Binding BadgeText}" FontSize="9" FontWeight="Bold" Foreground="White" />
+                                <TextBlock Text="{Binding BadgeText}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                             </Border>
                             <!-- Suma veche, TAIATA — apare doar cat timp promotia
                                  e activa (Etapa 4), inaintea sumei curente. -->
@@ -145,10 +145,10 @@
                          "reducere"/"discount"/"-X% OFF" pe produse proprii GDC
                          (Regula 3, Partea 1). Limbajul de discount exista
                          exclusiv pe cardul PartnerOffer (brand tert). -->
-                    <Border Style="{StaticResource BadgeBorderStyle}" Background="#FFB05B00"
+                    <Border Style="{StaticResource BadgeBorderStyle}" Background="{DynamicResource BadgePromoBrush}"
                             HorizontalAlignment="Left" Margin="0,6,0,0"
                             Visibility="{Binding IsPromoActive, Converter={StaticResource BoolToVisibility}}">
-                        <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                     </Border>
 
                     <TextBlock Text="Actualizare disponibila" Foreground="{DynamicResource BrandBrush}" FontSize="11"
@@ -168,7 +168,7 @@
                          incompatibil cu Windows -> niciun buton de cumparare/instalare,
                          doar acest mesaj. Port 1:1 al `!item.supportedOS.allows` din
                          PluginCard (ContentView.swift, Mac). -->
-                    <TextBlock Text="Incompatibil cu sistemul tau" FontSize="12" Foreground="#FFD9534F"
+                    <TextBlock Text="Incompatibil cu sistemul tau" FontSize="12" Foreground="{DynamicResource StatusErrorSoftBrush}"
                                Margin="0,12,0,0"
                                Visibility="{Binding IsCompatible, Converter={StaticResource InverseBoolToVisibility}}" />
 
@@ -298,11 +298,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
@@ -340,13 +340,13 @@
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                         <Border Style="{StaticResource BadgeBorderStyle}" Background="{Binding BadgeBrush}">
-                            <TextBlock Text="{Binding BadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <TextBlock Text="{Binding BadgeText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                         <TextBlock Text="{Binding PriceLabel}" Margin="8,0,0,0" VerticalAlignment="Center"
                                    FontSize="12" Style="{StaticResource MutedTextStyle}"
                                    Visibility="{Binding ShowPrice, Converter={StaticResource BoolToVisibility}}" />
-                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FF6E7681" Margin="8,0,0,0">
-                            <TextBlock Text="{Binding CategoryLabel}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="{DynamicResource BadgeCategoryBrush}" Margin="8,0,0,0">
+                            <TextBlock Text="{Binding CategoryLabel}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                     </StackPanel>
 
@@ -362,8 +362,8 @@
                         <TextBlock Text="{Binding OriginalPriceLabel}" FontSize="12" VerticalAlignment="Center"
                                    Style="{StaticResource MutedTextStyle}"
                                    TextDecorations="Strikethrough" Margin="0,0,8,0" />
-                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FFB05B00">
-                            <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="{DynamicResource BadgePromoBrush}">
+                            <TextBlock Text="{Binding PromoBadgeText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                     </StackPanel>
                     <!-- Deblocata: buton de descarcare. Blocata: WhatsApp cu ID masina. -->
@@ -470,11 +470,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
@@ -493,9 +493,9 @@
                         <TextBlock Grid.Column="0" Text="{Binding BrandName}" Style="{StaticResource HeadingTextStyle}"
                                    FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
                         <!-- Badge ROSU de discount — doar aici, doar daca e completat. -->
-                        <Border Grid.Column="1" Style="{StaticResource BadgeBorderStyle}" Background="#FFE2584A"
+                        <Border Grid.Column="1" Style="{StaticResource BadgeBorderStyle}" Background="{DynamicResource BadgeDiscountBrush}"
                                 Visibility="{Binding HasDiscount, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="{Binding DiscountText}" FontSize="11" FontWeight="Bold" Foreground="White" />
+                            <TextBlock Text="{Binding DiscountText}" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                     </Grid>
 
@@ -569,11 +569,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="340">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
@@ -585,8 +585,8 @@
                     </Button>
 
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                        <Border Style="{StaticResource BadgeBorderStyle}" Background="#FF7C7CF0">
-                            <TextBlock Text="PACHET" FontSize="9" FontWeight="Bold" Foreground="White" />
+                        <Border Style="{StaticResource BadgeBorderStyle}" Background="{DynamicResource BadgeBundleBrush}">
+                            <TextBlock Text="PACHET" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                     </StackPanel>
 
@@ -650,11 +650,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
@@ -676,7 +676,7 @@
                     <!-- Model de acces + Format/Durata + Valabilitate — Etapa 2026-09-03. -->
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                         <Border Style="{StaticResource BadgeBorderStyle}" Background="{Binding AccessTypeBrush}">
-                            <TextBlock Text="{Binding AccessTypeLabel}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <TextBlock Text="{Binding AccessTypeLabel}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                         <TextBlock Text="{Binding FormatLabel}" Style="{StaticResource MutedTextStyle}" FontSize="11"
                                    VerticalAlignment="Center" Margin="8,0,0,0"
@@ -722,7 +722,7 @@
                 <Grid>
                     <StackPanel>
                         <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Center">
-                            <TextBlock Text="APLICATIE" FontSize="9" FontWeight="Bold" Foreground="#4EA1F5" />
+                            <TextBlock Text="APLICATIE" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentAppsBrush}" />
                         </Border>
                         <!-- Coperta, daca aplicatia are una (vezi CoverButtonStyle mai sus);
                              altfel cade pe simbolul de mai jos (acelasi pattern ca la Magazine). -->
@@ -735,13 +735,13 @@
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
-                        <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="20" Margin="0,10,0,0" Foreground="#4EA1F5"
+                        <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="20" Margin="0,10,0,0" Foreground="{DynamicResource AccentAppsBrush}"
                                        Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <!-- Pret dinamic (Regula 27, 2026-08-31) - vezi AppPricingFetcher. -->
                         <StackPanel Orientation="Horizontal" Margin="0,4,0,0"
                                     Visibility="{Binding HasPromo, Converter={StaticResource BoolToVisibility}}">
-                            <TextBlock Text="{Binding PromoPriceText}" FontSize="13" FontWeight="Bold" Foreground="#FFB05B00" />
+                            <TextBlock Text="{Binding PromoPriceText}" FontSize="13" FontWeight="Bold" Foreground="{DynamicResource AlertWarningTextBrush}" />
                             <TextBlock Text="{Binding PriceText}" FontSize="11" Margin="6,0,0,0"
                                        Foreground="{DynamicResource InkTextMutedBrush}" TextDecorations="Strikethrough" />
                         </StackPanel>
@@ -762,11 +762,11 @@
                         <views:SocialLinksPanel SocialLinks="{Binding App.SocialLinks}" Margin="0,8,0,0" />
                     </StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -785,7 +785,7 @@
                 <Grid>
                     <StackPanel>
                         <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Center">
-                            <TextBlock Text="AUDIO" FontSize="9" FontWeight="Bold" Foreground="#7C7CF0" />
+                            <TextBlock Text="AUDIO" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentAudioBrush}" />
                         </Border>
                         <!-- Coperta, daca elementul are una — altfel cade pe simbolul de mai jos. -->
                         <Button Style="{StaticResource CoverButtonStyle}"
@@ -797,7 +797,7 @@
                                        RenderOptions.BitmapScalingMode="HighQuality" />
                             </Border>
                         </Button>
-                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="20" Margin="0,10,0,0" Foreground="#7C7CF0"
+                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="20" Margin="0,10,0,0" Foreground="{DynamicResource AccentAudioBrush}"
                                        Visibility="{Binding Cover.HasImage, Converter={StaticResource InverseBoolToVisibility}}" />
                         <TextBlock Text="{Binding Name}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <Button Content="Descriere" HorizontalAlignment="Left" Margin="0,6,0,0"
@@ -808,11 +808,11 @@
                         <Button Content="Descarca" Margin="0,10,0,0" HorizontalAlignment="Left" Command="{Binding OpenCommand}" />
                     </StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -831,7 +831,7 @@
                 <Grid>
                     <StackPanel>
                         <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Left">
-                            <TextBlock Text="{Binding KindLabel}" FontSize="9" FontWeight="Bold" Foreground="#4EA1F5" />
+                            <TextBlock Text="{Binding KindLabel}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentAppsBrush}" />
                         </Border>
                         <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
                         <Button Style="{StaticResource CoverButtonStyle}"
@@ -857,11 +857,11 @@
                         <views:SocialLinksPanel SocialLinks="{Binding Resource.SocialLinks}" Margin="0,8,0,0" />
                     </StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -893,7 +893,7 @@
 
                     <StackPanel Grid.Row="0" Orientation="Horizontal">
                         <Border Width="28" Height="28" CornerRadius="14" Background="{Binding IconBackground}">
-                            <ui:SymbolIcon Symbol="{Binding IconSymbol}" FontSize="16" Foreground="White" />
+                            <ui:SymbolIcon Symbol="{Binding IconSymbol}" FontSize="16" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </Border>
                         <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14"
                                    Margin="10,0,0,0" VerticalAlignment="Center"
@@ -922,13 +922,13 @@
                                 <Grid>
                                     <Image Source="{Binding Cover.Bitmap}" Stretch="UniformToFill"
                                            RenderOptions.BitmapScalingMode="HighQuality" />
-                                    <ui:SymbolIcon Symbol="Play24" FontSize="34" Foreground="White"
+                                    <ui:SymbolIcon Symbol="Play24" FontSize="34" Foreground="{DynamicResource OnAccentTextBrush}"
                                                    HorizontalAlignment="Center" VerticalAlignment="Center" />
                                 </Grid>
                             </Border>
                         </Button>
                         <Border Style="{StaticResource BadgeBorderStyle}" HorizontalAlignment="Left" Margin="0,8,0,0">
-                            <TextBlock Text="{Binding Category}" FontSize="9" FontWeight="Bold" Foreground="#4EA1F5" />
+                            <TextBlock Text="{Binding Category}" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource AccentAppsBrush}" />
                         </Border>
                         <TextBlock Text="{Binding Title}" Style="{StaticResource HeadingTextStyle}" Margin="0,8,0,0" TextWrapping="Wrap" />
                         <!-- Taguri colapsabile - "cat mai putin spatiu ... sageata sa se lungeasca"
@@ -956,11 +956,11 @@
                         <TextBlock Text="{Binding Description}" Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,6,0,0"
                                    Visibility="{Binding IsDescriptionExpanded, Converter={StaticResource BoolToVisibility}}" />
                     </StackPanel>
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                 </Grid>
@@ -1030,11 +1030,11 @@
                     <views:SocialLinksPanel SocialLinks="{Binding Event.SocialLinks}" Margin="0,8,0,0" />
                 </StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="8"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Padding="4" Background="Transparent" BorderThickness="0" HorizontalAlignment="Right" VerticalAlignment="Top"
@@ -1052,11 +1052,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280" MinHeight="120">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <!-- Coperta, daca produsul are una (vezi CoverButtonStyle mai sus). -->
@@ -1116,11 +1116,11 @@
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="280" MinHeight="120">
                 <StackPanel>
                     <!-- Ceas live optional "Mai sunt Xz Yh" (2026-08-31) - vezi Scheduling.ShowCountdown/CountdownText. -->
-                    <Border Background="#FFB05B00" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
+                    <Border Background="{DynamicResource BadgePromoBrush}" CornerRadius="9" Padding="7,2" HorizontalAlignment="Left" Margin="0,0,0,6"
                             Visibility="{Binding CountdownText, Converter={StaticResource NullToVisibility}}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="White" />
-                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="White" />
+                            <ui:SymbolIcon Symbol="Timer24" FontSize="10" Margin="0,0,4,0" Foreground="{DynamicResource OnAccentTextBrush}" />
+                            <TextBlock Text="{Binding CountdownText}" FontSize="10" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                         </StackPanel>
                     </Border>
                     <Button Style="{StaticResource CoverButtonStyle}"
@@ -1250,7 +1250,7 @@
                                  Command="{Binding ShowAudioTracksCommand}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=AudioTracks, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentAudioBrush}" />
                             <TextBlock Text="Audio" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1263,7 +1263,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadLut}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadLut, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Eyedropper24" FontSize="16" Margin="0,0,10,0" Foreground="#4ECDA4" />
+                            <ui:SymbolIcon Symbol="Eyedropper24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentLutBrush}" />
                             <TextBlock Text="LUT-uri" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1271,7 +1271,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadSfx}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadSfx, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#4EBFCD" />
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentSfxBrush}" />
                             <TextBlock Text="Efecte Audio" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1279,7 +1279,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadVfx}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadVfx, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Sparkle24" FontSize="16" Margin="0,0,10,0" Foreground="#A97CF0" />
+                            <ui:SymbolIcon Symbol="Sparkle24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentVfxBrush}" />
                             <TextBlock Text="Efecte Video" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1287,7 +1287,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPlugin}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPlugin, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="PuzzlePiece24" FontSize="16" Margin="0,0,10,0" Foreground="#E0A34E" />
+                            <ui:SymbolIcon Symbol="PuzzlePiece24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentPluginBrush}" />
                             <TextBlock Text="Plugin-uri" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1295,7 +1295,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPdf}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPdf, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="16" Margin="0,0,10,0" Foreground="#E06C6C" />
+                            <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentPdfBrush}" />
                             <TextBlock Text="PDF-uri / Ghiduri" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1303,7 +1303,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadScript}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadScript, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Code24" FontSize="16" Margin="0,0,10,0" Foreground="#C99A6E" />
+                            <ui:SymbolIcon Symbol="Code24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentScriptBrush}" />
                             <TextBlock Text="Scripturi" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1367,7 +1367,7 @@
                                  Command="{Binding ShowPartnerOffersCommand}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerOffers, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,10,0" Foreground="#E2584A" />
+                            <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentDiscountBrush}" />
                             <TextBlock Text="Oferte Parteneri" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1375,7 +1375,7 @@
                                  Command="{Binding ShowBundlesCommand}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Bundles, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
+                            <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentAudioBrush}" />
                             <TextBlock Text="Pachete" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1386,7 +1386,7 @@
                                  Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.Community}"
                                  IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Community, Mode=OneWay}">
                         <StackPanel Orientation="Horizontal">
-                            <ui:SymbolIcon Symbol="People24" FontSize="16" Margin="0,0,10,0" Foreground="#6EA8E0" />
+                            <ui:SymbolIcon Symbol="People24" FontSize="16" Margin="0,0,10,0" Foreground="{DynamicResource AccentCommunityBrush}" />
                             <TextBlock Text="Comunitate" VerticalAlignment="Center" />
                         </StackPanel>
                     </RadioButton>
@@ -1766,8 +1766,8 @@
                         </Grid.ColumnDefinitions>
                         <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <ui:SymbolIcon Symbol="Warning24" FontSize="16" Margin="0,0,8,0"
-                                           Foreground="#FFE0A030" VerticalAlignment="Center" />
-                            <TextBlock Text="{Binding CheckFailedBannerText}" Foreground="#FFE0A030"
+                                           Foreground="{DynamicResource StatusWarningBrush}" VerticalAlignment="Center" />
+                            <TextBlock Text="{Binding CheckFailedBannerText}" Foreground="{DynamicResource StatusWarningBrush}"
                                        TextWrapping="Wrap" VerticalAlignment="Center" />
                         </StackPanel>
                         <StackPanel Grid.Column="1" Orientation="Horizontal">
@@ -1778,7 +1778,7 @@
                     </Grid>
                 </Border>
 
-                <TextBlock Text="{Binding LoadError}" Foreground="#FFE8544D" TextWrapping="Wrap" Margin="0,6,0,0"
+                <TextBlock Text="{Binding LoadError}" Foreground="{DynamicResource StatusErrorBrush}" TextWrapping="Wrap" Margin="0,6,0,0"
                            Visibility="{Binding LoadError, Converter={StaticResource NullToVisibility}}" />
 
                 <!-- Banner dependinte de sistem lipsa — port 1:1 al DependencyBanner (Mac). -->
@@ -1786,7 +1786,7 @@
                               Visibility="{Binding MissingDependencies.Count, Converter={StaticResource ZeroToVisibility}}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#FFFCE8CD" CornerRadius="4" Padding="12,8" Margin="0,6,0,0">
+                            <Border Background="{DynamicResource AlertWarningSurfaceBrush}" CornerRadius="4" Padding="12,8" Margin="0,6,0,0">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
@@ -1794,8 +1794,8 @@
                                     </Grid.ColumnDefinitions>
                                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                                         <ui:SymbolIcon Symbol="Warning24" FontSize="16" Margin="0,0,8,0"
-                                                       Foreground="#FFB05B00" VerticalAlignment="Center" />
-                                        <TextBlock Text="{Binding Name}" Foreground="#FFB05B00" TextWrapping="Wrap" VerticalAlignment="Center" />
+                                                       Foreground="{DynamicResource AlertWarningTextBrush}" VerticalAlignment="Center" />
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource AlertWarningTextBrush}" TextWrapping="Wrap" VerticalAlignment="Center" />
                                     </StackPanel>
                                     <Button Grid.Column="1" Content="Instalează"
                                             Command="{Binding DataContext.InstallDependencyCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -2002,7 +2002,7 @@
                     <TextBlock Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap" Margin="0,0,0,16"
                                Text="Ai catalogul GDC si pe telefon: produse, cursuri, evenimente si magazine partenere, cu functionare offline. Scaneaza codul de mai jos, direct din browser, fara instalare — merge pe Android si pe iPhone." />
 
-                    <Border Background="White" CornerRadius="10" Padding="10" Width="188" Height="188"
+                    <Border Background="{DynamicResource QrCodeSurfaceBrush}" CornerRadius="10" Padding="10" Width="188" Height="188"
                             HorizontalAlignment="Left" Margin="0,0,0,14"
                             Visibility="{Binding MobileAppQrImage, Converter={StaticResource NullToVisibility}}">
                         <Image Source="{Binding MobileAppQrImage}" Width="168" Height="168"
@@ -2109,7 +2109,7 @@
                     <Border Style="{StaticResource CardBorderStyle}" Margin="0,14,0,0">
                         <StackPanel>
                             <TextBox Text="{Binding Code, UpdateSourceTrigger=PropertyChanged}" />
-                            <TextBlock Text="{Binding ActivationError}" Foreground="#FFE8544D" TextWrapping="Wrap" Margin="0,8,0,0"
+                            <TextBlock Text="{Binding ActivationError}" Foreground="{DynamicResource StatusErrorBrush}" TextWrapping="Wrap" Margin="0,8,0,0"
                                        Visibility="{Binding ActivationError, Converter={StaticResource NullToVisibility}}" />
                             <StackPanel Orientation="Horizontal" Margin="0,8,0,0"
                                         Visibility="{Binding JustActivated, Converter={StaticResource BoolToVisibility}}">
@@ -2232,10 +2232,10 @@
                                                        FontSize="15" TextWrapping="Wrap" VerticalAlignment="Center" />
                                             <!-- Badge ACTUALIZARE doar cand chiar stim ca exista
                                                  o versiune mai noua (verificarea a reusit). -->
-                                            <Border Grid.Column="2" Style="{StaticResource BadgeBorderStyle}" Background="#FF4EA1F5"
+                                            <Border Grid.Column="2" Style="{StaticResource BadgeBorderStyle}" Background="{DynamicResource BadgeAppBrush}"
                                                     ToolTip="{Binding UpdateTooltip}"
                                                     Visibility="{Binding HasUpdate, Converter={StaticResource BoolToVisibility}}">
-                                                <TextBlock Text="ACTUALIZARE" FontSize="9" FontWeight="Bold" Foreground="White" />
+                                                <TextBlock Text="ACTUALIZARE" FontSize="9" FontWeight="Bold" Foreground="{DynamicResource OnAccentTextBrush}" />
                                             </Border>
                                         </Grid>
                                         <TextBlock Text="{Binding InstalledVersionDisplay}" Style="{StaticResource MutedTextStyle}"
@@ -2593,9 +2593,9 @@
                 <!-- x:Name pe Border-ul benzii, nu doar pe StackPanel-ul
                      parinte - vezi UpdateLaunchBanner() in code-behind, care
                      reordoneaza LaunchBannerGrid.Children dupa TextOnTop. -->
-                <Border x:Name="LaunchBannerTextBand" Background="#D1000000" Height="46">
+                <Border x:Name="LaunchBannerTextBand" Background="{DynamicResource OverlayScrimBrush}" Height="46">
                     <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
-                        <TextBlock x:Name="LaunchBannerTopText" FontSize="11" FontWeight="Bold" Foreground="#D9FFFFFF"
+                        <TextBlock x:Name="LaunchBannerTopText" FontSize="11" FontWeight="Bold" Foreground="{DynamicResource OverlayTextBrush}"
                                    HorizontalAlignment="Center" TextAlignment="Center" />
                         <TextBlock x:Name="LaunchBannerMainText" FontSize="15" FontWeight="Black"
                                    HorizontalAlignment="Center" TextAlignment="Center" Margin="0,2,0,0">

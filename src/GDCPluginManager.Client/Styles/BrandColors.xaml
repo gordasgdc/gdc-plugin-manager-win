@@ -1,0 +1,72 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!--
+        Regula 37. Culorile de aici sunt SEMANTICE, nu decorative: înseamnă
+        același lucru în temă închisă și în temă deschisă (o insignă de promoție
+        e portocalie în ambele), deci rămân fixe în mod intenționat. Ce se
+        schimbă față de înainte e că nu mai sunt scrise literal pe 60 de
+        controale, ci definite o singură dată — deci se pot schimba dintr-un
+        singur loc, iar auditul de temă nu le mai confundă cu scăpări.
+
+        Culorile care TREBUIE să urmeze tema (fundaluri de fereastră, text
+        obișnuit, carduri) NU stau aici: acelea vin din Theme.xaml și din tema
+        WPF-UI.
+    -->
+
+    <!-- Text așezat PESTE o suprafață colorată (insigne). Alb pe fundal
+         saturat rămâne lizibil în ambele teme — suprafața e cea care dă
+         contrastul, nu tema. -->
+    <SolidColorBrush x:Key="OnAccentTextBrush" Color="#FFFFFFFF" />
+
+    <!-- Insigne și accente de stare -->
+    <SolidColorBrush x:Key="BadgePromoBrush" Color="#FFB05B00" />
+    <SolidColorBrush x:Key="BadgeDiscountBrush" Color="#FFE2584A" />
+    <SolidColorBrush x:Key="BadgeCategoryBrush" Color="#FF6E7681" />
+    <SolidColorBrush x:Key="BadgeBundleBrush" Color="#FF7C7CF0" />
+    <SolidColorBrush x:Key="BadgeAppBrush" Color="#FF4EA1F5" />
+
+    <SolidColorBrush x:Key="StatusErrorBrush" Color="#FFE8544D" />
+    <SolidColorBrush x:Key="StatusErrorSoftBrush" Color="#FFD9534F" />
+    <SolidColorBrush x:Key="StatusWarningBrush" Color="#FFE0A030" />
+
+    <!-- Caseta de avertisment „dependințe lipsă": fundal crem + text
+         portocaliu închis. Perechea e auto-consistentă (își aduce propriul
+         contrast), de aceea nu urmează tema. -->
+    <SolidColorBrush x:Key="AlertWarningSurfaceBrush" Color="#FFFCE8CD" />
+    <SolidColorBrush x:Key="AlertWarningTextBrush" Color="#FFB05B00" />
+
+    <!-- Accente de identitate pe categorii (iconițele din bara laterală și de
+         pe carduri). Fiecare categorie are culoarea ei, aceeași în ambele teme
+         — face parte din recunoașterea rubricii. -->
+    <SolidColorBrush x:Key="AccentAudioBrush" Color="#7C7CF0" />
+    <SolidColorBrush x:Key="AccentAppsBrush" Color="#4EA1F5" />
+    <SolidColorBrush x:Key="AccentLutBrush" Color="#4ECDA4" />
+    <SolidColorBrush x:Key="AccentSfxBrush" Color="#4EBFCD" />
+    <SolidColorBrush x:Key="AccentVfxBrush" Color="#A97CF0" />
+    <SolidColorBrush x:Key="AccentPluginBrush" Color="#E0A34E" />
+    <SolidColorBrush x:Key="AccentPdfBrush" Color="#E06C6C" />
+    <SolidColorBrush x:Key="AccentScriptBrush" Color="#C99A6E" />
+    <SolidColorBrush x:Key="AccentCommunityBrush" Color="#6EA8E0" />
+    <SolidColorBrush x:Key="AccentDiscountBrush" Color="#E2584A" />
+
+    <!--
+        Fundal ALB obligatoriu, sub codul QR.
+        Nu e o scăpare de tematizare: un cod QR se citește doar pe fundal
+        deschis, cu zonă liniștită albă în jur. Pe temă închisă, fără dreptunghiul
+        ăsta, codul devine nescanabil — deci albul e cerință funcțională, nu
+        stilistică.
+    -->
+    <SolidColorBrush x:Key="QrCodeSurfaceBrush" Color="#FFFFFFFF" />
+
+    <!-- Fundalul vizorului de imagini (lightbox): aproape negru în ambele
+         teme, ca orice vizualizator de fotografii — culorile imaginii se judecă
+         pe fundal neutru închis, nu pe alb. -->
+    <SolidColorBrush x:Key="LightboxSurfaceBrush" Color="#FF0A0A0A" />
+
+    <!-- Bandă semi-transparentă peste imaginea bannerului de lansare: trebuie
+         să întunece imaginea de dedesubt indiferent de temă. -->
+    <SolidColorBrush x:Key="OverlayScrimBrush" Color="#D1000000" />
+    <SolidColorBrush x:Key="OverlayTextBrush" Color="#D9FFFFFF" />
+
+</ResourceDictionary>
