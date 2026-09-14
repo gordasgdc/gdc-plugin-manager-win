@@ -1,8 +1,10 @@
 # Changelog — GDC Plugin Manager (Windows)
 
-## v1.31.0 (2026-09-14) — PDF-uri și Scripturi DaVinci Resolve
+## v1.33.0 (2026-09-14) — PDF-uri și Scripturi DaVinci Resolve
 
-Paritate cu clientul Mac (Regula 31).
+Paritate cu clientul Mac (Regula 31) — aceeași versiune pe ambele platforme, ca
+pachetele să stea pe același release și linkurile stabile să funcționeze pentru
+amândouă.
 
 ### Added
 - **Secțiune nouă „PDF-uri / Ghiduri"** în Resurse Download, cu descărcare
