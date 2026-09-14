@@ -31,6 +31,9 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<ServiceCenter> ServiceCenters { get; private set; } = [];
     /// Resurse de download direct (LUT/SFX/VFX/Plugin) — Etapa 2 (2026-08-29).
     public IReadOnlyList<DownloadableResource> DownloadableResources { get; private set; } = [];
+    /// PDF-uri / ghiduri / carti — cheie separata in catalog, vezi
+    /// Catalog.PdfResources.
+    public IReadOnlyList<DownloadableResource> PdfResources { get; private set; } = [];
     /// Oferte de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; private set; } = [];
     /// Pachete/Bundle-uri — Etapa 9 (2026-08-29).
@@ -98,6 +101,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             PartnerStores = catalog.PartnerStores;
             ServiceCenters = catalog.ServiceCenters;
             DownloadableResources = catalog.DownloadableResources;
+            PdfResources = catalog.PdfResources;
             PartnerOffers = catalog.PartnerOffers;
             SeasonalBackground = catalog.SeasonalBackground;
             SeasonalBackgrounds = catalog.SeasonalBackgrounds;
@@ -112,6 +116,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(PartnerStores));
             Raise(nameof(ServiceCenters));
             Raise(nameof(DownloadableResources));
+            Raise(nameof(PdfResources));
             Raise(nameof(PartnerOffers));
             Raise(nameof(SeasonalBackground));
             Raise(nameof(SeasonalBackgrounds));
@@ -171,6 +176,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             PartnerStores = catalog.PartnerStores;
             ServiceCenters = catalog.ServiceCenters;
             DownloadableResources = catalog.DownloadableResources;
+            PdfResources = catalog.PdfResources;
             PartnerOffers = catalog.PartnerOffers;
             SeasonalBackground = catalog.SeasonalBackground;
             SeasonalBackgrounds = catalog.SeasonalBackgrounds;

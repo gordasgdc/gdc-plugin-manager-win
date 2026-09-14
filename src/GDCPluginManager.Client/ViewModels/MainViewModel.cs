@@ -105,6 +105,8 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<DownloadResourceViewModel> DownloadSfx { get; } = [];
     public ObservableCollection<DownloadResourceViewModel> DownloadVfx { get; } = [];
     public ObservableCollection<DownloadResourceViewModel> DownloadPlugins { get; } = [];
+    /// PDF-uri / ghiduri / carti (2026-09-14).
+    public ObservableCollection<DownloadResourceViewModel> DownloadPdfs { get; } = [];
 
     /// Toate resursele, in ordinea din catalog — sursa pentru cautarea
     /// globala si pentru lista de ID-uri candidate la activarea unei licente.
@@ -801,6 +803,15 @@ public sealed partial class MainViewModel : ObservableObject
         DownloadSfx.Clear();
         DownloadVfx.Clear();
         DownloadPlugins.Clear();
+        DownloadPdfs.Clear();
+        // PDF-urile vin din cheia LOR de catalog, nu din lista comuna — vezi
+        // Catalog.PdfResources pentru motivul retrocompatibilitatii.
+        foreach (var resource in CatalogService.Shared.PdfResources.Where(x => x.Scheduling.IsVisibleNow()))
+        {
+            var pdfVm = new DownloadResourceViewModel(resource);
+            _allDownloadResources.Add(pdfVm);
+            DownloadPdfs.Add(pdfVm);
+        }
         foreach (var resource in CatalogService.Shared.DownloadableResources.Where(x => x.Scheduling.IsVisibleNow()))
         {
             var vm = new DownloadResourceViewModel(resource);
@@ -811,6 +822,8 @@ public sealed partial class MainViewModel : ObservableObject
                 case DownloadCategory.Sfx: DownloadSfx.Add(vm); break;
                 case DownloadCategory.Vfx: DownloadVfx.Add(vm); break;
                 case DownloadCategory.Plugin: DownloadPlugins.Add(vm); break;
+                case DownloadCategory.Pdf: DownloadPdfs.Add(vm); break;
+                default: break;   // Unknown: nu apare in UI, dar nu darama nimic
             }
         }
 

@@ -1134,6 +1134,24 @@ public enum DownloadCategory
     Sfx,
     Vfx,
     Plugin,
+    /// [2026-09-14] PDF-uri / ghiduri / carti. Pe Mac stau intr-o cheie
+    /// separata de catalog (pdfResources), tocmai ca aceasta valoare sa nu
+    /// ajunga niciodata intr-un array citit de un client vechi.
+    Pdf,
+    /// Categorie necunoscuta — plasa de siguranta. Convertorul arunca
+    /// inainte la orice valoare noua, iar exceptia darama deserializarea
+    /// INTREGULUI catalog: clientul n-ar mai vedea nimic, nu doar resursa
+    /// aia. Verificat experimental pe modelul Swift echivalent.
+    Unknown,
+}
+
+/// Ce fel de PDF e — pereche a PDFKind din Swift.
+public enum PdfKind
+{
+    AudioInstructions,
+    TechnicalGuide,
+    Book,
+    Manual,
 }
 
 /// Mapeaza DownloadCategory <-> stringul exact din JSON ("lut"/"sfx"/"vfx"/
@@ -1149,7 +1167,9 @@ public sealed class DownloadCategoryJsonConverter : JsonConverter<DownloadCatego
             "sfx" => DownloadCategory.Sfx,
             "vfx" => DownloadCategory.Vfx,
             "plugin" => DownloadCategory.Plugin,
-            _ => throw new JsonException($"Unknown DownloadCategory: {raw}"),
+            "pdf" => DownloadCategory.Pdf,
+            // NU arunca: vezi DownloadCategory.Unknown.
+            _ => DownloadCategory.Unknown,
         };
     }
 
@@ -1161,7 +1181,8 @@ public sealed class DownloadCategoryJsonConverter : JsonConverter<DownloadCatego
             DownloadCategory.Sfx => "sfx",
             DownloadCategory.Vfx => "vfx",
             DownloadCategory.Plugin => "plugin",
-            _ => throw new JsonException($"Unknown DownloadCategory: {value}"),
+            DownloadCategory.Pdf => "pdf",
+            _ => "unknown",
         });
     }
 }
@@ -1176,6 +1197,7 @@ public static class DownloadCategoryExtensions
         DownloadCategory.Sfx => "Efecte Audio",
         DownloadCategory.Vfx => "Efecte Video",
         DownloadCategory.Plugin => "Plugin-uri",
+        DownloadCategory.Pdf => "PDF-uri / Ghiduri / Carti",
         _ => category.ToString(),
     };
 
@@ -1219,6 +1241,23 @@ public sealed class DownloadableResource : IAccessDescribing
     public string? PurchaseURL { get; init; }
     public string? DemoURL { get; init; }
     public SocialLinks? SocialLinks { get; init; }
+
+    /// [2026-09-14] Fisier incarcat DIRECT in repo-ul privat, in loc de link
+    /// extern. Format identic cu PluginFile.Path ("<id>/pdf/<nume>.pdf").
+    /// null = resursa foloseste Url (link extern), ca inainte.
+    public string? FilePath { get; init; }
+    /// SHA-256 al fisierului de mai sus, verificat dupa descarcare.
+    public string? FileSHA256 { get; init; }
+    /// Doar pentru Category == Pdf.
+    public PdfKind? PdfKind { get; init; }
+
+    [JsonIgnore]
+    public bool HasDirectFile => !string.IsNullOrWhiteSpace(FilePath);
+
+    [JsonIgnore]
+    public string? DirectFileName => string.IsNullOrEmpty(FilePath)
+        ? null
+        : FilePath!.Split('/')[^1];
 
     /// Licentiere — port 1:1 al modelului de pe PluginItem: acces prin Ed25519
     /// (LicenseCore), aceeasi cheie publica din ecosistem, ACELASI flux
@@ -1303,6 +1342,19 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             Access = root.TryGetProperty("access", out var acc) && acc.ValueKind == JsonValueKind.Object
                 ? JsonSerializer.Deserialize<CatalogAccess>(acc.GetRawText(), options)
                 : null,
+            // Chei noi (2026-09-14) — retrocompatibile, lipsa lor e normala.
+            FilePath = root.TryGetProperty("filePath", out var fp) ? fp.GetString() : null,
+            FileSHA256 = root.TryGetProperty("fileSHA256", out var sha) ? sha.GetString() : null,
+            PdfKind = root.TryGetProperty("pdfKind", out var pk) && pk.ValueKind == JsonValueKind.String
+                ? pk.GetString() switch
+                {
+                    "audioInstructions" => Models.PdfKind.AudioInstructions,
+                    "technicalGuide" => Models.PdfKind.TechnicalGuide,
+                    "book" => Models.PdfKind.Book,
+                    "manual" => Models.PdfKind.Manual,
+                    _ => null,
+                }
+                : null,
         };
     }
 
@@ -1315,6 +1367,18 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
         writer.WritePropertyName("category");
         JsonSerializer.Serialize(writer, value.Category, options);
         writer.WriteString("url", value.Url);
+        if (value.FilePath is not null) writer.WriteString("filePath", value.FilePath);
+        if (value.FileSHA256 is not null) writer.WriteString("fileSHA256", value.FileSHA256);
+        if (value.PdfKind is not null)
+        {
+            writer.WriteString("pdfKind", value.PdfKind switch
+            {
+                Models.PdfKind.AudioInstructions => "audioInstructions",
+                Models.PdfKind.TechnicalGuide => "technicalGuide",
+                Models.PdfKind.Book => "book",
+                _ => "manual",
+            });
+        }
         if (value.YoutubeURL is not null) writer.WriteString("youtubeURL", value.YoutubeURL);
         if (value.CoverImage is not null) writer.WriteString("coverImage", value.CoverImage);
         writer.WritePropertyName("supportedOS");
@@ -1529,6 +1593,13 @@ public sealed class Catalog
     /// Resurse de download direct (LUT/SFX/VFX/Plugin) — Etapa 2 (2026-08-29).
     /// Default `[]`: orice catalog publicat inainte decodeaza curat.
     public IReadOnlyList<DownloadableResource> DownloadableResources { get; init; } = [];
+
+    /// [2026-09-14] PDF-uri / ghiduri / carti — CHEIE SEPARATA, nu o categorie
+    /// noua in DownloadableResources. Motivul e retrocompatibilitatea: o
+    /// valoare noua de `category` in array-ul existent facea INTREG catalogul
+    /// nedeserializabil pe clientii deja instalati. O cheie noua de nivel
+    /// superior e pur si simplu ignorata de ei.
+    public IReadOnlyList<DownloadableResource> PdfResources { get; init; } = [];
 
     /// Oferte/Promotii de la branduri partenere — Etapa 4 (2026-08-29).
     public IReadOnlyList<PartnerOffer> PartnerOffers { get; init; } = [];
