@@ -1320,6 +1320,12 @@ public sealed class DownloadableResource : IAccessDescribing
 
     [JsonIgnore]
     public int DirectFileCount => Files.Count > 0 ? Files.Count : (HasDirectFile ? 1 : 0);
+
+    /// [2026-09-14] Cand resursa REFOLOSESTE fisierele unui produs deja
+    /// publicat: id-ul acelui produs. Fisierele din Files raman ale
+    /// produsului, cu repo-ul lor — acelasi continut nu se stocheaza de doua
+    /// ori. Clientul nu foloseste campul; fiecare fisier isi poarta deja calea.
+    public string? SourceProductID { get; init; }
     /// Doar pentru Category == Pdf.
     public PdfKind? PdfKind { get; init; }
 
@@ -1418,6 +1424,7 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
             FilePath = root.TryGetProperty("filePath", out var fp) ? fp.GetString() : null,
             FileSHA256 = root.TryGetProperty("fileSHA256", out var sha) ? sha.GetString() : null,
             FileRepo = root.TryGetProperty("fileRepo", out var frepo) ? frepo.GetString() : null,
+            SourceProductID = root.TryGetProperty("sourceProductID", out var spid) ? spid.GetString() : null,
             Files = root.TryGetProperty("files", out var rf) && rf.ValueKind == JsonValueKind.Array
                 ? JsonSerializer.Deserialize<List<PluginFile>>(rf.GetRawText(), options) ?? []
                 : [],
@@ -1446,6 +1453,7 @@ public sealed class DownloadableResourceJsonConverter : JsonConverter<Downloadab
         if (value.FilePath is not null) writer.WriteString("filePath", value.FilePath);
         if (value.FileSHA256 is not null) writer.WriteString("fileSHA256", value.FileSHA256);
         if (value.FileRepo is not null) writer.WriteString("fileRepo", value.FileRepo);
+        if (value.SourceProductID is not null) writer.WriteString("sourceProductID", value.SourceProductID);
         if (value.Files.Count > 0)
         {
             writer.WritePropertyName("files");
