@@ -150,4 +150,96 @@
         <Setter Property="Width" Value="10" />
     </Style>
 
+    <!-- Sectiune pliabila din bara laterala (2026-09-14). Paritate cu
+         `Section(isExpanded:)` de pe Mac: acelasi titlu marunt, majuscule,
+         cu o sageata care se roteste lin la deschidere/inchidere.
+         ControlTemplate propriu, nu Expander-ul implicit: acela vine cu
+         chenar, fundal si o sageata triunghiulara care nu seamana deloc cu
+         restul barei. -->
+    <Style x:Key="SidebarSectionStyle" TargetType="Expander">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Margin" Value="0,10,0,0" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Expander">
+                    <StackPanel>
+                        <ToggleButton IsChecked="{Binding IsExpanded, RelativeSource={RelativeSource TemplatedParent}, Mode=TwoWay}"
+                                      Cursor="Hand" Focusable="True" HorizontalContentAlignment="Stretch">
+                            <ToggleButton.Template>
+                                <ControlTemplate TargetType="ToggleButton">
+                                    <Border x:Name="HeaderBorder" Background="Transparent" Padding="16,6,12,6">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{TemplateBinding Content}"
+                                                       FontSize="10" FontWeight="Bold"
+                                                       Foreground="{DynamicResource InkTextMutedBrush}"
+                                                       VerticalAlignment="Center" />
+                                            <Path x:Name="Chevron" Grid.Column="1" Width="8" Height="8"
+                                                  Data="M 0,0 L 4,4 L 0,8"
+                                                  Stroke="{DynamicResource InkTextMutedBrush}" StrokeThickness="1.5"
+                                                  StrokeEndLineCap="Round" StrokeStartLineCap="Round"
+                                                  VerticalAlignment="Center" RenderTransformOrigin="0.5,0.5">
+                                                <Path.RenderTransform>
+                                                    <RotateTransform Angle="0" />
+                                                </Path.RenderTransform>
+                                            </Path>
+                                        </Grid>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter TargetName="HeaderBorder" Property="Background"
+                                                    Value="{DynamicResource InkSurfaceRaisedBrush}" />
+                                        </Trigger>
+                                        <!-- Rotatia sagetii: un singur Trigger cu
+                                             EnterActions/ExitActions, nu EventTriggers pe
+                                             Checked/Unchecked.
+                                             MOTIV: acelea se declanseaza doar la o SCHIMBARE
+                                             de stare, deci o sectiune salvata ca deschisa s-ar
+                                             fi desenat cu sageata in pozitia de "inchis" pana
+                                             la primul click. EnterActions ruleaza si atunci
+                                             cand conditia e deja adevarata la incarcare, deci
+                                             acopera si starea initiala, si animatia.
+                                             Tinta e data prin cale de proprietate, nu prin
+                                             x:Name-ul transformarii: un Setter nu poate tinti
+                                             un RotateTransform (nu e element din sablon). -->
+                                        <Trigger Property="IsChecked" Value="True">
+                                            <Trigger.EnterActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="Chevron"
+                                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                         To="90" Duration="0:0:0.15" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.EnterActions>
+                                            <Trigger.ExitActions>
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetName="Chevron"
+                                                                         Storyboard.TargetProperty="(UIElement.RenderTransform).(RotateTransform.Angle)"
+                                                                         To="0" Duration="0:0:0.15" />
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </Trigger.ExitActions>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </ToggleButton.Template>
+                        </ToggleButton>
+                        <ContentPresenter x:Name="Content" Visibility="Collapsed" />
+                    </StackPanel>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsExpanded" Value="True">
+                            <Setter TargetName="Content" Property="Visibility" Value="Visible" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
 </ResourceDictionary>

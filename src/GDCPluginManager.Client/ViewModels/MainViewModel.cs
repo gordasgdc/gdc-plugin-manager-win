@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Diagnostics;   // Process.Start — deschide linkul APK in browser
@@ -344,7 +345,101 @@ public sealed partial class MainViewModel : ObservableObject
         ProductsView.Refresh();
     }
 
-    partial void OnCurrentPageChanged(SidebarPage value) => OnPropertyChanged(nameof(ContentPage));
+
+    // MARK: Sectiuni pliabile in bara laterala (2026-09-14)
+    //
+    // Paritate cu Mac: aceleasi cinci grupuri, aceleasi implicite (doar
+    // primul deschis), aceeasi persistenta intre porniri. Pe Mac o face
+    // @AppStorage; aici, SidebarStateStore.
+
+    private readonly Dictionary<string, bool> _sidebarState = SidebarStateStore.Load();
+
+    public bool SidebarResolveInstallExpanded
+    {
+        get => _sidebarState["resolveInstall"];
+        set => SetSidebarSection("resolveInstall", value);
+    }
+
+    public bool SidebarDownloadResourcesExpanded
+    {
+        get => _sidebarState["downloadResources"];
+        set => SetSidebarSection("downloadResources", value);
+    }
+
+    public bool SidebarCommunityExpanded
+    {
+        get => _sidebarState["community"];
+        set => SetSidebarSection("community", value);
+    }
+
+    public bool SidebarEcosystemExpanded
+    {
+        get => _sidebarState["ecosystem"];
+        set => SetSidebarSection("ecosystem", value);
+    }
+
+    public bool SidebarAccountExpanded
+    {
+        get => _sidebarState["account"];
+        set => SetSidebarSection("account", value);
+    }
+
+    private void SetSidebarSection(string key, bool value, [CallerMemberName] string? propertyName = null)
+    {
+        if (_sidebarState[key] == value) return;
+        _sidebarState[key] = value;
+        SidebarStateStore.Save(_sidebarState);
+        OnPropertyChanged(propertyName);
+    }
+
+    /// Deschide sectiunea din care face parte pagina data. Nu strange
+    /// niciodata altceva: o sectiune deschisa de utilizator ramane deschisa.
+    /// Fara asta, o navigare venita din alta parte ar lasa sidebar-ul pe o
+    /// rubrica invizibila, intr-o sectiune stransa — ar parea ca aplicatia
+    /// nu a reactionat la click.
+    private void ExpandSectionContaining(SidebarPage page)
+    {
+        switch (page)
+        {
+            case SidebarPage.Catalog:
+                SidebarResolveInstallExpanded = true;
+                break;
+            case SidebarPage.AudioTracks:
+            case SidebarPage.DownloadLut:
+            case SidebarPage.DownloadSfx:
+            case SidebarPage.DownloadVfx:
+            case SidebarPage.DownloadPlugin:
+            case SidebarPage.DownloadPdf:
+            case SidebarPage.DownloadScript:
+                SidebarDownloadResourcesExpanded = true;
+                break;
+            case SidebarPage.Courses:
+            case SidebarPage.EducationalResources:
+            case SidebarPage.Tutorials:
+            case SidebarPage.Events:
+            case SidebarPage.PartnerStores:
+            case SidebarPage.ServiceCenters:
+            case SidebarPage.PartnerOffers:
+            case SidebarPage.Bundles:
+            case SidebarPage.Community:
+                SidebarCommunityExpanded = true;
+                break;
+            case SidebarPage.Apps:
+            case SidebarPage.Android:
+            case SidebarPage.MyApps:
+                SidebarEcosystemExpanded = true;
+                break;
+            case SidebarPage.License:
+                SidebarAccountExpanded = true;
+                break;
+        }
+    }
+
+    partial void OnCurrentPageChanged(SidebarPage value)
+    {
+        OnPropertyChanged(nameof(ContentPage));
+        ExpandSectionContaining(value);
+    }
 
     partial void OnSearchTextChanged(string value)
     {

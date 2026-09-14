@@ -1212,210 +1212,234 @@
             <StackPanel>
                 <TextBlock Text="GDC PLUGIN MANAGER" Style="{StaticResource MutedTextStyle}" Margin="16,0,0,16"
                            FontWeight="SemiBold" />
-                <ItemsControl ItemsSource="{Binding Categories}">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate DataType="{x:Type vm:CategoryFilter}">
-                            <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar"
-                                         Margin="8,1"
-                                         Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
-                                         CommandParameter="{Binding}">
-                                <RadioButton.IsChecked>
-                                    <MultiBinding Converter="{StaticResource CategoryEquals}" Mode="OneWay">
-                                        <Binding Path="DataContext.SelectedCategory" RelativeSource="{RelativeSource AncestorType=Window}" Mode="OneWay" />
-                                        <Binding Mode="OneWay" />
-                                        <Binding Path="DataContext.CurrentPage" RelativeSource="{RelativeSource AncestorType=Window}" Mode="OneWay" />
-                                    </MultiBinding>
-                                </RadioButton.IsChecked>
-                                <StackPanel Orientation="Horizontal">
-                                    <ui:SymbolIcon Symbol="{Binding Symbol}" FontSize="16" Margin="0,0,10,0" />
-                                    <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
-                                </StackPanel>
-                            </RadioButton>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
+                <Expander Style="{StaticResource SidebarSectionStyle}" Header="INSTALARE DAVINCI RESOLVE"
+                          IsExpanded="{Binding SidebarResolveInstallExpanded, Mode=TwoWay}">
+                    <StackPanel>
+                    <ItemsControl ItemsSource="{Binding Categories}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:CategoryFilter}">
+                                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar"
+                                             Margin="8,1"
+                                             Command="{Binding DataContext.SelectCategoryCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                             CommandParameter="{Binding}">
+                                    <RadioButton.IsChecked>
+                                        <MultiBinding Converter="{StaticResource CategoryEquals}" Mode="OneWay">
+                                            <Binding Path="DataContext.SelectedCategory" RelativeSource="{RelativeSource AncestorType=Window}" Mode="OneWay" />
+                                            <Binding Mode="OneWay" />
+                                            <Binding Path="DataContext.CurrentPage" RelativeSource="{RelativeSource AncestorType=Window}" Mode="OneWay" />
+                                        </MultiBinding>
+                                    </RadioButton.IsChecked>
+                                    <StackPanel Orientation="Horizontal">
+                                        <ui:SymbolIcon Symbol="{Binding Symbol}" FontSize="16" Margin="0,0,10,0" />
+                                        <TextBlock Text="{Binding Label}" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </RadioButton>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
 
-                <!-- Audio — plasata aici, langa categoriile LUT/DCTL/OFX/PowerGrade
-                     de mai sus (nu langa Cursuri/Materiale/etc.), la fel ca pe Mac. -->
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowAudioTracksCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=AudioTracks, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
-                        <TextBlock Text="Audio" VerticalAlignment="Center" />
                     </StackPanel>
-                </RadioButton>
+                </Expander>
 
-                <!-- RESURSE DOWNLOAD (Etapa 2, 2026-08-29) — 4 rubrici noi,
-                     una per DownloadCategory, langa Audio (acelasi tip de
-                     continut: descarcare directa, fara auto-instalare in
-                     Resolve), exact ca gruparea de pe Mac. -->
-                <TextBlock Text="RESURSE DOWNLOAD" Style="{StaticResource MutedTextStyle}"
-                           FontSize="10" FontWeight="Bold" Margin="16,14,0,6" />
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadLut}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadLut, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Eyedropper24" FontSize="16" Margin="0,0,10,0" Foreground="#4ECDA4" />
-                        <TextBlock Text="LUT-uri" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadSfx}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadSfx, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#4EBFCD" />
-                        <TextBlock Text="Efecte Audio" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadVfx}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadVfx, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Sparkle24" FontSize="16" Margin="0,0,10,0" Foreground="#A97CF0" />
-                        <TextBlock Text="Efecte Video" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPlugin}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPlugin, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="PuzzlePiece24" FontSize="16" Margin="0,0,10,0" Foreground="#E0A34E" />
-                        <TextBlock Text="Plugin-uri" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPdf}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPdf, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="16" Margin="0,0,10,0" Foreground="#E06C6C" />
-                        <TextBlock Text="PDF-uri / Ghiduri" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <!-- Comunitate (2026-09-14). Refoloseste comanda generica de
-                     navigare (`ShowDownloadCategoryCommand` = CurrentPage = page),
-                     nu una noua identica. -->
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.Community}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Community, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="People24" FontSize="16" Margin="0,0,10,0" Foreground="#6EA8E0" />
-                        <TextBlock Text="Comunitate" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadScript}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadScript, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Code24" FontSize="16" Margin="0,0,10,0" Foreground="#C99A6E" />
-                        <TextBlock Text="Scripturi" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
+                <Expander Style="{StaticResource SidebarSectionStyle}" Header="RESURSE DOWNLOAD"
+                          IsExpanded="{Binding SidebarDownloadResourcesExpanded, Mode=TwoWay}">
+                    <StackPanel>
+                    <!-- Audio — plasata aici, langa categoriile LUT/DCTL/OFX/PowerGrade
+                         de mai sus (nu langa Cursuri/Materiale/etc.), la fel ca pe Mac. -->
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowAudioTracksCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=AudioTracks, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
+                            <TextBlock Text="Audio" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
 
-                <Separator Margin="16,16" />
+                    <!-- RESURSE DOWNLOAD (Etapa 2, 2026-08-29) — 4 rubrici noi,
+                         una per DownloadCategory, langa Audio (acelasi tip de
+                         continut: descarcare directa, fara auto-instalare in
+                         Resolve), exact ca gruparea de pe Mac. -->
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadLut}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadLut, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Eyedropper24" FontSize="16" Margin="0,0,10,0" Foreground="#4ECDA4" />
+                            <TextBlock Text="LUT-uri" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadSfx}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadSfx, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="MusicNote224" FontSize="16" Margin="0,0,10,0" Foreground="#4EBFCD" />
+                            <TextBlock Text="Efecte Audio" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadVfx}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadVfx, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Sparkle24" FontSize="16" Margin="0,0,10,0" Foreground="#A97CF0" />
+                            <TextBlock Text="Efecte Video" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPlugin}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPlugin, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="PuzzlePiece24" FontSize="16" Margin="0,0,10,0" Foreground="#E0A34E" />
+                            <TextBlock Text="Plugin-uri" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadPdf}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadPdf, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="16" Margin="0,0,10,0" Foreground="#E06C6C" />
+                            <TextBlock Text="PDF-uri / Ghiduri" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.DownloadScript}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=DownloadScript, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Code24" FontSize="16" Margin="0,0,10,0" Foreground="#C99A6E" />
+                            <TextBlock Text="Scripturi" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
 
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowCoursesCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Courses, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="HatGraduation24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Cursuri" VerticalAlignment="Center" />
                     </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowEducationalResourcesCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=EducationalResources, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Book24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Materiale" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowTutorialsCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Tutorials, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Video24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Tutoriale" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowEventsCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Events, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Calendar24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Evenimente" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowPartnerStoresCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerStores, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="ShoppingBag24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Magazine partenere" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowServiceCentersCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=ServiceCenters, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Wrench24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Service &amp; Reparații" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <!-- Oferte Parteneri (Etapa 4, 2026-08-29) — grup COMUNITATE. -->
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowPartnerOffersCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerOffers, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,10,0" Foreground="#E2584A" />
-                        <TextBlock Text="Oferte Parteneri" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowBundlesCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Bundles, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
-                        <TextBlock Text="Pachete" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowMyAppsCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=MyApps, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Rocket24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Aplicatiile Mele" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowAppsCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Apps, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Aplicatii" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
-                <!-- Aplicatia mobila companion (PWA, gordas.dev/app.html —
-                     fost APK/TWA, retras 2026-08-24). -->
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowAndroidCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Android, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="PhoneDesktop24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Aplicatie mobila" VerticalAlignment="Center" />
-                    </StackPanel>
-                </RadioButton>
+                </Expander>
 
-                <Separator Margin="16,16" />
-
-                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
-                             Command="{Binding ShowLicenseCommand}"
-                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=License, Mode=OneWay}">
-                    <StackPanel Orientation="Horizontal">
-                        <ui:SymbolIcon Symbol="Key24" FontSize="16" Margin="0,0,10,0" />
-                        <TextBlock Text="Licenta" VerticalAlignment="Center" />
+                <Expander Style="{StaticResource SidebarSectionStyle}" Header="COMUNITATE &amp; EDUCAȚIE"
+                          IsExpanded="{Binding SidebarCommunityExpanded, Mode=TwoWay}">
+                    <StackPanel>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowCoursesCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Courses, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="HatGraduation24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Cursuri" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowEducationalResourcesCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=EducationalResources, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Book24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Materiale" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowTutorialsCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Tutorials, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Video24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Tutoriale" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowEventsCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Events, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Calendar24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Evenimente" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowPartnerStoresCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerStores, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="ShoppingBag24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Magazine partenere" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowServiceCentersCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=ServiceCenters, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Wrench24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Service &amp; Reparații" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <!-- Oferte Parteneri (Etapa 4, 2026-08-29) — grup COMUNITATE. -->
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowPartnerOffersCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=PartnerOffers, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Tag24" FontSize="16" Margin="0,0,10,0" Foreground="#E2584A" />
+                            <TextBlock Text="Oferte Parteneri" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowBundlesCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Bundles, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Box24" FontSize="16" Margin="0,0,10,0" Foreground="#7C7CF0" />
+                            <TextBlock Text="Pachete" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <!-- Comunitate (2026-09-14). Refoloseste comanda generica de
+                         navigare (`ShowDownloadCategoryCommand` = CurrentPage = page),
+                         nu una noua identica. -->
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.Community}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Community, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="People24" FontSize="16" Margin="0,0,10,0" Foreground="#6EA8E0" />
+                            <TextBlock Text="Comunitate" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
                     </StackPanel>
-                </RadioButton>
+                </Expander>
+
+                <Expander Style="{StaticResource SidebarSectionStyle}" Header="ECOSISTEM GDC"
+                          IsExpanded="{Binding SidebarEcosystemExpanded, Mode=TwoWay}">
+                    <StackPanel>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowMyAppsCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=MyApps, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Rocket24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Aplicatiile Mele" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowAppsCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Apps, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="AppsListDetail24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Aplicatii" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+                    <!-- Aplicatia mobila companion (PWA, gordas.dev/app.html —
+                         fost APK/TWA, retras 2026-08-24). -->
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowAndroidCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Android, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="PhoneDesktop24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Aplicatie mobila" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+
+                    </StackPanel>
+                </Expander>
+
+                <Expander Style="{StaticResource SidebarSectionStyle}" Header="CONTUL TĂU"
+                          IsExpanded="{Binding SidebarAccountExpanded, Mode=TwoWay}">
+                    <StackPanel>
+                    <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                                 Command="{Binding ShowLicenseCommand}"
+                                 IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=License, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="Key24" FontSize="16" Margin="0,0,10,0" />
+                            <TextBlock Text="Licenta" VerticalAlignment="Center" />
+                        </StackPanel>
+                    </RadioButton>
+
+                    </StackPanel>
+                </Expander>
 
             </StackPanel>
             </ScrollViewer>
