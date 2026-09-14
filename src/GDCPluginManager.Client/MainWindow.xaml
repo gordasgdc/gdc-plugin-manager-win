@@ -875,6 +875,43 @@
         </DataTemplate>
 
         <!-- Un card de tutorial YouTube embedded (2026-09-01). -->
+        <!-- Canal de comunitate (2026-09-14) — port al CommunityChannelCard
+             din CommunityView.swift. Pastila colorata tine locul logo-ului
+             de brand: WPF nu randeaza SVG nativ, iar culoarea + simbolul dau
+             aceeasi recunoastere fara nicio dependinta noua. -->
+        <DataTemplate DataType="{x:Type vm:CommunityChannelViewModel}">
+            <Border Width="260" MinHeight="172" Margin="0,0,16,16" CornerRadius="10"
+                    Background="{DynamicResource CardBackgroundFillColorDefaultBrush}"
+                    BorderBrush="{DynamicResource CardStrokeColorDefaultBrush}" BorderThickness="1">
+                <Grid Margin="16">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                        <RowDefinition Height="Auto" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Orientation="Horizontal">
+                        <Border Width="28" Height="28" CornerRadius="14" Background="{Binding IconBackground}">
+                            <ui:SymbolIcon Symbol="{Binding IconSymbol}" FontSize="16" Foreground="White" />
+                        </Border>
+                        <TextBlock Text="{Binding Title}" FontWeight="SemiBold" FontSize="14"
+                                   Margin="10,0,0,0" VerticalAlignment="Center"
+                                   TextWrapping="Wrap" MaxWidth="180" />
+                    </StackPanel>
+
+                    <TextBlock Grid.Row="1" Text="{Binding Description}" Margin="0,10,0,0"
+                               Style="{StaticResource MutedTextStyle}" TextWrapping="Wrap"
+                               MaxHeight="36" TextTrimming="CharacterEllipsis"
+                               Visibility="{Binding HasDescription, Converter={StaticResource BoolToVisibility}}" />
+
+                    <ui:Button Grid.Row="3" Content="{Binding ActionLabel}" Appearance="Primary"
+                               HorizontalAlignment="Stretch" Margin="0,12,0,0"
+                               Command="{Binding OpenCommand}" ToolTip="{Binding Url}" />
+                </Grid>
+            </Border>
+        </DataTemplate>
+
         <DataTemplate DataType="{x:Type vm:TutorialViewModel}">
             <Border Style="{StaticResource CardBorderStyle}" Margin="0,0,14,14" Width="320">
                 <Grid>
@@ -1253,6 +1290,17 @@
                     <StackPanel Orientation="Horizontal">
                         <ui:SymbolIcon Symbol="DocumentPdf24" FontSize="16" Margin="0,0,10,0" Foreground="#E06C6C" />
                         <TextBlock Text="PDF-uri / Ghiduri" VerticalAlignment="Center" />
+                    </StackPanel>
+                </RadioButton>
+                <!-- Comunitate (2026-09-14). Refoloseste comanda generica de
+                     navigare (`ShowDownloadCategoryCommand` = CurrentPage = page),
+                     nu una noua identica. -->
+                <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
+                             Command="{Binding ShowDownloadCategoryCommand}" CommandParameter="{x:Static vm:SidebarPage.Community}"
+                             IsChecked="{Binding CurrentPage, Converter={StaticResource PageEquals}, ConverterParameter=Community, Mode=OneWay}">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="People24" FontSize="16" Margin="0,0,10,0" Foreground="#6EA8E0" />
+                        <TextBlock Text="Comunitate" VerticalAlignment="Center" />
                     </StackPanel>
                 </RadioButton>
                 <RadioButton Style="{StaticResource CategoryButtonStyle}" GroupName="Sidebar" Margin="8,1"
@@ -2321,6 +2369,25 @@
                     <TextBlock Text="Nicio resursa disponibila momentan." Style="{StaticResource MutedTextStyle}"
                                Visibility="{Binding DownloadPdfs.Count, Converter={StaticResource ZeroToVisibility}}" />
                     <ItemsControl ItemsSource="{Binding DownloadPdfs}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Comunitate (2026-09-14) — hub de grupuri si canale de suport.
+                 Link-urile se deschid in browserul sistemului, niciodata
+                 intr-un webview: un grup de Facebook sau WhatsApp cere
+                 sesiunea reala a utilizatorului. -->
+            <ScrollViewer Grid.Row="2" Grid.RowSpan="2" Margin="20,20,20,20" VerticalScrollBarVisibility="Auto"
+                          Visibility="{Binding ContentPage, Converter={StaticResource PageVisible}, ConverterParameter=Community}">
+                <StackPanel>
+                    <TextBlock Text="Comunitate" Style="{StaticResource HeadingTextStyle}" FontSize="20" Margin="0,0,0,14" />
+                    <TextBlock Text="Grupurile si canalele de suport apar aici imediat ce sunt publicate."
+                               Style="{StaticResource MutedTextStyle}"
+                               Visibility="{Binding CommunityChannels.Count, Converter={StaticResource ZeroToVisibility}}" />
+                    <ItemsControl ItemsSource="{Binding CommunityChannels}">
                         <ItemsControl.ItemsPanel>
                             <ItemsPanelTemplate><WrapPanel Orientation="Horizontal" /></ItemsPanelTemplate>
                         </ItemsControl.ItemsPanel>

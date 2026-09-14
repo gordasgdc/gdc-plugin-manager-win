@@ -46,6 +46,8 @@ public enum SidebarPage
     License,
     /// Tutoriale YouTube embedded (2026-09-01).
     Tutorials,
+    /// Canale de comunitate si suport (2026-09-14).
+    Community,
     /// Cele 4 rubrici noi de Resurse Download (Etapa 2, 2026-08-29) — una per
     /// DownloadCategory, exact ca `SidebarSection.download(DownloadCategory)`
     /// de pe Mac.
@@ -80,6 +82,9 @@ public sealed partial class MainViewModel : ObservableObject
     public ObservableCollection<CourseViewModel> Courses { get; } = [];
     public ObservableCollection<EducationalResourceViewModel> EducationalResources { get; } = [];
     public ObservableCollection<TutorialViewModel> Tutorials { get; } = [];
+    /// Canale de comunitate si suport (2026-09-14). Lipsa cheii din catalog
+    /// da o lista goala, deci sectiunea arata starea goala — nu o eroare.
+    public ObservableCollection<CommunityChannelViewModel> CommunityChannels { get; } = [];
     /// Vedere filtrata (cautare + categorie) peste `Tutorials` — cerinta
     /// directa (2026-09-01): "un cautator deasupra ... si o optiune de
     /// grupare [pe categorie]". Categoria e liberă, gestionată de Furnizor,
@@ -766,6 +771,18 @@ public sealed partial class MainViewModel : ObservableObject
         foreach (var tutorial in CatalogService.Shared.Tutorials.Where(x => x.Scheduling.IsVisibleNow()))
         {
             Tutorials.Add(new TutorialViewModel(tutorial));
+        }
+
+        // Aceeasi regula ca pe Mac (`publishedSorted`): canalele fara adresa
+        // utilizabila nu se afiseaza, iar ordinea vine din `order`, cu
+        // departajare alfabetica pentru o lista stabila intre porniri.
+        CommunityChannels.Clear();
+        foreach (var channel in CatalogService.Shared.CommunityChannels
+                     .Where(c => c.Destination is not null)
+                     .OrderBy(c => c.Order)
+                     .ThenBy(c => c.Title, StringComparer.CurrentCultureIgnoreCase))
+        {
+            CommunityChannels.Add(new CommunityChannelViewModel(channel));
         }
         OnPropertyChanged(nameof(TutorialCategories));
         TutorialsView?.Refresh(); // acelasi bug de refresh ca la ProductsView (vezi comentariul de mai jos)

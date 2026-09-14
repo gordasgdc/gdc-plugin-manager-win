@@ -44,6 +44,9 @@ public sealed class CatalogService : INotifyPropertyChanged
     public IReadOnlyList<ProductBundle> ProductBundles { get; private set; } = [];
     /// Tutoriale YouTube embedded — 2026-09-01.
     public IReadOnlyList<Tutorial> Tutorials { get; private set; } = [];
+    /// [2026-09-14] Canale de comunitate si suport. Lipsa cheii din
+    /// catalog da o lista goala, nu o eroare.
+    public IReadOnlyList<CommunityChannel> CommunityChannels { get; private set; } = [];
     /// Filigran sezonier — Etapa 6 (2026-08-29). null = fara filigran.
     public string? SeasonalBackground { get; private set; }
     public Uri? SeasonalBackgroundUrl => CatalogAssets.ImageUrl(SeasonalBackground);
@@ -113,6 +116,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             SeasonalBackgrounds = catalog.SeasonalBackgrounds;
             ProductBundles = catalog.ProductBundles;
             Tutorials = catalog.Tutorials;
+            CommunityChannels = catalog.CommunityChannels;
             Raise(nameof(Items));
             Raise(nameof(Courses));
             Raise(nameof(Apps));
@@ -130,6 +134,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             Raise(nameof(SeasonalBackgrounds));
             Raise(nameof(ProductBundles));
             Raise(nameof(Tutorials));
+            Raise(nameof(CommunityChannels));
             SaveToCache(data);
         }
         catch (CatalogFetchException ex)
@@ -192,6 +197,7 @@ public sealed class CatalogService : INotifyPropertyChanged
             SeasonalBackgrounds = catalog.SeasonalBackgrounds;
             ProductBundles = catalog.ProductBundles;
             Tutorials = catalog.Tutorials;
+            CommunityChannels = catalog.CommunityChannels;
         }
         catch
         {

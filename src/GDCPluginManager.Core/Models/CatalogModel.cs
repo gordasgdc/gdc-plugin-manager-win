@@ -1668,6 +1668,66 @@ public sealed record Tutorial : IAccessDescribing
     public Uri? ThumbnailUri => Uri.TryCreate(ThumbnailURL, UriKind.Absolute, out var u) ? u : null;
 }
 
+/// Port 1:1 al CommunityChannel.swift — un canal din sectiunea Comunitate
+/// (2026-09-14). Eticheta butonului NU vine din JSON: se deriva din Kind si
+/// se traduce in client, exact ca pe Mac.
+public enum CommunityKind { Community, Chat, Video, Docs, Feedback }
+
+public sealed class CommunityKindJsonConverter : JsonConverter<CommunityKind>
+{
+    public override CommunityKind Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    {
+        var raw = reader.GetString();
+        return raw switch
+        {
+            "community" => CommunityKind.Community,
+            "chat" => CommunityKind.Chat,
+            "video" => CommunityKind.Video,
+            "docs" => CommunityKind.Docs,
+            "feedback" => CommunityKind.Feedback,
+            // NU arunca: o valoare noua ar face INTREG catalogul
+            // nedeserializabil pe clientii deja instalati.
+            _ => CommunityKind.Community,
+        };
+    }
+
+    public override void Write(Utf8JsonWriter writer, CommunityKind value, JsonSerializerOptions options)
+    {
+        writer.WriteStringValue(value switch
+        {
+            CommunityKind.Chat => "chat",
+            CommunityKind.Video => "video",
+            CommunityKind.Docs => "docs",
+            CommunityKind.Feedback => "feedback",
+            _ => "community",
+        });
+    }
+}
+
+public sealed record CommunityChannel
+{
+    public required string Id { get; init; }
+
+    [JsonConverter(typeof(CommunityKindJsonConverter))]
+    public CommunityKind Kind { get; init; } = CommunityKind.Community;
+
+    /// Cheie de brand ("facebook", "whatsapp"...). String liber, nu enum: o
+    /// iconita noua publicata din Furnizor trebuie sa degradeze elegant pe un
+    /// client vechi, nu sa-l rupa.
+    public string Icon { get; init; } = "";
+    public string Title { get; init; } = "";
+    public string Description { get; init; } = "";
+    public string Url { get; init; } = "";
+    public int Order { get; init; }
+
+    /// Adresa utilizabila, sau null. Un canal fara adresa valida nu se
+    /// afiseaza deloc — un card cu buton care nu duce nicaieri e mai rau
+    /// decat absenta lui.
+    [JsonIgnore]
+    public Uri? Destination =>
+        !string.IsNullOrWhiteSpace(Url) && Uri.TryCreate(Url.Trim(), UriKind.Absolute, out var u) ? u : null;
+}
+
 public sealed class Catalog
 {
     public string? UpdatedAt { get; init; }
@@ -1708,6 +1768,10 @@ public sealed class Catalog
 
     /// Tutoriale YouTube embedded — 2026-09-01. Default `[]`: retrocompatibil.
     public IReadOnlyList<Tutorial> Tutorials { get; init; } = [];
+
+    /// [2026-09-14] Canale de comunitate si suport — cheie noua de nivel
+    /// superior, deci clientii deja instalati o ignora si raman intacti.
+    public IReadOnlyList<CommunityChannel> CommunityChannels { get; init; } = [];
 
     /// Filigran/fundal sezonier optional pentru Client — Etapa 6 (2026-08-29).
     /// NU un banner mic, ci o imagine mare, discreta, "gravata" in fundalul

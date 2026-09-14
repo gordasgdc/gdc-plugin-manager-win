@@ -1,5 +1,12 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.35.0 (2026-09-14) — Comunitate
+
+### Added
+- **Sectiune noua „Comunitate"** — grupurile si canalele de suport, cu acelasi
+  continut ca pe Mac, publicat din Furnizor fara nicio versiune noua de
+  aplicatie. Link-urile se deschid in browserul implicit.
+
 ## v1.34.0 (2026-09-14) — Pachete întregi și scripturi generale
 
 Paritate cu clientul Mac (Regula 31) — aceeași versiune pe ambele platforme.
