@@ -1,5 +1,17 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.34.0 (2026-09-14) — Pachete întregi și scripturi generale
+
+Paritate cu clientul Mac (Regula 31) — aceeași versiune pe ambele platforme.
+
+### Added
+- **Descărcare de pachete cu mai multe fișiere**, cu subfolderele păstrate
+  intacte, nu doar fișiere singulare.
+- **Secțiune nouă „Scripturi"** — scripturi de uz general, cu marcaj
+  Mac / Windows / ambele.
+- Resursele descărcabile au propria locație de stocare, separată de arhiva de
+  produse.
+
 ## v1.33.0 (2026-09-14) — PDF-uri și Scripturi DaVinci Resolve
 
 Paritate cu clientul Mac (Regula 31) — aceeași versiune pe ambele platforme, ca
