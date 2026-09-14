@@ -1,5 +1,16 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.36.1 (2026-09-14) — Badge de actualizare fals si contrast
+
+### Fixed
+- **„Aplicatiile Mele" arata badge-ul ACTUALIZARE la nesfarsit**, chiar dupa ce
+  aplicatia era deja actualizata. Cauza: cand versiunea instalata nu putea fi
+  citita din registru (aplicatie instalata inainte de installer-ul actual),
+  era tratata ca "0.0.0" — adica mai veche decat orice. Acum versiunea se
+  citeste din executabil, iar daca tot nu se poate afla, badge-ul NU mai apare
+  deloc si cardul scrie "versiune necunoscuta".
+- **Culorile fixe** de pe carduri si insigne au trecut in resurse de tema.
+
 ## v1.36.0 (2026-09-14) — Meniu lateral pliabil
 
 ### Changed

@@ -23,7 +23,12 @@ public sealed partial class InstalledAppViewModel : ObservableObject
     public InstalledAppViewModel(InstalledGdcApp installed) => Installed = installed;
 
     public string Name => Installed.App.Name;
-    public string InstalledVersionDisplay => $"v{Installed.InstalledVersion}";
+    /// Cand versiunea nu s-a putut citi, spunem asta — nu inventam "v0.0.0",
+    /// care arata ca o versiune reala si foarte veche.
+    public string InstalledVersionDisplay =>
+        string.IsNullOrWhiteSpace(Installed.InstalledVersion)
+            ? "versiune necunoscuta"
+            : $"v{Installed.InstalledVersion}";
 
     /// Iconita reala extrasa din executabilul instalat — vezi IconExtractor.
     public System.Windows.Media.ImageSource? IconSource => IconExtractor.Extract(Installed.ExecutablePath);
@@ -31,9 +36,13 @@ public sealed partial class InstalledAppViewModel : ObservableObject
     /// Badge "ACTUALIZARE" doar cand chiar stim ca versiunea publicata e mai
     /// noua. Daca verificarea a esuat (LatestVersion == null) NU aratam nimic
     /// — mai bine tacere decat un badge fals pe o informatie pur optionala.
+    /// Acum se cere si versiunea INSTALATA sa fie cunoscuta. Fara conditia
+    /// asta, o aplicatie a carei versiune nu se poate citi arata badge-ul la
+    /// infinit — vezi bug-ul documentat in InstalledGdcApp.
     public bool HasUpdate =>
         !string.IsNullOrWhiteSpace(LatestVersion)
-        && VersionCompare.IsNewer(LatestVersion!, Installed.InstalledVersion);
+        && !string.IsNullOrWhiteSpace(Installed.InstalledVersion)
+        && VersionCompare.IsNewer(LatestVersion!, Installed.InstalledVersion!);
 
     public string UpdateTooltip => $"Versiune disponibila: v{LatestVersion}";
 

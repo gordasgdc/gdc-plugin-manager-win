@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
 using System.Runtime.Versioning;
@@ -37,7 +38,19 @@ public sealed record KnownGdcApp(
 /// O aplicatie GDC gasita instalata pe masina asta.
 public sealed record InstalledGdcApp(
     KnownGdcApp App,
-    string InstalledVersion,
+    /// `null` = versiunea instalata NU a putut fi citita. Deliberat nullable,
+    /// nu "0.0.0".
+    ///
+    /// BUG REAL (2026-09-14, raportat din aplicatie): o aplicatie fara cheie
+    /// de dezinstalare in registru primea literal "0.0.0", iar "0.0.0" e mai
+    /// mic decat ORICE versiune publicata — deci badge-ul "ACTUALIZARE"
+    /// ramanea aprins permanent, oricate actualizari ar fi facut userul.
+    /// DataMover aparea asa in captura: "v0.0.0" cu badge.
+    ///
+    /// Necunoscut trebuie sa fie o STARE, nu o valoare care se compara. Asa e
+    /// si pe Mac, unde `installedVersion` e `String?` si badge-ul nu apare
+    /// deloc daca nu s-a putut citi (MyAppsLauncher.swift).
+    string? InstalledVersion,
     string ExecutablePath);
 
 /// Port al `MyAppsLauncher.swift` (Etapa 3, 2026-08-29) — "Aplicatiile Mele".
@@ -163,10 +176,15 @@ public static class MyAppsService
                 using var key = baseKey.OpenSubKey(subKey);
                 if (key is null) continue;
 
-                var version = key.GetValue("DisplayVersion") as string ?? "0.0.0";
                 var location = key.GetValue("InstallLocation") as string;
                 var exe = ResolveExecutable(app, location);
                 if (exe is null) continue;
+
+                // Registrul primul (il scrie installer-ul), executabilul ca
+                // rezerva — o instalare veche sau reparata poate avea cheia
+                // fara `DisplayVersion`.
+                var version = key.GetValue("DisplayVersion") as string;
+                if (string.IsNullOrWhiteSpace(version)) version = ReadVersionFromExecutable(exe);
 
                 return new InstalledGdcApp(app, version, exe);
             }
@@ -177,9 +195,35 @@ public static class MyAppsService
             }
         }
 
-        // Fara cheie de dezinstalare: poate o copie dezarhivata manual.
+        // Fara cheie de dezinstalare: poate o copie dezarhivata manual, sau
+        // una instalata inainte ca installer-ul sa scrie cheia. Versiunea se
+        // citeste atunci din executabil — singura sursa ramasa.
         var fallback = FallbackExecutable(app);
-        return fallback is null ? null : new InstalledGdcApp(app, "0.0.0", fallback);
+        return fallback is null ? null : new InstalledGdcApp(app, ReadVersionFromExecutable(fallback), fallback);
+    }
+
+    /// Versiunea din metadatele executabilului. `ProductVersion` intai
+    /// (acolo scrie .NET valoarea din `<Version>`), apoi `FileVersion`.
+    ///
+    /// Intoarce `null`, niciodata "0.0.0": vezi motivul din InstalledGdcApp.
+    private static string? ReadVersionFromExecutable(string exePath)
+    {
+        try
+        {
+            var info = FileVersionInfo.GetVersionInfo(exePath);
+            var version = info.ProductVersion ?? info.FileVersion;
+            if (string.IsNullOrWhiteSpace(version)) return null;
+
+            // .NET pune uneori si metadate de build dupa `+` (ex.
+            // "2.14.3+a1b2c3d"); pastram doar partea de versiune.
+            var plus = version.IndexOf('+');
+            if (plus > 0) version = version[..plus];
+            return version.Trim();
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string? ResolveExecutable(KnownGdcApp app, string? installLocation)
