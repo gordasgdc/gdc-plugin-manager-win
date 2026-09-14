@@ -26,14 +26,26 @@ public partial class App : Application
         // neconfirmat inca prin log real — vezi gdcpm-crash.log).
         ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12 | SecurityProtocolType.Tls13;
 
+        // Raportarea porneste cat mai devreme: o eroare aparuta in timpul
+        // pornirii e exact genul pe care nu-l vede nimeni altfel. Fara DSN
+        // configurat nu se porneste nimic (vezi CrashReportingConfig).
+        Services.CrashReporter.Start();
+
         Log("App() constructor started.");
 
         AppDomain.CurrentDomain.UnhandledException += (_, e) =>
+        {
             Log($"AppDomain.UnhandledException (fatal={e.IsTerminating}): {e.ExceptionObject}");
+            // `flushNow`: procesul moare imediat dupa acest handler, deci
+            // raportul trebuie trimis sincron sau nu mai pleaca deloc.
+            if (e.ExceptionObject is Exception ex)
+                Services.CrashReporter.Capture(ex, "AppDomain.UnhandledException", flushNow: true);
+        };
 
         TaskScheduler.UnobservedTaskException += (_, e) =>
         {
             Log($"TaskScheduler.UnobservedTaskException: {e.Exception}");
+            Services.CrashReporter.Capture(e.Exception, "TaskScheduler.UnobservedTaskException");
             e.SetObserved();
         };
 
@@ -52,12 +64,19 @@ public partial class App : Application
             // întâmplă între constructor și evenimentul Startup.
             Services.WindowsThemeManager.ApplyNow();
         };
-        Exit += (_, e) => Log($"App.Exit event fired, ExitCode={e.ApplicationExitCode}.");
+        Exit += (_, e) =>
+        {
+            Log($"App.Exit event fired, ExitCode={e.ApplicationExitCode}.");
+            // Golire la inchidere: ultimul eveniment ar ramane netrimis daca
+            // procesul se termina inaintea firului de fundal al SDK-ului.
+            Services.CrashReporter.Stop();
+        };
     }
 
     private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Log($"DispatcherUnhandledException: {e.Exception}");
+        Services.CrashReporter.Capture(e.Exception, "DispatcherUnhandledException");
         MessageBox.Show(
             $"A aparut o eroare neasteptata:\n\n{e.Exception}",
             "GDC Plugin Manager",
