@@ -356,3 +356,10 @@ HAS_WIN_SELFSIGN` la nivel de job + 2 pași noi de semnare (`publish\
 GDCPluginManager.exe` după smoke test, `Output\GDCPluginManagerSetup.exe`
 după Inno Setup) — `actionlint` 0 erori, YAML valid. Fără secretele
 încărcate, build-ul continuă nesemnat, exact ca înainte.
+
+### Handoff — fișierul de stare (Regula 50, `~/Developer/CLAUDE.md`)
+
+- Fișierul de stare al acestui proiect: `PROJECT_STATE.md` (rădăcina repo-ului). La orice sesiune nouă se citește
+  ÎNTÂI el, apoi doar fragmentele strict necesare; se actualizează la milestone-uri și obligatoriu la final.
+  Dacă lipsește, se creează la prima sesiune care atinge proiectul. Repo PUBLIC: fișierul e intern, listat în `.gitignore` (doar local, Regula 29).
+- Restructurarea/ștergerea lui și orice modificare a acestui `CLAUDE.md`: doar cu diff-ul arătat și acordul lui Cristi.

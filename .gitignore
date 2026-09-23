@@ -37,3 +37,6 @@ src/GDCPluginManager.Core/Services/PrivateCatalogAuth.cs
 *.pem
 *.mobileprovision
 .DS_Store
+
+# Stare de lucru internă (Regula 50), doar local
+PROJECT_STATE.md
