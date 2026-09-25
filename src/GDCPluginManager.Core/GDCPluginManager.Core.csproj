@@ -7,6 +7,11 @@
     <RootNamespace>GDCPluginManager.Core</RootNamespace>
   </PropertyGroup>
 
+  <!-- S1 (2026-09-25): clientul nu mai contine credentialul GitHub. Un
+       PrivateCatalogAuth.cs ramas local (gitignored) nu mai intra in build. -->
+  <ItemGroup>
+    <Compile Remove="Services\PrivateCatalogAuth.cs" />
+  </ItemGroup>
   <ItemGroup>
     <!-- Ed25519 pentru LicenseCore (.NET nu are suport nativ pentru Ed25519 pe net8.0). -->
     <PackageReference Include="BouncyCastle.Cryptography" Version="2.4.0" />

@@ -3,4 +3,7 @@
     <Project Path="src/GDCPluginManager.Client/GDCPluginManager.Client.csproj" />
     <Project Path="src/GDCPluginManager.Core/GDCPluginManager.Core.csproj" />
   </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/GDCPluginManager.Core.Tests/GDCPluginManager.Core.Tests.csproj" />
+  </Folder>
 </Solution>

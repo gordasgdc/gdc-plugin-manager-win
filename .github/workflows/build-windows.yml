@@ -41,18 +41,14 @@ jobs:
             8.0.x
             9.0.x
 
-      # PrivateCatalogAuth.cs e gitignored (contine tokenul GitHub real
-      # pt. repo-ul privat gdc-plugin-manager-files) - CI il recreeaza
-      # din sablon + secretul PRIVATE_CATALOG_TOKEN (Settings -> Secrets
-      # and variables -> Actions, pe acest repo). Fara el, build-ul pica
-      # cu "cannot find PrivateCatalogAuth in scope" (vezi
-      # PrivateCatalogAuth.cs.example pentru cum se seteaza manual local).
-      - name: Recreeaza PrivateCatalogAuth.cs din secret
-        shell: pwsh
-        run: |
-          $template = Get-Content "src\GDCPluginManager.Core\Services\PrivateCatalogAuth.cs.example" -Raw
-          $real = $template -replace 'PASTE_TOKEN_HERE', '${{ secrets.PRIVATE_CATALOG_TOKEN }}'
-          Set-Content -Path "src\GDCPluginManager.Core\Services\PrivateCatalogAuth.cs" -Value $real -NoNewline
+      # S1 (2026-09-25): clientul NU mai primeste niciun credential GitHub.
+      # Descarcarile trec prin functia Supabase `authorize-download`; secretul
+      # PRIVATE_CATALOG_TOKEN nu mai e folosit de acest workflow.
+
+      # Contractele Core (autorizarea descarcarii, licenta). Fara pachete NuGet:
+      # executabil cu asertiuni proprii; cod de iesire != 0 opreste build-ul.
+      - name: TESTS — GDCPluginManager.Core
+        run: dotnet run --project tests\GDCPluginManager.Core.Tests -c Release
 
       - name: Publica exe-ul self-contained (win-x64)
         # ATENTIE: fara -p:PublishSingleFile=true, intentionat. Obfuscarea de mai
@@ -144,6 +140,21 @@ jobs:
       # cu Claude) - altfel build-ul continua NESEMNAT, exact ca inainte,
       # fara nicio eroare (acelasi tipar ca semnarea Mac,
       # APPLE_SIGN_IDENTITY_APP).
+      # S1: fisierele publicate NU contin credentiale (ASCII si UTF-16, cum stau
+      # literalele .NET). Valorile nu se afiseaza; orice potrivire opreste build-ul.
+      - name: SECURITY — fara credentiale in publish
+        shell: pwsh
+        run: |
+          $pattern = 'github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{30,}|-----BEGIN [A-Z ]*PRIVATE KEY|service_role'
+          $bad = 0
+          Get-ChildItem publish -Recurse -File | ForEach-Object {
+            $bytes = [System.IO.File]::ReadAllBytes($_.FullName)
+            $texts = @([System.Text.Encoding]::ASCII.GetString($bytes), [System.Text.Encoding]::Unicode.GetString($bytes))
+            if ($bytes.Length -gt 1) { $texts += [System.Text.Encoding]::Unicode.GetString($bytes, 1, $bytes.Length - 1) }
+            foreach ($t in $texts) { if ($t -match $pattern) { Write-Host "CREDENTIAL in $($_.Name)"; $bad = 1; break } }
+          }
+          if ($bad) { exit 1 } else { Write-Host "fara credentiale in publish" }
+
       - name: Semneaza GDCPluginManager.exe (Self-Signed, test intern)
         if: ${{ env.HAS_WIN_SELFSIGN == 'true' }}
         shell: pwsh

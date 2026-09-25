@@ -77,6 +77,11 @@ public sealed class LicenseManager : INotifyPropertyChanged
     /// de a lor proprie. Fara proba globala de aplicatie: aplicatia e
     /// gratuita, doar produsele platite se deblocheaza, iar cele gratuite
     /// sunt pur si simplu... gratuite.
+    /// Serialul salvat pentru un produs — trimis la `authorize-download` (S1),
+    /// care il reverifica pe server. null pentru produse neactivate.
+    public string? SerialFor(string productID) =>
+        LoadStore() is { } store && store.TryGetValue(productID, out var serial) ? serial : null;
+
     public bool IsUnlocked(PluginItem item) => IsUnlocked(item.Id, item.IsFree);
 
     /// Overload pentru resursele de download direct (Etapa 2, 2026-08-29) —

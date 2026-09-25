@@ -42,7 +42,7 @@ namespace GDCPluginManager.Client.ViewModels;
 /// ca descarcarea a esuat.
 ///
 /// Coperile sunt PUBLICE (vezi CatalogAssets) — spre deosebire de
-/// fisierele vandabile, nu trec prin PrivateCatalogAuth si nu au nevoie de
+/// fisierele vandabile, nu trec prin autorizarea de descarcare si nu au nevoie de
 /// token.
 public sealed partial class CoverViewModel : ObservableObject
 {

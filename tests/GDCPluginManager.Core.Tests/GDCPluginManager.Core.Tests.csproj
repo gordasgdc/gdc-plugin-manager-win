@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Teste pentru GDCPluginManager.Core (net8.0, fără WPF), FĂRĂ pachete NuGet: un executabil
+       cu aserțiuni proprii (Program.cs). Rulează în CI-ul Windows și local pe Mac:
+         dotnet run (proiectul tests/GDCPluginManager.Core.Tests, configurația Release)
+       Cod de ieșire 0 = toate trec. RollForward=Major: local poate exista doar un runtime mai nou. -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <IsPackable>false</IsPackable>
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\GDCPluginManager.Core\GDCPluginManager.Core.csproj" />
+  </ItemGroup>
+</Project>

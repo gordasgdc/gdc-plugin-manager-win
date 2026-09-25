@@ -30,7 +30,11 @@ public sealed class InstallException(string message) : Exception(message)
 {
     public static InstallException DownloadFailed() => new("Download failed.");
     public static InstallException AuthenticationFailed() => new(
-        "Couldn't authenticate with the file server — contact support, the access token may need renewing.");
+        "Couldn't authenticate with the file server — contact support.");
+    public static InstallException LicenseRejected() => new(
+        "Licența pentru acest produs nu a fost acceptată (invalidă, expirată, revocată sau pentru alt calculator). Verifică pagina Licență.");
+    public static InstallException RateLimited() => new(
+        "Prea multe descărcări într-un timp scurt. Încearcă din nou peste câteva minute.");
     public static InstallException ChecksumMismatch() => new("Downloaded file doesn't match the expected checksum.");
     public static InstallException WriteFailed(string detail) => new($"Couldn't write the file: {detail}");
 }
@@ -130,7 +134,7 @@ public sealed class InstallManager : INotifyPropertyChanged
             // pe jumatate instalat.
             foreach (var file in item.Files)
             {
-                var data = await FetchPrivateFileDataAsync(file.Path, file.Repo);
+                var data = await FetchAuthorizedFileDataAsync(item.Id, file.Path, file.Sha256);
                 var actualSha = Convert.ToHexString(SHA256.HashData(data)).ToLowerInvariant();
                 if (actualSha != file.Sha256.ToLowerInvariant())
                 {
@@ -257,12 +261,8 @@ public sealed class InstallManager : INotifyPropertyChanged
         return galleryOutcome;
     }
 
-    // MARK: - Fetch autentificat din repo-ul privat de fisiere
+    // MARK: - Descarcarea fisierelor de produs: vezi FetchAuthorizedFileDataAsync (S1)
 
-    /// Fetch al bytes-ilor unui fisier din repo-ul privat gdc-plugin-manager-files
-    /// prin GitHub Contents API, cu token-ul read-only (vezi PrivateCatalogAuth).
-    /// catalog.json NU se ia asa — doar fisierele produs, care nu stau
-    /// niciodata la un URL public.
     /// [2026-09-14] Descarca fisierul unei resurse (PDF/ghid/carte) incarcat
     /// direct in repo-ul privat si il salveaza local — FARA browser.
     /// Port 1:1 al `downloadResourceFile` din InstallManager.swift: acelasi
@@ -300,7 +300,7 @@ public sealed class InstallManager : INotifyPropertyChanged
         string? firstWritten = null;
         foreach (var file in toDownload)
         {
-            var data = await FetchPrivateFileDataAsync(file.Path, file.Repo ?? resource.FileRepo);
+            var data = await FetchAuthorizedFileDataAsync(resource.Id, file.Path, file.Sha256);
             // Verificarea de integritate nu e optionala doar pentru ca e "doar un
             // PDF": un fisier trunchiat se deschide si arata gol, iar userul ar da
             // vina pe continut, nu pe descarcare.
@@ -323,29 +323,29 @@ public sealed class InstallManager : INotifyPropertyChanged
         return toDownload.Count > 1 ? root : (firstWritten ?? root);
     }
 
-    private async Task<byte[]> FetchPrivateFileDataAsync(string path, string? repoKey = null)
+    /// S1 (2026-09-25): octetii unui fisier de produs vin prin `authorize-download`;
+    /// clientul nu mai detine niciun credential pentru repo-urile private. Serialul
+    /// (daca exista) e reverificat pe server; SHA-256 se verifica si aici, si de apelant.
+    private async Task<byte[]> FetchAuthorizedFileDataAsync(string productID, string path, string? sha256)
     {
-        var encodedPath = Uri.EscapeDataString(path).Replace("%2F", "/");
-        // [2026-09-14] Repo-ul vine din catalog (PluginFile.Repo); fara el se
-        // foloseste cel principal, exact ca pana acum.
-        var repo = PrivateCatalogAuth.RepoFor(repoKey);
-        var url = $"https://api.github.com/repos/{repo.Owner}/{repo.Name}/contents/{encodedPath}";
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", repo.Token);
-        request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github.raw+json"));
-        request.Headers.Add("X-GitHub-Api-Version", "2022-11-28");
-
-        using var response = await _http.SendAsync(request);
-        if (response.StatusCode is System.Net.HttpStatusCode.Unauthorized or System.Net.HttpStatusCode.Forbidden)
+        var version = typeof(InstallManager).Assembly.GetName().Version?.ToString(3);
+        var authorizer = new DownloadAuthorizer(_http, clientVersion: version);
+        try
         {
-            throw InstallException.AuthenticationFailed();
+            return await authorizer.FetchAsync(productID, path, sha256, LicenseManager.Shared.SerialFor(productID));
         }
-        if (!response.IsSuccessStatusCode)
+        catch (DownloadAuthorizer.AuthorizationException e)
         {
-            throw InstallException.DownloadFailed();
+            DiagnosticLog.Write("InstallManager", $"Autorizare/descarcare esuata pentru {productID}:{path} — {e.Failure} ({e.Status})");
+            throw e.Failure switch
+            {
+                DownloadAuthorizer.Failure.InvalidLicense or DownloadAuthorizer.Failure.RevokedLicense
+                    or DownloadAuthorizer.Failure.UnauthorizedPlatform => InstallException.LicenseRejected(),
+                DownloadAuthorizer.Failure.RateLimited => InstallException.RateLimited(),
+                DownloadAuthorizer.Failure.ChecksumMismatch => InstallException.ChecksumMismatch(),
+                _ => InstallException.DownloadFailed(),
+            };
         }
-        return await response.Content.ReadAsByteArrayAsync();
     }
 
     // MARK: - Filesystem, cu fallback la elevare (UAC)
