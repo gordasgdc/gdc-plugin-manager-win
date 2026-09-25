@@ -224,9 +224,19 @@ jobs:
           git clone "https://x-access-token:$env:GH_TOKEN@github.com/$releaseRepo.git" release-repo
           Push-Location release-repo
           $updateJson = Get-Content "docs\update.json" -Raw | ConvertFrom-Json
+          # Link VERSIONAT: releases/latest arata spre ultimul release Mac (Windows e --latest=false) -> 404.
+          $zipUrl = "https://github.com/$releaseRepo/releases/download/$tag/GDCPluginManager-Windows.zip"
+          $zipSha = (Get-FileHash "..\GDCPluginManager-Windows.zip" -Algorithm SHA256).Hash.ToLowerInvariant()
           $updateJson.windows.version = $version
           $updateJson.windows.release_date = (Get-Date -Format "yyyy-MM-dd")
           $updateJson.windows.changes = "Actualizare Windows, sincronizata cu ultima versiune."
+          $updateJson.windows.download_url = $zipUrl
+          $updateJson.windows | Add-Member -NotePropertyName sha256 -NotePropertyValue $zipSha -Force
+          $updateJson.download_url.windows = $zipUrl
+          # Regula 35: campul de la radacina (clienti <= 1.27) = MINIMUL dintre platforme.
+          $minVersion = @([version]$updateJson.mac.version, [version]$version) | Sort-Object | Select-Object -First 1
+          $updateJson.version = $minVersion.ToString()
+          Write-Host "update.json: windows $version, sha256 $zipSha, radacina $($updateJson.version)"
           $updateJson | ConvertTo-Json -Depth 10 | Set-Content "docs\update.json"
           git config user.name "gdc-plugin-manager-win-ci"
           git config user.email "ci@gordas.dev"

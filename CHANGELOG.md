@@ -1,10 +1,12 @@
 # Changelog — GDC Plugin Manager (Windows)
 
-## Nelansat (2026-09-25) — Descarcari autorizate
+## v1.37.1 (nelansat, pregatit 2026-09-25) — Descarcari autorizate, actualizare verificata
 
 ### Security
 - Fisierele produselor se descarca printr-o autorizare per fisier (serviciul `authorize-download`), cu verificarea sumei de control. Aplicatia nu mai contine niciun credential de stocare.
 - Mesaje noi: licenta respinsa, prea multe descarcari.
+- Actualizarea automata verifica suma de control a arhivei si semnatura GDC a instalatorului inainte sa-l ruleze; refuza arhivele cu mai multe instalatoare.
+- Linkul de descarcare Windows din `update.json` e versionat (nu mai depinde de ultimul release publicat).
 
 ### Tests
 - `tests/GDCPluginManager.Core.Tests` (fara pachete externe), rulat in CI; CI verifica si ca fisierele publicate nu contin credentiale.

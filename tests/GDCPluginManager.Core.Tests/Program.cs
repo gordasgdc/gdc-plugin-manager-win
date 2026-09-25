@@ -124,6 +124,53 @@ Test("LicenseCore: base32 round-trip", () =>
     return Task.CompletedTask;
 });
 
+Test("UpdatePackageVerifier: versiune, SHA-256, rezultat WinVerifyTrust, thumbprint", () =>
+{
+    Assert(UpdatePackageVerifier.IsValidVersion("1.37.1"), "1.37.1 validă");
+    foreach (var bad in new[] { null, "", "1.37", "1.37.1-beta", "1.37.1\"; calc", "../1.0.0" })
+        Assert(!UpdatePackageVerifier.IsValidVersion(bad), $"versiune invalidă acceptată: {bad}");
+    var file = Path.GetTempFileName();
+    File.WriteAllBytes(file, payload);
+    try
+    {
+        var actual = UpdatePackageVerifier.Sha256Hex(file);
+        Assert(actual == sha, "SHA-256 calculat greșit");
+        UpdatePackageVerifier.CheckSha256(null, actual);          // manifest vechi: nimic de verificat
+        UpdatePackageVerifier.CheckSha256(sha.ToUpperInvariant(), actual);
+        foreach (var bad in new[] { new string('0', 64), "xyz" })
+        {
+            var threw = false;
+            try { UpdatePackageVerifier.CheckSha256(bad, actual); } catch (UpdatePackageVerifier.VerificationException) { threw = true; }
+            Assert(threw, $"SHA-256 greșit acceptat: {bad}");
+        }
+    }
+    finally { File.Delete(file); }
+    Assert(UpdatePackageVerifier.IsAcceptableTrustResult(0), "semnătură validă refuzată");
+    Assert(UpdatePackageVerifier.IsAcceptableTrustResult(0x800B0109), "self-signed (rădăcină neîncrezută) refuzat");
+    foreach (var bad in new uint[] { 0x80096010 /*digest greșit*/, 0x800B0100 /*nesemnat*/, 0x800B0101 /*expirat*/, 0x800B010C /*revocat*/ })
+        Assert(!UpdatePackageVerifier.IsAcceptableTrustResult(bad), $"rezultat acceptat greșit: 0x{bad:X8}");
+    UpdatePackageVerifier.CheckSignerThumbprint("fa7d4925035bab6ed01c778fb3c821d174ebd934");
+    var foreign = false;
+    try { UpdatePackageVerifier.CheckSignerThumbprint("0000000000000000000000000000000000000000"); } catch (UpdatePackageVerifier.VerificationException) { foreign = true; }
+    Assert(foreign, "certificat străin acceptat");
+    return Task.CompletedTask;
+});
+
+Test("UpdatePackageVerifier: exe-ul nesemnat e refuzat (doar pe Windows)", () =>
+{
+    if (!OperatingSystem.IsWindows()) return Task.CompletedTask;
+    var file = Path.Combine(Path.GetTempPath(), $"gdc-unsigned-{Guid.NewGuid()}.exe");
+    File.WriteAllBytes(file, payload);
+    try
+    {
+        var threw = false;
+        try { UpdatePackageVerifier.VerifySignature(file); } catch (UpdatePackageVerifier.VerificationException) { threw = true; }
+        Assert(threw, "fișier nesemnat acceptat");
+    }
+    finally { File.Delete(file); }
+    return Task.CompletedTask;
+});
+
 var failed = 0;
 foreach (var (name, run) in tests)
 {

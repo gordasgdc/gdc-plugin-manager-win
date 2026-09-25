@@ -30,6 +30,10 @@ public sealed class UpdateInfo
 
     [JsonPropertyName("min_version")]
     public string? MinVersion { get; init; }
+
+    /// SHA-256 al arhivei de la `download_url` (scris de CI de la 1.37.1). Opțional: manifestele vechi nu-l au.
+    [JsonPropertyName("sha256")]
+    public string? Sha256 { get; init; }
 }
 
 /// [2026-09-03] `update.json` a trecut de la un singur camp `version`

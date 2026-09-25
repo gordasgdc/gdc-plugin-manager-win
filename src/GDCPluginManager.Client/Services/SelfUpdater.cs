@@ -77,6 +77,12 @@ public static class SelfUpdater
             return;
         }
 
+        if (!UpdatePackageVerifier.IsValidVersion(info.Version))
+        {
+            PresentFailure("Versiunea anunțată în update.json nu e validă.");
+            return;
+        }
+
         var progress = new UpdateProgressWindow(info.Version);
         progress.Show();
 
@@ -93,8 +99,15 @@ public static class SelfUpdater
             var extractDir = Path.Combine(tempDir, "extracted");
             ZipFile.ExtractToDirectory(zipPath, extractDir);
 
-            var extractedExe = Directory.GetFiles(extractDir, "*.exe").FirstOrDefault()
-                ?? throw new InvalidOperationException("Arhiva descărcată nu conține un instalator .exe.");
+            var exes = Directory.GetFiles(extractDir, "*.exe", SearchOption.AllDirectories);
+            if (exes.Length != 1)
+                throw new InvalidOperationException("Arhiva descărcată trebuie să conțină exact un instalator .exe.");
+            var extractedExe = exes[0];
+
+            // S2 (pereche Mac): SHA-256 al arhivei + semnătura GDC a exe-ului, ÎNAINTE de rulare.
+            progress.SetStatus("Se verifică actualizarea…");
+            UpdatePackageVerifier.Verify(info.Version, zipPath, info.Sha256, extractedExe);
+            DiagnosticLog.Write("SelfUpdater", $"v{info.Version}: arhivă și semnătură verificate (sha256 {(string.IsNullOrWhiteSpace(info.Sha256) ? "nedeclarat" : "OK")})");
 
             // Regula 17: redenumim cu versiunea INAINTE de lansare — arhiva
             // sursa are un nume stabil (necesar pt. releases/latest/download),
