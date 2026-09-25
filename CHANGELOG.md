@@ -1,6 +1,8 @@
 # Changelog — GDC Plugin Manager (Windows)
 
-## v1.37.1 (nelansat, pregatit 2026-09-25) — Descarcari autorizate, actualizare verificata
+## v1.37.2 (nelansat, pregatit 2026-09-25) — Descarcari autorizate, actualizare verificata
+
+Versiunea 1.37.1 nu exista pe Windows: tag-ul v1.37.1 apartine unui release Mac mai vechi.
 
 ### Security
 - Fisierele produselor se descarca printr-o autorizare per fisier (serviciul `authorize-download`), cu verificarea sumei de control. Aplicatia nu mai contine niciun credential de stocare.

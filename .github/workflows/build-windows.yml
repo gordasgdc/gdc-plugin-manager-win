@@ -216,16 +216,16 @@ jobs:
           $tag = "v$version"
           $releaseRepo = "gordasgdc/gdc-plugin-manager"
 
-          $exists = $true
+          # GARDA: Mac si Windows impart spatiul de tag-uri vX.Y.Z. Daca tag-ul SAU release-ul exista
+          # deja (ex. v1.37.1 = release Mac vechi), publicarea se opreste: nu se ataseaza si nu se
+          # suprascrie NICIODATA nimic intr-un release existent. Remediu: versiune Windows libera.
           gh release view $tag --repo $releaseRepo *> $null
-          if ($LASTEXITCODE -ne 0) { $exists = $false }
-
-          if (-not $exists) {
-            Write-Host "Release $tag nu exista inca pe $releaseRepo - il creez (doar cu asset-ul Windows; Mac isi adauga separat pachetul semnat)."
-            gh release create $tag --repo $releaseRepo --title $tag --notes "Actualizare Windows." --latest=false
-          }
-
-          gh release upload $tag "GDCPluginManager-Windows.zip" --repo $releaseRepo --clobber
+          if ($LASTEXITCODE -eq 0) { Write-Error "Release-ul $tag exista deja pe $releaseRepo - publicare oprita, nimic modificat. Alege o versiune Windows libera."; exit 1 }
+          gh api "repos/$releaseRepo/git/refs/tags/$tag" *> $null
+          if ($LASTEXITCODE -eq 0) { Write-Error "Tag-ul $tag exista deja pe $releaseRepo - publicare oprita, nimic modificat."; exit 1 }
+          $global:LASTEXITCODE = 0
+          gh release create $tag "GDCPluginManager-Windows.zip" --repo $releaseRepo --title "$tag (Windows)" --notes "Actualizare Windows." --latest=false
+          if ($LASTEXITCODE -ne 0) { Write-Error "gh release create a esuat"; exit 1 }
 
           git clone "https://x-access-token:$env:GH_TOKEN@github.com/$releaseRepo.git" release-repo
           Push-Location release-repo
