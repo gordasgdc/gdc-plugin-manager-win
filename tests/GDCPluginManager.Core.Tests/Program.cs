@@ -171,6 +171,34 @@ Test("UpdatePackageVerifier: exe-ul nesemnat e refuzat (doar pe Windows)", () =>
     return Task.CompletedTask;
 });
 
+// CI: instalatorul semnat în aceeași rulare (GDC_SIGNED_EXE) trebuie ACCEPTAT, iar o copie cu un
+// octet modificat trebuie REFUZATĂ (digest greșit) — dovada că WinVerifyTrust verifică integritatea
+// înainte de rădăcina neîncrezută a certificatului self-signed.
+Test("UpdatePackageVerifier: instalatorul GDC semnat e acceptat, copia alterată e refuzată (CI)", () =>
+{
+    var signed = Environment.GetEnvironmentVariable("GDC_SIGNED_EXE");
+    if (string.IsNullOrEmpty(signed) || !OperatingSystem.IsWindows()) { Console.WriteLine("  (sărit: GDC_SIGNED_EXE nesetat)"); return Task.CompletedTask; }
+    Assert(File.Exists(signed), $"lipsește {signed}");
+#pragma warning disable SYSLIB0057
+    using (var cert = new System.Security.Cryptography.X509Certificates.X509Certificate2(
+        System.Security.Cryptography.X509Certificates.X509Certificate.CreateFromSignedFile(signed)))
+#pragma warning restore SYSLIB0057
+        Assert(UpdatePackageVerifier.TrustedSignerThumbprints.Contains(cert.Thumbprint.ToUpperInvariant()), $"amprentă neașteptată: {cert.Thumbprint}");
+    UpdatePackageVerifier.VerifySignature(signed);      // aruncă dacă e refuzat
+    var tampered = Path.Combine(Path.GetTempPath(), $"gdc-tampered-{Guid.NewGuid()}.exe");
+    var bytes = File.ReadAllBytes(signed);
+    bytes[bytes.Length / 2] ^= 0xFF;                    // în conținut, departe de antet și de semnătura de la final
+    File.WriteAllBytes(tampered, bytes);
+    try
+    {
+        var threw = false;
+        try { UpdatePackageVerifier.VerifySignature(tampered); } catch (UpdatePackageVerifier.VerificationException) { threw = true; }
+        Assert(threw, "instalator alterat acceptat");
+    }
+    finally { File.Delete(tampered); }
+    return Task.CompletedTask;
+});
+
 var failed = 0;
 foreach (var (name, run) in tests)
 {

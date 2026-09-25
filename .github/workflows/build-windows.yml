@@ -175,6 +175,12 @@ jobs:
           WIN_SELFSIGN_PFX_PASSWORD: ${{ secrets.WIN_SELFSIGN_PFX_PASSWORD }}
         run: .\codesigning\sign-windows.ps1 -TargetPath "Output\GDCPluginManagerSetup.exe"
 
+      - name: TESTS — SelfUpdater accepta instalatorul semnat (si refuza copia alterata)
+        if: ${{ env.HAS_WIN_SELFSIGN == 'true' }}
+        env:
+          GDC_SIGNED_EXE: ${{ github.workspace }}\Output\GDCPluginManagerSetup.exe
+        run: dotnet run --project tests\GDCPluginManager.Core.Tests -c Release
+
       - name: Incarca instalatorul ca artefact descarcabil
         uses: actions/upload-artifact@v4
         with:

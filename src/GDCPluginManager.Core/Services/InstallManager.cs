@@ -328,7 +328,8 @@ public sealed class InstallManager : INotifyPropertyChanged
     /// (daca exista) e reverificat pe server; SHA-256 se verifica si aici, si de apelant.
     private async Task<byte[]> FetchAuthorizedFileDataAsync(string productID, string path, string? sha256)
     {
-        var version = typeof(InstallManager).Assembly.GetName().Version?.ToString(3);
+        // Versiunea APLICAȚIEI (ca UpdateChecker.CurrentVersion), nu a bibliotecii Core (mereu 1.0.0).
+        var version = System.Reflection.Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3);
         var authorizer = new DownloadAuthorizer(_http, clientVersion: version);
         try
         {
