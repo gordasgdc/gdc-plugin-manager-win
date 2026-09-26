@@ -29,13 +29,19 @@ public static class WindowsThemeManager
     private const int ColorsDictIndex = 2;
 
     public static AppThemePreference Current { get; private set; } = AppThemeStore.Load();
+    /// Tema efectiv aplicată (după rezolvarea „Sistem”) — o folosește bannerul promoțional pentru imaginea Light/Dark.
+    public static bool IsEffectiveDark { get; private set; } = true;
+    public static event Action? Applied;
 
     /// De apelat o dată, la pornire (App.xaml.cs, `Startup`), și din nou la
     /// fiecare schimbare din `SettingsWindow`.
-    public static void Apply(AppThemePreference preference)
+    public static void Apply(AppThemePreference preference) => Apply(preference, persist: true);
+
+    /// `persist: false` doar pentru verificări DEBUG (GDC_FORCE_THEME): nu atinge preferința salvată a utilizatorului.
+    public static void Apply(AppThemePreference preference, bool persist)
     {
         Current = preference;
-        AppThemeStore.Save(preference);
+        if (persist) AppThemeStore.Save(preference);
 
         var effectiveDark = preference switch
         {
@@ -49,6 +55,7 @@ public static class WindowsThemeManager
         // separată de paleta noastră "Shift", dar trebuie ținută în sincron
         // ca ferestrele native (ex. Wpf.Ui.Controls.MessageBox de la
         // update-uri) să nu rămână închise la culoare pe fundal deschis.
+        IsEffectiveDark = effectiveDark;
         WpfThemeManager.Apply(effectiveDark ? WpfTheme.Dark : WpfTheme.Light);
 
         var app = Application.Current;
@@ -67,6 +74,7 @@ public static class WindowsThemeManager
             // ordinea documentată, dar mai bine adăugăm decât să aruncăm.
             dict.Add(newDict);
         }
+        Applied?.Invoke();
     }
 
     /// Apelat o dată la pornire, cu preferința salvată — dacă nu există

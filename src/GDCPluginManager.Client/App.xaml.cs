@@ -63,6 +63,12 @@ public partial class App : Application
             // decât după ce `InitializeComponent()` a rulat, ceea ce se
             // întâmplă între constructor și evenimentul Startup.
             Services.WindowsThemeManager.ApplyNow();
+#if DEBUG
+            // GDC_FORCE_THEME=light|dark: temă forțată doar pentru capturile din laborator, fără a salva preferința.
+            if (Environment.GetEnvironmentVariable("GDC_FORCE_THEME") is "light" or "dark")
+                Services.WindowsThemeManager.Apply(Environment.GetEnvironmentVariable("GDC_FORCE_THEME") == "dark"
+                    ? Core.Services.AppThemePreference.Dark : Core.Services.AppThemePreference.Light, persist: false);
+#endif
         };
         Exit += (_, e) =>
         {

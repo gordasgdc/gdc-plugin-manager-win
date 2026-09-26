@@ -39,12 +39,25 @@ public partial class MainWindow : Window
         Log("DataContext setat. MainWindow() constructor complet.");
 
         LaunchBannerChecker.Shared.Updated += () => Dispatcher.Invoke(UpdateLaunchBanner);
+        WindowsThemeManager.Applied += () => Dispatcher.Invoke(UpdateLaunchBanner);   // imaginea Light/Dark urmează tema
     }
 
     /// Banner de lansare (2026-08-31) - vezi LaunchBannerChecker.cs. Actualizat
     /// pe UI thread la fiecare fetch reusit (initial sau din cache offline).
     private void UpdateLaunchBanner()
     {
+        // Faza 6: cu o campanie activă (launch-banner.json → campaigns) se afișează campania; altfel bannerul clasic, neschimbat.
+        foreach (var old in LaunchBannerGrid.Children.OfType<Views.PromoBannerView>().ToList()) LaunchBannerGrid.Children.Remove(old);
+        LaunchBannerGrid.IsHitTestVisible = false;
+        if (LaunchBannerChecker.Shared.ActiveCampaign is { } campaign)
+        {
+            LaunchBannerGrid.Children.Remove(LaunchBannerTextBand);
+            LaunchBannerGrid.Children.Remove(LaunchBannerImage);
+            LaunchBannerGrid.Children.Add(new Views.PromoBannerView(campaign, LaunchBannerChecker.Shared.PromoImages));
+            LaunchBannerGrid.IsHitTestVisible = !string.IsNullOrEmpty(campaign.LinkUrl);
+            LaunchBannerGrid.Visibility = Visibility.Visible;
+            return;
+        }
         var config = LaunchBannerChecker.Shared.Config;
         var image = LaunchBannerChecker.Shared.Image;
         if (config is null || !config.IsDisplayable)

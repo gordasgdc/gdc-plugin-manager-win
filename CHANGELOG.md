@@ -1,5 +1,11 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## Nelansat — paritate funcțională cu Mac 1.40.0 (ramura win-functional-parity)
+- Bannere promoționale: campanii programate din Furnizor (doar text / imagine + text / doar imagine), imagini Light/Dark și variantă lată, încărcate în fundal cu cache local; fără campanii, bannerul existent rămâne neschimbat.
+- Compatibilitate verificată cu catalogul și fișierele publicate de Furnizor 1.53 (câmpurile noi sunt ignorate fără erori).
+- Licențiere: aceleași verificări ca pe Mac, confirmate cu un serial de test comun ambelor platforme.
+- Starea produselor (instalat / actualizare / eroare / incompatibil) calculată în nucleu, testată; interfața neschimbată.
+
 ## v1.37.2 (nelansat, pregatit 2026-09-25) — Descarcari autorizate, actualizare verificata
 
 Versiunea 1.37.1 nu exista pe Windows: tag-ul v1.37.1 apartine unui release Mac mai vechi.
