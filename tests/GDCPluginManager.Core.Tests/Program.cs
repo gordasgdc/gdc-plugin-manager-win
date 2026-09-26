@@ -124,6 +124,128 @@ Test("LicenseCore: base32 round-trip", () =>
     return Task.CompletedTask;
 });
 
+// ---------- Faza 6: paritate funcțională cu Mac 1.40.0 / Furnizor 1.53.0 ----------
+string Fixture(string name) => Path.Combine(AppContext.BaseDirectory, "Fixtures", name);
+var looseJson = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+
+Test("catalog: catalog.json publicat se decodează; câmpurile necunoscute sunt ignorate", async () =>
+{
+    var raw = await File.ReadAllTextAsync(Fixture("catalog.json"));
+    var catalog = JsonSerializer.Deserialize<GDCPluginManager.Core.Models.Catalog>(raw, CatalogJsonOptions.Default);
+    Assert(catalog is not null && catalog.Items.Count > 0, "catalogul real nu s-a decodat");
+    var node = System.Text.Json.Nodes.JsonNode.Parse(raw)!.AsObject();
+    node["campFuturTopLevel"] = 1;
+    foreach (var item in node["items"]!.AsArray()) item!.AsObject()["campFuturProdus"] = new System.Text.Json.Nodes.JsonObject { ["x"] = 1 };
+    var extended = JsonSerializer.Deserialize<GDCPluginManager.Core.Models.Catalog>(node.ToJsonString(), CatalogJsonOptions.Default);
+    Assert(extended is not null && extended.Items.Count == catalog.Items.Count, "un câmp nou rupe decodarea catalogului");
+});
+
+Test("banner: launch-banner.json publicat (clasic) — fără campanii, bannerul clasic rămâne", async () =>
+{
+    var cfg = JsonSerializer.Deserialize<GDCPluginManager.Core.Models.LaunchBannerConfig>(await File.ReadAllBytesAsync(Fixture("launch-banner.json")), looseJson)!;
+    Assert(cfg.Campaigns is null && cfg.ActiveCampaign(DateTime.UtcNow) is null, "nu există campanii în producție");
+    Assert(cfg.IsDisplayable == (cfg.Enabled && cfg.TopText != "" && cfg.MainText != ""), "logica clasică neschimbată");
+});
+
+Test("banner: campanii în formatul scris de Furnizor (date Swift, linkURL, mod necunoscut)", async () =>
+{
+    var cfg = JsonSerializer.Deserialize<GDCPluginManager.Core.Models.LaunchBannerConfig>(await File.ReadAllBytesAsync(Fixture("launch-banner-campaigns.json")), looseJson)!;
+    Assert(cfg.Campaigns?.Count == 4, "campaniile nu s-au decodat");
+    var active = cfg.ActiveCampaign(new DateTime(2026, 9, 26, 0, 0, 0, DateTimeKind.Utc));
+    Assert(active?.Id == "now", $"campania activă greșită: {active?.Id}");
+    Assert(active!.Mode == GDCPluginManager.Core.Models.PromoBannerMode.ImageText, "modul imageText");
+    Assert(active.LinkUrl == "https://gordas.dev/x", "linkURL nemapat");
+    Assert(active.TextFor("en")?.Main == "Pachete festive", "EN gol trebuie să cadă pe RO");
+    Assert(cfg.Campaigns![3].Mode == GDCPluginManager.Core.Models.PromoBannerMode.Text, "modul necunoscut → text");
+    Assert(cfg.IsDisplayable, "clienții vechi văd textul de rezervă");
+});
+
+Test("banner: listă de campanii stricată nu ascunde bannerul clasic", () =>
+{
+    var json = """{"enabled":true,"topText":"A","mainText":"B","campaigns":"nu-e-listă"}""";
+    var cfg = JsonSerializer.Deserialize<GDCPluginManager.Core.Models.LaunchBannerConfig>(json, looseJson)!;
+    Assert(cfg.Campaigns is null && cfg.IsDisplayable, "lista stricată trebuie ignorată");
+    var cfg2 = JsonSerializer.Deserialize<GDCPluginManager.Core.Models.LaunchBannerConfig>("""{"enabled":true,"topText":"A","mainText":"B","campaigns":[{"id":5}]}""", looseJson)!;
+    Assert(cfg2.Campaigns is null && cfg2.IsDisplayable, "element invalid → toată lista ignorată, ca pe Mac");
+    return Task.CompletedTask;
+});
+
+Test("banner: layout „Doar imagine” identic cu Mac (6:1 / 12:1 de la 900, plafon 160)", () =>
+{
+    var n = GDCPluginManager.Core.Models.PromoBannerSpec.ImageOnlyLayout(470, true);
+    Assert(!n.UseWide && Math.Abs(n.Height - 470 / 6.0) < 0.01, "îngust");
+    var w = GDCPluginManager.Core.Models.PromoBannerSpec.ImageOnlyLayout(1150, true);
+    Assert(w.UseWide && Math.Abs(w.Height - 1150 / 12.0) < 0.01, "lat");
+    Assert(GDCPluginManager.Core.Models.PromoBannerSpec.ImageOnlyLayout(1150, false).Height == 160, "plafon");
+    return Task.CompletedTask;
+});
+
+Test("update.json publicat: secțiunea windows se decodează", async () =>
+{
+    using var doc = JsonDocument.Parse(await File.ReadAllBytesAsync(Fixture("update.json")));
+    var windows = doc.RootElement.EnumerateObject().First(p => p.Name.Equals("windows", StringComparison.OrdinalIgnoreCase)).Value;
+    var info = windows.Deserialize<UpdateInfo>(looseJson);
+    Assert(info is not null && !string.IsNullOrEmpty(info.Version), "secțiunea windows lipsă/nedecodabilă");
+});
+
+Test("ProductActionState: aceeași ordine de prioritate ca pe Mac", () =>
+{
+    ProductActionState D(bool c = true, bool u = true, bool b = false, string? i = null, string v = "1.0", bool f = false, bool o = false) =>
+        ProductActionState.Derive(c, u, b, i, v, f, o);
+    Assert(D(false, false, true, "0.9") is ProductActionState.Incompatible, "incompatibil primul");
+    Assert(D(true, false, true) is ProductActionState.LicenseRequired, "licența înaintea operației");
+    Assert(D(b: true, f: true, o: true) is ProductActionState.Installing, "operația în curs");
+    Assert(D(i: null, f: true) is ProductActionState.Failed { IsUpdate: false }, "eșec instalare");
+    Assert(D(i: "0.9", f: true) is ProductActionState.Failed { IsUpdate: true }, "eșec actualizare");
+    Assert(D(i: "1.0", f: true) is ProductActionState.Installed, "eșec la Elimină pe produs la zi → instalat");
+    Assert(D(o: true) is ProductActionState.Offline && D() is ProductActionState.NotInstalled, "offline informativ");
+    Assert(D(i: "2.0") is ProductActionState.UpdateAvailable { InstalledVersion: "2.0", Latest: "1.0" }, "orice diferență = actualizare");
+    return Task.CompletedTask;
+});
+
+// Licențiere: aceiași vectori ca LicenseCoreTests.swift, cu o cheie de TEST (seed fix) — cheia de producție nu e atinsă.
+var testSeed = Enumerable.Range(1, 32).Select(i => (byte)i).ToArray();
+var testKey = new Org.BouncyCastle.Crypto.Parameters.Ed25519PrivateKeyParameters(testSeed, 0);
+var testPub = Convert.ToBase64String(testKey.GeneratePublicKey().GetEncoded());
+var thisMachine = new byte[] { 1, 2, 3, 4, 5, 6 };
+string MakeSerial(string product = "gdc-demo", long expiresAt = 0, byte[]? machine = null, byte? platform = null,
+                  Org.BouncyCastle.Crypto.Parameters.Ed25519PrivateKeyParameters? signer = null)
+{
+    var payload = new List<byte>(LicenseCore.ProductHash(product));
+    for (var shift = 56; shift >= 0; shift -= 8) payload.Add((byte)((expiresAt >> shift) & 0xFF));
+    payload.AddRange(new byte[] { 9, 9, 9, 9 });
+    payload.AddRange(machine ?? new byte[6]);
+    if (platform is { } p) payload.Add(p);
+    var s = new Org.BouncyCastle.Crypto.Signers.Ed25519Signer();
+    s.Init(true, signer ?? testKey);
+    s.BlockUpdate(payload.ToArray(), 0, payload.Count);
+    var raw = LicenseCore.Base32Encode(payload.Concat(s.GenerateSignature()).ToArray());
+    return string.Join("-", Enumerable.Range(0, (raw.Length + 4) / 5).Select(i => raw.Substring(i * 5, Math.Min(5, raw.Length - i * 5))));
+}
+LicenseCore.ValidationErrorKind? Kind(string serial, string product = "gdc-demo", bool hwid = true, long now = 1_000_000)
+{
+    try { LicenseCore.Validate(serial, product, hwid, testPub, () => thisMachine, now); return null; }
+    catch (LicenseCore.ValidationError e) { return e.Kind; }
+}
+
+Test("licență: vectorii Mac (v1, v2, expirare, produs, semnătură, mașină, platformă)", () =>
+{
+    Assert(Kind(MakeSerial()) is null, "v1 perpetuu valid");
+    Assert(Kind(MakeSerial(machine: thisMachine, platform: 3)) is null, "v2 legat de mașină, cross-platform");
+    Assert(Kind(MakeSerial().ToLowerInvariant().Replace("-", " ")) is null, "insensibil la majuscule și separatori");
+    Assert(Kind(MakeSerial(expiresAt: 2_000_000)) is null && Kind(MakeSerial(expiresAt: 500)) == LicenseCore.ValidationErrorKind.Expired, "expirare");
+    Assert(Kind(MakeSerial(), product: "alt-produs") == LicenseCore.ValidationErrorKind.WrongProduct, "alt produs");
+    var foreign = new Org.BouncyCastle.Crypto.Parameters.Ed25519PrivateKeyParameters(Enumerable.Repeat((byte)7, 32).ToArray(), 0);
+    Assert(Kind(MakeSerial(signer: foreign)) == LicenseCore.ValidationErrorKind.BadSignature, "semnătură străină");
+    Assert(Kind("ABC") == LicenseCore.ValidationErrorKind.MalformedCode, "cod malformat");
+    Assert(Kind(MakeSerial(machine: new byte[] { 9, 9, 9, 9, 9, 9 })) == LicenseCore.ValidationErrorKind.WrongMachine, "alt calculator");
+    Assert(Kind(MakeSerial(machine: thisMachine), hwid: false) == LicenseCore.ValidationErrorKind.HwidUnavailable, "HWID indisponibil ≠ alt calculator");
+    Assert(Kind(MakeSerial(platform: 1)) == LicenseCore.ValidationErrorKind.WrongPlatform, "serial doar-Mac respins pe Windows");
+    Assert(Kind(MakeSerial(platform: 2)) is null && Kind(MakeSerial(platform: 200)) is null, "doar-Windows valid; octet necunoscut = oricare");
+    Console.WriteLine($"  vector comun Mac/Windows: pub={testPub} serial={MakeSerial(product: "gdc-parity-vector", platform: 3)}");
+    return Task.CompletedTask;
+});
+
 Test("UpdatePackageVerifier: versiune, SHA-256, rezultat WinVerifyTrust, thumbprint", () =>
 {
     Assert(UpdatePackageVerifier.IsValidVersion("1.37.1"), "1.37.1 validă");

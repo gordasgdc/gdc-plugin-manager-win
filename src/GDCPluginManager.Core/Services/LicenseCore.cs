@@ -85,7 +85,13 @@ public static class LicenseCore
     /// bruti (22+64, coduri v1, deja emise) si 87 (23+64, coduri noi). Un cod
     /// v1 decodeaza mereu platforma ca Any, deci comportamentul lui ramane
     /// identic dinainte de aceasta schimbare.
-    public static Payload Validate(string serial, string expectedProductId, bool hwidAvailable = true)
+    public static Payload Validate(string serial, string expectedProductId, bool hwidAvailable = true) =>
+        Validate(serial, expectedProductId, hwidAvailable, PublicKeyBase64, () => MachineID.HashBytes, DateTimeOffset.UtcNow.ToUnixTimeSeconds());
+
+    /// Aceeași validare, cu cheia publică, amprenta mașinii și timpul injectate — ca `LicenseCore.validate` din Swift,
+    /// ca testele să ruleze vectori comuni Mac/Windows fără cheia de producție. Comportament identic.
+    public static Payload Validate(string serial, string expectedProductId, bool hwidAvailable, string publicKeyBase64,
+                                   Func<byte[]> machineHash, long nowUnix)
     {
         var packed = Base32Decode(serial);
         int effectiveSize;
@@ -105,7 +111,7 @@ public static class LicenseCore
         var payloadBytes = packed[..effectiveSize];
         var signature = packed[effectiveSize..];
 
-        var publicKeyBytes = Convert.FromBase64String(PublicKeyBase64);
+        var publicKeyBytes = Convert.FromBase64String(publicKeyBase64);
         var publicKey = new Ed25519PublicKeyParameters(publicKeyBytes, 0);
         var verifier = new Ed25519Signer();
         verifier.Init(forSigning: false, publicKey);
@@ -143,13 +149,13 @@ public static class LicenseCore
             {
                 throw new ValidationError(ValidationErrorKind.HwidUnavailable, payload: payload);
             }
-            if (!storedMachineHash.AsSpan().SequenceEqual(MachineID.HashBytes))
+            if (!storedMachineHash.AsSpan().SequenceEqual(machineHash()))
             {
                 throw new ValidationError(ValidationErrorKind.WrongMachine, payload: payload);
             }
         }
 
-        if (expiresAt != 0 && expiresAt < DateTimeOffset.UtcNow.ToUnixTimeSeconds())
+        if (expiresAt != 0 && expiresAt < nowUnix)
         {
             throw new ValidationError(ValidationErrorKind.Expired, expiresAt, payload);
         }

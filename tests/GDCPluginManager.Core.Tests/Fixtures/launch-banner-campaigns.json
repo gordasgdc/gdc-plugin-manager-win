@@ -1,0 +1,17 @@
+{
+  "enabled": true,
+  "imagePath": "",
+  "topText": "CRĂCIUN",
+  "mainText": "Pachete festive",
+  "textOnTop": true,
+  "updatedAt": "2026-09-26",
+  "unknownFutureField": {"x": 1},
+  "campaigns": [
+    {"id": "old", "name": "Vechi", "mode": "text", "texts": {"ro": {"top": "A", "main": "Vechi"}}, "scheduling": {"startDate": 0, "endDate": 100, "showCountdown": false}},
+    {"id": "now", "name": "Acum", "mode": "imageText", "texts": {"ro": {"top": "CRĂCIUN", "main": "Pachete festive"}, "en": {"top": "", "main": ""}},
+     "imagePath": "covers/banner-now-light.jpg", "imagePathDark": "covers/banner-now-dark.jpg", "linkURL": "https://gordas.dev/x",
+     "scheduling": {"startDate": 150, "endDate": 10000000000, "showCountdown": false}},
+    {"id": "img", "name": "Imagine fără cale", "mode": "image", "texts": {}, "scheduling": {"startDate": 150, "endDate": 10000000000}},
+    {"id": "future", "name": "Mod viitor", "mode": "video", "texts": {"ro": {"top": "", "main": "Text"}}}
+  ]
+}

@@ -26,6 +26,17 @@ public sealed record LaunchBannerConfig
     /// in cod). Implicit true (deasupra).
     public bool TextOnTop { get; init; } = true;
 
+    /// Faza 5: campanii programate (opțional; clienții vechi îl ignoră). Vezi PromoBanner.cs.
+    [JsonConverter(typeof(TolerantCampaignListConverter))]
+    public List<PromoBannerCampaign>? Campaigns { get; init; }
+
+    /// Campania afișată acum: activă, cu conținut complet; la suprapunere câștigă începutul cel mai recent (apoi id-ul).
+    public PromoBannerCampaign? ActiveCampaign(DateTime utcNow) =>
+        !Enabled || Campaigns is null ? null
+        : Campaigns.Where(c => c.IsActive(utcNow) && c.HasRequiredContent)
+                   .OrderByDescending(c => c.IntervalStart).ThenByDescending(c => c.Id, StringComparer.Ordinal)
+                   .FirstOrDefault();
+
     [JsonIgnore]
     public Uri? ImageUrl => CatalogAssets.ImageUrl(ImagePath);
 
