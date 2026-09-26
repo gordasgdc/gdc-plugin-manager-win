@@ -180,6 +180,12 @@ Test("banner: layout „Doar imagine” identic cu Mac (6:1 / 12:1 de la 900, pl
     return Task.CompletedTask;
 });
 
+Test("versiunea candidat e mai nouă decât cea publică (clientul 1.37.2 o va oferi)", () =>
+{
+    Assert(VersionCompare.IsNewer("1.38.1", "1.37.2") && !VersionCompare.IsNewer("1.37.2", "1.38.1"), "comparația de versiuni");
+    return Task.CompletedTask;
+});
+
 Test("update.json publicat: secțiunea windows se decodează", async () =>
 {
     using var doc = JsonDocument.Parse(await File.ReadAllBytesAsync(Fixture("update.json")));
