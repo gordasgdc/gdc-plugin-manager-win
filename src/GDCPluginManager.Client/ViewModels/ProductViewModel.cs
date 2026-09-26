@@ -117,8 +117,30 @@ public sealed partial class ProductViewModel : ObservableObject
     public bool IsCompatible => Item.SupportedOS.Allows(SupportedOSExtensions.Current);
 
     public bool IsInstalled => InstallManager.Shared.IsInstalled(Item);
-    public bool HasUpdate => InstallManager.Shared.HasUpdate(Item);
     public bool IsUnlocked => LicenseManager.Shared.IsUnlocked(Item);
+
+    /// Ultima instalare/actualizare a eșuat (resetat la următoarea încercare) — alimentează starea „Eroare”.
+    [ObservableProperty]
+    private bool _lastInstallFailed;
+
+    /// Starea reală a produsului (Core, testată, aceeași ca pe Mac). Proprietățile legate în XAML derivă din ea.
+    public ProductActionState State => ProductActionState.Derive(
+        IsCompatible, IsUnlocked, IsBusy,
+        InstallManager.Shared.InstalledVersions.TryGetValue(Item.Id, out var v) ? v : null,
+        Item.Version, LastInstallFailed);
+
+    /// Actualizare disponibilă — inclusiv după o actualizare eșuată (butonul rămâne „Actualizează”/„Reîncearcă”).
+    public bool HasUpdate => InstallManager.Shared.HasUpdate(Item) || State is ProductActionState.Failed { IsUpdate: true };   // comportamentul vechi + eșecul unei actualizări
+    public bool IsFailed => State is ProductActionState.Failed;
+
+    partial void OnIsBusyChanged(bool value) => NotifyState();
+    partial void OnLastInstallFailedChanged(bool value) => NotifyState();
+    private void NotifyState()
+    {
+        OnPropertyChanged(nameof(State));
+        OnPropertyChanged(nameof(HasUpdate));
+        OnPropertyChanged(nameof(IsFailed));
+    }
 
     /// Recalculeaza toate proprietatile derivate din InstallManager/LicenseManager —
     /// apelat de MainViewModel dupa orice actiune care le poate schimba
@@ -126,8 +148,8 @@ public sealed partial class ProductViewModel : ObservableObject
     public void Refresh()
     {
         OnPropertyChanged(nameof(IsInstalled));
-        OnPropertyChanged(nameof(HasUpdate));
         OnPropertyChanged(nameof(IsUnlocked));
+        NotifyState();
     }
 
     [RelayCommand]
@@ -189,6 +211,7 @@ public sealed partial class ProductViewModel : ObservableObject
         IsBusy = true;
         StatusMessage = null;
         ShowPaidResourceSupportError = false;
+        LastInstallFailed = false;
         try
         {
             var outcome = await InstallManager.Shared.InstallAsync(Item);
@@ -208,10 +231,12 @@ public sealed partial class ProductViewModel : ObservableObject
             // legat de ShowPaidResourceSupportError).
             StatusMessage = ex.Message;
             ShowPaidResourceSupportError = true;
+            LastInstallFailed = true;
         }
         catch (Exception ex)
         {
             StatusMessage = ex.Message;
+            LastInstallFailed = true;
         }
         finally
         {

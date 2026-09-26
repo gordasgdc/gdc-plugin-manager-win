@@ -231,6 +231,10 @@
                                                 <DataTrigger Binding="{Binding HasUpdate}" Value="True">
                                                     <Setter Property="Text" Value="Actualizeaza" />
                                                 </DataTrigger>
+                                                <!-- Faza 6: după un eșec, aceeași acțiune (InstallCommand) se numește „Reîncearcă”. -->
+                                                <DataTrigger Binding="{Binding IsFailed}" Value="True">
+                                                    <Setter Property="Text" Value="Reincearca" />
+                                                </DataTrigger>
                                             </Style.Triggers>
                                         </Style>
                                     </TextBlock.Style>
