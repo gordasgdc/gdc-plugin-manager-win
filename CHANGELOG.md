@@ -1,5 +1,9 @@
 # Changelog — GDC Plugin Manager (Windows)
 
+## v1.38.2 (nelansat, pregătit 2026-09-26, ramura fix/win-dark-bg)
+
+- Tema întunecată: fundalul ferestrei principale urmează acum tema (înainte rămânea alb).
+
 ## v1.38.1 (nelansat, pregătit 2026-09-26) — Paritate funcțională cu Mac 1.40.0
 
 Versiunea 1.38.0 nu există pe Windows: tag-ul v1.38.0 aparține unui release Mac (spațiu de tag-uri comun).
