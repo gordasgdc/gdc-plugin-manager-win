@@ -328,6 +328,15 @@ Test("UpdatePackageVerifier: instalatorul GDC semnat e acceptat, copia alterată
 });
 
 var failed = 0;
+Test("InnoUninstallKey: AppId={{X}} din installer.iss -> cheia reală {X}}_is1 (verificat în VM 2026-10-29), plus forma veche", () =>
+{
+    var k = InnoUninstallKey.SubKeyNames("{B7F2E4D5-9A1C-4F3B-8E2D-DATAMOVERWPF1}");
+    Assert(k.Count == 2, "două variante");
+    Assert(k[0] == "{B7F2E4D5-9A1C-4F3B-8E2D-DATAMOVERWPF1}}_is1", "forma scrisă de Inno pentru AppId={{X}}: " + k[0]);
+    Assert(k[1] == "{B7F2E4D5-9A1C-4F3B-8E2D-DATAMOVERWPF1}_is1", "forma veche, păstrată ca rezervă");
+    return Task.CompletedTask;
+});
+
 foreach (var (name, run) in tests)
 {
     try { await run(); Console.WriteLine($"✓ {name}"); }

@@ -1,10 +1,15 @@
 # Changelog — GDC Plugin Manager (Windows)
 
-## v1.38.2 (nelansat, pregătit 2026-09-26, ramura fix/win-dark-bg)
+## v1.38.3 (2026-10-29)
+
+- „Aplicațiile Mele”: CursorPro GDC apare acum în listă.
+- „Aplicațiile Mele”: aplicațiile GDC instalate (de exemplu DataMover) sunt recunoscute corect, cu versiunea instalată.
+
+## v1.38.2 (2026-09-26)
 
 - Tema întunecată: fundalul ferestrei principale urmează acum tema (înainte rămânea alb).
 
-## v1.38.1 (nelansat, pregătit 2026-09-26) — Paritate funcțională cu Mac 1.40.0
+## v1.38.1 (2026-09-26) — Paritate funcțională cu Mac 1.40.0
 
 Versiunea 1.38.0 nu există pe Windows: tag-ul v1.38.0 aparține unui release Mac (spațiu de tag-uri comun).
 - Bannere promoționale: campanii programate din Furnizor (doar text / imagine + text / doar imagine), imagini Light/Dark și variantă lată, încărcate în fundal cu cache local; fără campanii, bannerul existent rămâne neschimbat.

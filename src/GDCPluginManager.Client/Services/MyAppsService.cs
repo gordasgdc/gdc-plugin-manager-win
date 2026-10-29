@@ -1,3 +1,4 @@
+using GDCPluginManager.Core.Services;
 using System.Diagnostics;
 using System.IO;
 using System.Net.Http;
@@ -68,7 +69,7 @@ public sealed record InstalledGdcApp(
 /// versiunea din fisierul .exe (ar putea diferi de ce a inregistrat
 /// installer-ul).
 ///
-/// **De ce doar 3 aplicatii, nu 4**: Mac-ul listeaza DataMover, CursorPro GDC,
+/// **[ÎNVECHIT 2026-10-29: CursorPro GDC are build Windows din 2.0.0; adăugat mai jos]** **De ce doar 3 aplicatii, nu 4**: Mac-ul listeaza DataMover, CursorPro GDC,
 /// GDC Vault si MediaFlow Monitor. Verificat direct in `~/Developer`
 /// (2026-08-29), NU presupus: `CursorPro` are doar `Package.swift`/`.icns`/
 /// `build_app.sh` — niciun `.csproj`, `.iss` sau folder Windows. Nu exista
@@ -81,6 +82,7 @@ public static class MyAppsService
     /// Identitati preluate VERBATIM din `installer.iss`-ul fiecarui repo
     /// (2026-08-29). AppId apare acolo ca `AppId={{X}}` — Inno interpreteaza
     /// `{{` ca un `{` literal, deci cheia reala din Registry e `{X}_is1`.
+    /// **[ÎNVECHIT 2026-10-29]**: `}}` NU se reduce, cheia reală e `{X}}_is1` — vezi `InnoUninstallKey`.
     ///
     /// [BUG REAL, gasit 2026-09-03: raportat de Cristi, "Aplicatiile mele"
     /// arata v0.0.0 pentru toate] GUID-ul de DataMover ramasese cel VECHI
@@ -115,6 +117,15 @@ public static class MyAppsService
             VersionSource: VersionSourceKind.GitHubRelease,
             VersionSourceValue: "gordasgdc/datamover",
             SiteUrl: "https://gordas.dev/datamover"),
+        new(
+            Id: "cursorpro",
+            Name: "CursorPro GDC",
+            InnoAppId: "{B7E1F4A2-3C6D-4A8F-9E1B-CURSORPROWIN1}",
+            ExeName: "CursorPro.exe",
+            FallbackRelativeDir: @"GDC\CursorPro GDC",
+            VersionSource: VersionSourceKind.GitHubRelease,
+            VersionSourceValue: "gordasgdc/cursorpro-gdc-win",
+            SiteUrl: "https://gordas.dev/cursorpro-gdc"),
         new(
             Id: "gdc-vault",
             Name: "GDC Vault",
@@ -161,8 +172,21 @@ public static class MyAppsService
 
     private static InstalledGdcApp? DetectOne(KnownGdcApp app)
     {
-        var subKey = $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{app.InnoAppId}_is1";
+        foreach (var name in InnoUninstallKey.SubKeyNames(app.InnoAppId))
+        {
+            var found = DetectInRegistry(app, $@"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\{name}");
+            if (found is not null) return found;
+        }
 
+        // Fara cheie de dezinstalare: poate o copie dezarhivata manual, sau
+        // una instalata inainte ca installer-ul sa scrie cheia. Versiunea se
+        // citeste atunci din executabil — singura sursa ramasa.
+        var fallback = FallbackExecutable(app);
+        return fallback is null ? null : new InstalledGdcApp(app, ReadVersionFromExecutable(fallback), fallback);
+    }
+
+    private static InstalledGdcApp? DetectInRegistry(KnownGdcApp app, string subKey)
+    {
         foreach (var (hive, view) in new[]
                  {
                      (RegistryHive.LocalMachine, RegistryView.Registry64),
@@ -195,11 +219,7 @@ public static class MyAppsService
             }
         }
 
-        // Fara cheie de dezinstalare: poate o copie dezarhivata manual, sau
-        // una instalata inainte ca installer-ul sa scrie cheia. Versiunea se
-        // citeste atunci din executabil — singura sursa ramasa.
-        var fallback = FallbackExecutable(app);
-        return fallback is null ? null : new InstalledGdcApp(app, ReadVersionFromExecutable(fallback), fallback);
+        return null;
     }
 
     /// Versiunea din metadatele executabilului. `ProductVersion` intai
